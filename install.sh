@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# copy additional repos
+cp ./yum.repos.d/* /etc/yum.repos.d/
+
 rpm-ostree update
 
 # fedora silverblue packages
