@@ -9,15 +9,18 @@ rpm-ostree update
 $PACKAGES="code \
 fedora-workstation-repositories \
 gnome-tweak-tool \
-google-chrome \
 google-chrome-stable \
 moby-engine \
 git \
 git-lfs \
 neovim \
-sway \
 tmux \
+vifm \
+sway \
+swaylock \
 bemenu \
+j4-dmenu-desktop \
+xdg-desktop-portal-wlr \
 waybar \
 wl-clipboard \
 "
