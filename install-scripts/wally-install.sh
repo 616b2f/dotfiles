@@ -2,11 +2,11 @@
 
 rpm-ostree install libusb
 
-VERSION=2.0.0
+VERSION=2.0.1
 
-curl -O "https://github.com/zsa/wally-cli/releases/download/$VERSION-linux/wally-cli"
+curl -LO "https://github.com/zsa/wally-cli/releases/download/$VERSION-linux/wally-cli"
 
-install wally-cli
+install wally-cli /usr/local/bin
 
 # setup rules for moonlander keyboard
 cat << EOF > /etc/udev/rules.d/50-wally.rules 

@@ -65,11 +65,15 @@ local function setup_servers()
   -- get all installed servers
   local servers = require'lspinstall'.installed_servers()
   -- ... and add manually installed servers
-  table.insert(servers, "rust")
+  -- table.insert(servers, "rust")
   -- table.insert(servers, "sourcekit")
 
   for _, server in pairs(servers) do
     local config = make_config()
+
+		----debug output
+		-- print(server)
+		-- print(vim.inspect(config))
 
     -- language specific config
     -- if server == "lua" then

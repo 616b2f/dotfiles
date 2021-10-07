@@ -6,7 +6,7 @@ cp ./yum.repos.d/* /etc/yum.repos.d/
 rpm-ostree update
 
 # fedora silverblue packages
-$PACKAGES="code \
+PACKAGES="code \
 fedora-workstation-repositories \
 gnome-tweak-tool \
 google-chrome-stable \
@@ -17,17 +17,16 @@ neovim \
 tmux \
 vifm \
 sway \
+grim \
+slurp \
+mako \
 swaylock \
 bemenu \
 j4-dmenu-desktop \
 xdg-desktop-portal-wlr \
 waybar \
 wl-clipboard \
+brightnessctl \
 "
 
 rpm-ostree install $PACKAGES
-
-# get docker to work on fedora
-# for more info see https://fedoramagazine.org/docker-and-fedora-32/
-sudo firewall-cmd --permanent --zone=trusted --add-interface=docker0
-sudo firewall-cmd --permanent --zone=FedoraWorkstation --add-masquerade

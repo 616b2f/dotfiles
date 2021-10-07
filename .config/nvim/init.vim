@@ -16,13 +16,6 @@ Plug 'norcalli/snippets.nvim'
 "Plug 'hrsh7th/vim-vsnip'
 "Plug 'hrsh7th/vim-vsnip-integ'
 
-" Use release branch (recommend)
-"Plug 'neoclide/coc.nvim', {'branch': 'release'}
-
-" treesitter install
-" Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  " We recommend updating the parsers on update
-"Plug 'nvim-treesitter/playground'
-
 " color schemes
 Plug 'tomasiser/vim-code-dark'
 Plug 'rakr/vim-one'
@@ -60,8 +53,17 @@ call plug#end()
 " sync default registers with clipboard
 set clipboard=unnamedplus
 
-" fix yaml indentation
+" by default, the indent is 2 spaces. 
+set shiftwidth=2
+set softtabstop=2
+set tabstop=2
+
+" fix yaml/html indentation, 2 spaces
 autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
+autocmd Filetype html setlocal ts=2 sw=2 expandtab
+
+" for js/coffee files, 4 spaces
+autocmd Filetype javascript setlocal ts=4 sw=4 sts=0 expandtab
 
 " set coloring for vifmrc
 autocmd BufNewFile,BufRead vifmrc set syntax=vim
@@ -100,15 +102,10 @@ set updatetime=300
 " Don't pass messages to |ins-completion-menu|.
 set shortmess+=c
 
-let b:coc_enabled=0
-
 " differentiate between toolbox env and regular env
 if filereadable(expand('/run/.toolboxenv'))
 	echo "You are in a toolbox"
 
-	" source ~/.config/nvim/coc-config.vimrc
-	" source ~/.config/nvim/treesitter.vimrc
-	
 	" setup snippets support
 	lua require'snippets'.snippets = {}
 	" lua require'snippets'.use_suggested_mappings()

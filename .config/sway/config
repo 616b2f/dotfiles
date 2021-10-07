@@ -3,6 +3,9 @@
 # vscode, teams (electron based apps) do not support wayland natively
 xwayland enabled
 
+# start notification daemon
+exec mako
+
 ### Colors
 #
 set $color_fg_primary '#2980b9'
@@ -129,6 +132,13 @@ input type:touchpad {
     bindsym XF86AudioRaiseVolume exec pactl set-sink-volume $(pacmd list-sinks | awk '/* index:/{print $3}') +5%
     bindsym XF86AudioLowerVolume exec pactl set-sink-volume $(pacmd list-sinks | awk '/* index:/{print $3}') -5%
     bindsym XF86AudioMute exec pactl set-sink-mute $(pacmd list-sinks | awk '/* index:/{print $3}') toggle
+
+#
+# Brightness control
+#
+		bindsym XF86MonBrightnessUp exec "brightnessctl s 1%+"
+		bindsym XF86MonBrightnessDown exec "brightnessctl s 1%-"
+
 #
 # Moving around:
 #
