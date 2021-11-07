@@ -3,8 +3,20 @@
 # vscode, teams (electron based apps) do not support wayland natively
 xwayland enabled
 
-# start notification daemon
+### start default programs
+#
+
+# network manager applet in traybar
+exec nm-applet --indicator
+# mako notifier
 exec mako
+# microsoft teams
+#exec teams
+# rdp client
+#exec remmina -i
+#exec env XDG_CURRENT_DESKTOP=sway && flatpak run org.flameshot.Flameshot 
+# gnome keyring deamon (to be able to use saved passwords)
+#exec systemctl --user import-environment && gnome-keyring-daemon --components=ssh\,secrets\,pkcs11 --start
 
 ### Colors
 #
@@ -13,9 +25,16 @@ set $color_fg_normal '#ffffff'
 
 ### Variables
 #
-# Logo key. Use Mod1 for Alt.
+# Logo key. 
+# Use
+# Mod1=Alt
+# Mod4=Superkey
 set $mod Mod4
+# define moonlander keys
+set $meh Mod1+Shift+Ctrl
+set $hyper Mod1+Shift+Ctrl+Mod4
 # Home row direction keys, like vim
+#
 set $left h
 set $down j
 set $up k
@@ -26,33 +45,40 @@ set $term alacritty
 # Note: pass the final command to swaymsg so that the resulting window can be opened
 # on the original workspace that the command was run on.
 #set $menu dmenu_path | dmenu | xargs swaymsg exec --
-set $menu BEMENU_BACKEND=wayland bemenu-run -i -p '>' --tf $color_fg_normal --hf $color_fg_primary
-set $menu-desktop j4-dmenu-desktop --term="$term -e" --dmenu="BEMENU_BACKEND=wayland bemenu -i -p '>' --tf $color_fg_normal --hf $color_fg_primary"
+#set $menu BEMENU_BACKEND=wayland bemenu-run -i -p '>' --tf $color_fg_normal --hf $color_fg_primary
+set $menu dmenu_run -i -p '>'
+#set $menu dmenu_run -i -p '>' --tf $color_fg_normal --hf $color_fg_primary
+set $menu-desktop j4-dmenu-desktop --term="$term -e" --dmenu="dmenu -i -p '>'"
 
 ### Output configuration
 #
 # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
-output * bg /usr/share/backgrounds/fedora-workstation/aurora-over-iceland.png fill
+# output * bg /usr/share/backgrounds/fedora-workstation/aurora-over-iceland.png fill
+# output * bg /usr/share/backgrounds/fedora-workstation/frog-prince.jpg fit
+output * bg /usr/share/backgrounds/gnome/adwaita-morning.png fill
+# output * bg /usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png fill
+# output * bg /usr/share/backgrounds/default.png fill
 
 # set fractional scaling
-output * scale 1.5
-#
-# Example configuration:
-#
-#   output HDMI-A-1 resolution 1920x1080 position 1920,0
-#
+#output * scale 1.5
+
 # You can get the names of your outputs by running: swaymsg -t get_outputs
+set $laptopDP eDP-1
+
+# LG big curved single monitor
+# output DP-5 resolution 2560x1080
+
+# DELL 2 monitor setup
+output DP-3 pos 0 0 res 1920x1200
+output DP-4 pos 1920 0 res 1920x1200
+output DP-5 pos 0 0 res 1920x1200
+output DP-6 pos 1920 0 res 1920x1200
+# output DP-6 pos 0 0 res 1920x1200
+# output DP-7 pos 1920 0 res 1920x1200
 
 ### Idle configuration
 #
-# Example configuration:
-#
-# exec swayidle -w \
-#          timeout 300 'swaylock -f -c 000000' \
-#          timeout 600 'swaymsg "output * dpms off"' resume 'swaymsg "output * dpms on"' \
-#          before-sleep 'swaylock -f -c 000000'
-#
-# This will lock your screen after 300 seconds of inactivity, then turn off
+# This will lock your screen after 300 seconds (5min) of inactivity, then turn off
 # your displays after another 300 seconds, and turn your screens back on when
 # resumed. It will also lock your screen before your computer goes to sleep.
 
@@ -60,9 +86,16 @@ output * scale 1.5
 set $wmexit 	swaymsg exit
 set $lock 		swaylock -e -f -c 000000 -i ~/.config/wall.png -t
 set $locksoff	swayidle -w  \
-		timeout 1 'swaylock -e -f -c 000000 -i ~/.config/wall.png -t' \
+		timeout 1 "$lock" \
 		timeout 2 'swaymsg "output * dpms off"' \
 		resume 'swaymsg "output * dpms on"; pkill -nx swayidle'
+
+# disable the screen if lid is closed, enable again if it is open.
+# also lock the screen if lid is closed
+bindswitch --reload --locked lid:on output $laptopDP disable
+# bindswitch --reload --locked lid:off output $laptopDP enable
+bindswitch --reload --locked lid:off output $laptopDP enable, exec $lock
+
 
 set $Pause-break  System (l)lock, (k) locktoblack, (e) exit, (s) suspend, (r) reboot, (Return) shutdown
 mode "$Pause-break" {
@@ -129,16 +162,9 @@ input type:touchpad {
 #
 # Multimedia:
 #
-    bindsym XF86AudioRaiseVolume exec pactl set-sink-volume $(pacmd list-sinks | awk '/* index:/{print $3}') +5%
-    bindsym XF86AudioLowerVolume exec pactl set-sink-volume $(pacmd list-sinks | awk '/* index:/{print $3}') -5%
-    bindsym XF86AudioMute exec pactl set-sink-mute $(pacmd list-sinks | awk '/* index:/{print $3}') toggle
-
-#
-# Brightness control
-#
-		bindsym XF86MonBrightnessUp exec "brightnessctl s 1%+"
-		bindsym XF86MonBrightnessDown exec "brightnessctl s 1%-"
-
+    bindsym XF86AudioRaiseVolume exec amixer -D pipewire sset Master 5%+
+    bindsym XF86AudioLowerVolume exec amixer -D pipewire sset Master 5%-
+    bindsym XF86AudioMute exec amixer -D pipewire set Master toggle
 #
 # Moving around:
 #
@@ -227,6 +253,12 @@ input type:touchpad {
     # Show the next scratchpad window or hide the focused scratchpad window.
     # If there are multiple scratchpad windows, this command cycles through them.
     bindsym $mod+minus scratchpad show
+#
+# Screenshots
+#
+bindsym $mod+Shift+s exec grim -g "$(slurp)" - | wl-copy
+# mod1 is alt
+bindsym $meh+s exec flatpak run org.flameshot.Flameshot gui -r | wl-copy
 #
 # Resizing containers:
 #

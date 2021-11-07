@@ -1,9 +1,12 @@
 local nvim_lsp = require('lspconfig')
+local util = require 'lspconfig/util'
 local on_attach = function(client, bufnr)
   local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
   local function buf_set_option(...) vim.api.nvim_buf_set_option(bufnr, ...) end
 
   -- buf_set_option('omnifunc', 'v:lua.vim.lsp.omnifunc')
+
+  require "lsp_signature".on_attach({})
 
   -- Mappings.
   local opts = { noremap=true, silent=true }
@@ -18,11 +21,13 @@ local on_attach = function(client, bufnr)
   buf_set_keymap('n', '<space>D', '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
   buf_set_keymap('n', '<space>rn', '<cmd>lua vim.lsp.buf.rename()<CR>', opts)
   buf_set_keymap('n', 'gr', '<cmd>lua vim.lsp.buf.references()<CR>', opts)
-  buf_set_keymap('n', '<space>e', '<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>', opts)
+  buf_set_keymap('n', '<space>e', '<cmd>lua vim.diagnostic.open_float()<CR>', opts)
   buf_set_keymap('n', '<space>a', '<cmd>lua vim.lsp.buf.code_action()<CR>', opts)
-  buf_set_keymap('n', '[d', '<cmd>lua vim.lsp.diagnostic.goto_prev()<CR>', opts)
-  buf_set_keymap('n', ']d', '<cmd>lua vim.lsp.diagnostic.goto_next()<CR>', opts)
-  buf_set_keymap('n', '<space>q', '<cmd>lua vim.lsp.diagnostic.set_loclist()<CR>', opts)
+  buf_set_keymap('n', '[d', '<cmd>lua vim.diagnostic.goto_prev()<CR>', opts)
+  buf_set_keymap('n', ']d', '<cmd>lua vim.diagnostic.goto_next()<CR>', opts)
+  buf_set_keymap('n', '<space>q', '<cmd>lua vim.diagnostic.setqflist()<CR>', opts)
+  buf_set_keymap('n', '<space>qe', '<cmd>lua vim.diagnostic.setqflist({severity_limit=\'Error\'})<CR>', opts)
+  buf_set_keymap('n', '<space>ql', '<cmd>lua vim.diagnostic.setloclist()<CR>', opts)
 
   -- Set some keybinds conditional on server capabilities
   if client.resolved_capabilities.document_formatting then
@@ -58,51 +63,49 @@ local function make_config()
   }
 end
 
--- lsp-install
-local function setup_servers()
-  require'lspinstall'.setup()
+local lsp_installer = require("nvim-lsp-installer")
 
-  -- get all installed servers
-  local servers = require'lspinstall'.installed_servers()
-  -- ... and add manually installed servers
-  -- table.insert(servers, "rust")
-  -- table.insert(servers, "sourcekit")
-
-  for _, server in pairs(servers) do
+-- Register a handler that will be called for all installed servers.
+-- Alternatively, you may also register handlers on specific server instances instead (see example below).
+lsp_installer.on_server_ready(function(server)
     local config = make_config()
-
-		----debug output
-		-- print(server)
-		-- print(vim.inspect(config))
-
-    -- language specific config
-    -- if server == "lua" then
-    --   config.settings = lua_settings
-    -- end
-    -- if server == "sourcekit" then
-    --   config.filetypes = {"swift", "objective-c", "objective-cpp"}; -- we don't want c and cpp!
-    -- end
-    -- if server == "clangd" then
-    --   config.filetypes = {"c", "cpp"}; -- we don't want objective-c and objective-cpp!
-    -- end
-
-    -- -- setup omnisharp lsp
-    -- local pid = vim.fn.getpid()
-    -- local omnisharp_bin = "/path/to/omnisharp-repo/run"
-    -- nvim_lsp.omnisharp.setup{
-    --     cmd = { omnisharp_bin, "--languageserver" , "--hostPID", tostring(pid) };
-    --     on_attach = on_attach, 
-    --     capabilities = capabilities,
-    -- }
-
-    nvim_lsp[server].setup(config)
-  end
-end
-
-setup_servers()
-
--- Automatically reload after `:LspInstall <server>` so we don't have to restart neovim
-require'lspinstall'.post_install_hook = function ()
-  setup_servers() -- reload installed servers
-  vim.cmd("bufdo e") -- this triggers the FileType autocmd that starts the server
-end
+    if server.name == "omnisharp" then
+        local pid = vim.fn.getpid()
+        local omnisharp_bin = vim.fn.expand('~/.local/share/nvim/lsp_servers/omnisharp/omnisharp/run')
+        local capabilities = vim.lsp.protocol.make_client_capabilities()
+        capabilities.textDocument.completion.completionItem.snippetSupport = true
+        config = {
+            cmd = { omnisharp_bin, "--languageserver" , "--hostPID", tostring(pid) },
+            capabilities = capabilities,
+            filetypes = { "cs", "vb" },
+            init_options = {},
+                root_dir = function(fname)
+            return util.root_pattern '*.sln'(fname) or util.root_pattern '*.csproj'(fname)
+            end,
+            on_attach = on_attach,
+        }
+        server:setup(config)
+    elseif server.name == "yamlls" then
+        config.settings = {
+            yaml = {
+                completion = true,
+                hover = true,
+                validate = true,
+                schemas = {
+                    Kubernetes= "/*.yaml"
+                },
+                format = {
+                    enable = true
+                }
+            },
+            http = {
+                proxyStrictSSL = true
+            }
+        }
+        server:setup(config)
+    else
+        -- This setup() function is exactly the same as lspconfig's setup function.
+        -- Refer to https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
+        server:setup(config)
+    end
+end)

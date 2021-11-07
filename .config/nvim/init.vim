@@ -5,21 +5,38 @@ call plug#begin(stdpath('data') . '/plugged')
 " nvim lsp support
 Plug 'neovim/nvim-lspconfig'
 " plugin to install lsp servers
-" Plug 'anott03/nvim-lspinstall'
-Plug 'kabouzeid/nvim-lspinstall'
+Plug 'williamboman/nvim-lsp-installer'
+
 " complete support
- Plug 'hrsh7th/nvim-compe'
-" Plug 'nvim-lua/completion-nvim'
+Plug 'hrsh7th/nvim-cmp'
+Plug 'hrsh7th/cmp-buffer'
+Plug 'hrsh7th/cmp-path'
+Plug 'hrsh7th/cmp-nvim-lua'
+Plug 'hrsh7th/cmp-nvim-lsp'
+Plug 'L3MON4D3/LuaSnip'
+Plug 'saadparwaiz1/cmp_luasnip'
+Plug 'onsails/lspkind-nvim'
+Plug 'tjdevries/complextras.nvim'
 
 " add snippets support
-Plug 'norcalli/snippets.nvim'
+" Plug 'norcalli/snippets.nvim'
 "Plug 'hrsh7th/vim-vsnip'
 "Plug 'hrsh7th/vim-vsnip-integ'
+
+" custom formatters
+Plug 'mhartington/formatter.nvim'
+
+" treesitter install
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  " We recommend updating the parsers on update
+Plug 'nvim-treesitter/nvim-treesitter-textobjects'
+"Plug 'nvim-treesitter/playground'
 
 " color schemes
 Plug 'tomasiser/vim-code-dark'
 Plug 'rakr/vim-one'
 Plug 'arcticicestudio/nord-vim'
+" colorscheme helper
+Plug 'tjdevries/colorbuddy.nvim'
 
 " colorizer (show colors for RGB and there like)
 Plug 'norcalli/nvim-colorizer.lua'
@@ -37,36 +54,81 @@ Plug 'itchyny/lightline.vim'
 
 " git plugin
 Plug 'tpope/vim-fugitive'
+" try out
+"Plug 'sindrets/diffview.nvim'
+
 
 " essential plugins
 Plug 'tpope/vim-surround'
 
 " debugger adapter protocoll support
 Plug 'mfussenegger/nvim-dap'
+Plug 'Pocco81/DAPInstall.nvim'
+Plug 'rcarriga/nvim-dap-ui'
 
 " file explorer like NERDtree
 Plug 'kyazdani42/nvim-web-devicons' " for file icons
 Plug 'kyazdani42/nvim-tree.lua'
+
+" telescope plugins
+Plug 'nvim-lua/popup.nvim'
+Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-telescope/telescope.nvim'
+
+" terraform plugin
+Plug 'hashivim/vim-terraform'
+
+" nice helper for registers
+Plug 'tversteeg/registers.nvim', { 'branch': 'main' }
+
+" plugin to show function signatures in a better way
+Plug 'ray-x/lsp_signature.nvim'
 
 call plug#end()
 
 " sync default registers with clipboard
 set clipboard=unnamedplus
 
-" by default, the indent is 2 spaces. 
-set shiftwidth=2
-set softtabstop=2
-set tabstop=2
+"""
+" set default tab to spaces
+"""
+" length of an actual \t character:
+set tabstop=4
+" length to use when editing text (eg. TAB and BS keys)
+" (0 for ‘tabstop’, -1 for ‘shiftwidth’):
+set softtabstop=-1
+" length to use when shifting text (eg. <<, >> and == commands)
+" (0 for ‘tabstop’):
+set shiftwidth=0
+" round indentation to multiples of 'shiftwidth' when shifting text
+" (so that it behaves like Ctrl-D / Ctrl-T):
+set shiftround
 
-" fix yaml/html indentation, 2 spaces
+" if set, only insert spaces; otherwise insert \t and complete with spaces:
+set expandtab
+
+" reproduce the indentation of the previous line:
+set autoindent
+" keep indentation produced by 'autoindent' if leaving the line blank:
+"set cpoptions+=I
+" try to be smart (increase the indenting level after ‘{’,
+" decrease it after ‘}’, and so on):
+"set smartindent
+" a stricter alternative which works better for the C language:
+"set cindent
+
+" fix yaml indentation
 autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
-autocmd Filetype html setlocal ts=2 sw=2 expandtab
-
-" for js/coffee files, 4 spaces
-autocmd Filetype javascript setlocal ts=4 sw=4 sts=0 expandtab
+autocmd FileType json setlocal ts=2 sts=2 sw=2 expandtab
+autocmd FileType tf setlocal ts=2 sts=2 sw=2 expandtab
+autocmd FileType javascript setlocal ts=4 sts=4 sw=0 expandtab
+autocmd FileType groovy setlocal ts=4 sts=4 sw=0 expandtab
 
 " set coloring for vifmrc
 autocmd BufNewFile,BufRead vifmrc set syntax=vim
+
+" this is needed for LSP terraform server to work
+autocmd BufNewFile,BufRead *.tf,*.tfvars set filetype=terraform
 
 " set scheme
 "Use 24-bit (true-color) mode in Vim/Neovim when outside tmux.
@@ -102,73 +164,40 @@ set updatetime=300
 " Don't pass messages to |ins-completion-menu|.
 set shortmess+=c
 
-" differentiate between toolbox env and regular env
-if filereadable(expand('/run/.toolboxenv'))
-	echo "You are in a toolbox"
+"""
+" setup lsp_signature
+"""
+" this needs to be called before we configure lsp servers
+lua require'lsp_signature'.setup({floating_window_above_cur_line = true})
 
-	" setup snippets support
-	lua require'snippets'.snippets = {}
-	" lua require'snippets'.use_suggested_mappings()
+luafile ~/.config/nvim/completion.lua
+luafile ~/.config/nvim/lsp-config.lua
+luafile ~/.config/nvim/dap-config.lua
+luafile ~/.config/nvim/formatter.lua
+luafile ~/.config/nvim/treesitter.lua
 
-	" This variant will set up the mappings only for the *CURRENT* buffer.
-	" lua require'snippets'.use_suggested_mappings(true)
+""" setup dap key bindings
+""" REPL (Read Evaluate Print Loop)
+nnoremap <leader>dd  <cmd>lua require("dapui").toggle()<cr>
+nnoremap <leader>db  <cmd>lua require('dap').toggle_breakpoint()<cr>
+nnoremap <leader>dBc <cmd>lua require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: '))<CR>
+nnoremap <leader>dBl <cmd>lua require('dap').set_breakpoint(nil, nil, vim.fn.input('Log point message: '))<CR>
+nnoremap <leader>dc  <cmd>lua require('dap').continue()<cr>
+nnoremap <leader>dn <cmd>lua require('dap').step_over()<cr>
+nnoremap <leader>dp <cmd>lua require('dap').step_back()<cr>
+nnoremap <leader>dsi <cmd>lua require('dap').step_into()<cr>
+nnoremap <leader>dso <cmd>lua require('dap').step_out()<cr>
+nnoremap <leader>do  <cmd>lua require('dap').repl.open()<cr>
+nnoremap <leader>drl <cmd>lua require('dap').run_last()<cr>
 
-	" There are only two keybindings specified by the suggested keymappings, which is <C-k> and <C-j>
-	" They are exactly equivalent to:
-
-	" <c-k> will either expand the current snippet at the word or try to jump to
-	" the next position for the snippet.
-	inoremap <c-k> <cmd>lua return require'snippets'.expand_or_advance(1)<CR>
-
-	" <c-j> will jump backwards to the previous field.
-	" If you jump before the first field, it will cancel the snippet.
-	inoremap <c-j> <cmd>lua return require'snippets'.advance_snippet(-1)<CR>
-
-
-	" Use completion-nvim in every buffer
-	" autocmd BufEnter * lua require'completion'.on_attach()
-	
-	" setup nvim-comple support
-	set completeopt=menuone,noselect
-	set shortmess+=c
-	" lua require'lspconfig'.rust_analyzer.setup{on_attach=require'completion'.on_attach}
-
-	let g:compe = {}
-	let g:compe.enabled = v:true
-	let g:compe.autocomplete = v:true
-	let g:compe.debug = v:false
-	let g:compe.min_length = 1
-	let g:compe.preselect = 'enable'
-	let g:compe.throttle_time = 80
-	let g:compe.source_timeout = 200
-	let g:compe.incomplete_delay = 400
-	let g:compe.max_abbr_width = 100
-	let g:compe.max_kind_width = 100
-	let g:compe.max_menu_width = 100
-	let g:compe.documentation = v:true
-
-	let g:compe.source = {}
-	let g:compe.source.path = v:true
-	let g:compe.source.buffer = v:true
-	" let g:compe.source.calc = v:true
-	" let g:compe.source.vsnip = v:true
-	let g:compe.source.snippets_nvim = v:true
-	let g:compe.source.nvim_lsp = v:true
-	let g:compe.source.nvim_lua = v:true
-	let g:compe.source.spell = v:true
-	let g:compe.source.tags = v:true
-	" let g:compe.source.treesitter = v:true
-	" let g:compe.source.omni = v:true
-
-	inoremap <silent><expr> <C-Space> compe#complete()
-	inoremap <silent><expr> <CR>      compe#confirm('<CR>')
-	inoremap <silent><expr> <C-e>     compe#close('<C-e>')
-	inoremap <silent><expr> <C-f>     compe#scroll({ 'delta': +4 })
-	inoremap <silent><expr> <C-d>     compe#scroll({ 'delta': -4 })
-
-	luafile ~/.config/nvim/lsp-config.lua
+if exists('g:vscode')
+    """ VSCode extension
+    nnoremap gi <Cmd>call VSCodeNotify('editor.action.goToImplementation')<CR>
+    nnoremap gen <Cmd>call VSCodeNotify('editor.action.marker.next')<CR>
+    nnoremap gef <Cmd>call VSCodeNotify('editor.action.marker.nextInFiles')<CR>
+    nnoremap gep <Cmd>call VSCodeNotify('editor.action.marker.prev')<CR>
 else
-	echo "You are NOT in a toolbox"
+    """ ordinary neovim
 endif
 
 " Always show the signcolumn, otherwise it would shift the text each time
@@ -179,22 +208,6 @@ endif
 "else
 "  set signcolumn=yes
 "endif
-
-
-"""
-" nvim lsp plugin mappings
-"""
-" nnoremap <silent> <c-]> <cmd>lua vim.lsp.buf.definition()<CR>
-" nnoremap <silent> K     <cmd>lua vim.lsp.buf.hover()<CR>
-" nnoremap <silent> gD    <cmd>lua vim.lsp.buf.implementation()<CR>
-" nnoremap <silent> <c-k> <cmd>lua vim.lsp.buf.signature_help()<CR>
-" nnoremap <silent> 1gD   <cmd>lua vim.lsp.buf.type_definition()<CR>
-" nnoremap <silent> gr    <cmd>lua vim.lsp.buf.references()<CR>
-" nnoremap <silent> g0    <cmd>lua vim.lsp.buf.document_symbol()<CR>
-" nnoremap <silent> gW    <cmd>lua vim.lsp.buf.workspace_symbol()<CR>
-" nnoremap <silent> gd    <cmd>lua vim.lsp.buf.declaration()<CR>
-
-
 
 """
 " nvim-tree.lua plugin settings
@@ -234,9 +247,16 @@ let g:nvim_tree_icons = {
     \   }
     \ }
 
+lua require'nvim-tree'.setup {
+    \ update_focused_file = {
+    \     update_cwd = false
+    \   }
+    \ }
+
 " nnoremap <C-n> :NvimTreeToggle<CR>
 nnoremap <leader>r :NvimTreeRefresh<CR>
-nnoremap <leader>n :NvimTreeFindFile<CR>
+nnoremap <leader>n :NvimTreeToggle<CR>
+nnoremap <leader>nf :NvimTreeFindFile<CR>
 
 set termguicolors " this variable must be enabled for colors to be applied properly
 
@@ -244,14 +264,71 @@ set termguicolors " this variable must be enabled for colors to be applied prope
 " lightline config
 """
 let g:lightline = {
-      \ 'colorscheme': 'wombat',
-      \ 'active': {
-      \   'left': [ [ 'mode', 'paste' ],
-      \             [ 'gitbranch', 'readonly', 'filename', 'modified' ] ]
-      \ },
-      \ 'component_function': {
-      \   'gitbranch': 'FugitiveHead'
-      \ },
-      \ }
+	\ 'colorscheme': 'wombat',
+	\ 'active': {
+	\   'left': [ [ 'mode', 'paste' ],
+	\             [ 'gitbranch', 'readonly', 'filename', 'modified' ] ]
+	\ },
+	\ 'component_function': {
+	\   'gitbranch': 'FugitiveHead',
+	\   'filename': 'LightlineFilename',
+	\ },
+	\ }
+
+function! LightlineFilename()
+  let root = fnamemodify(get(b:, 'git_dir'), ':h')
+  let path = expand('%:p')
+  if path[:len(root)-1] ==# root
+    return path[len(root)+1:]
+  endif
+  return expand('%')
+endfunction
+
+"""
+" Telescope config
+"""
+
+" Find files using Telescope command-line sugar.
+" nnoremap <leader>ff <cmd>Telescope find_files<cr>
+
+" Using Lua functions
+nnoremap <leader>ff <cmd>lua require('telescope.builtin').find_files()<cr>
+nnoremap <leader>fw <cmd>lua require('telescope.builtin').grep_string({search=vim.fn.expand('<cword>')})<cr>
+nnoremap <leader>fg <cmd>lua require('telescope.builtin').live_grep()<cr>
+nnoremap <leader>fb <cmd>lua require('telescope.builtin').buffers()<cr>
+nnoremap <leader>fh <cmd>lua require('telescope.builtin').help_tags()<cr>
+nnoremap <leader>fgb <cmd>lua require('telescope.builtin').git_branches()<cr>
+nnoremap <leader>fgc <cmd>lua require('telescope.builtin').git_commits()<cr>
+nnoremap <leader>fi <cmd>lua require('telescope.builtin').lsp_implementations()<cr>
+nnoremap <leader>fs <cmd>lua require('telescope.builtin').lsp_document_symbols()<cr>
+nnoremap <leader>fsm <cmd>lua require('telescope.builtin').lsp_document_symbols({symbols='method'})<cr>
+nnoremap <leader>fsw <cmd>lua require('telescope.builtin').lsp_workspace_symbols()<cr>
+nnoremap <leader>fsc <cmd>lua require('telescope.builtin').lsp_workspace_symbols({symbols='class'})<cr>
+
+"""
+" remappings for easier switching between windows
+"""
+nnoremap <C-H> <C-W>h
+nnoremap <C-J> <C-W>j
+nnoremap <C-K> <C-W>k
+nnoremap <C-L> <C-W>l
+
+"""
+" custom commands
+"""
+
+" configure terminal
+autocmd TermOpen * setlocal nonumber norelativenumber
+" open new terminal in the current files path
+command Dterm new %:p:h | lcd % | terminal
+command Sterm split | terminal
+command Vterm vsplit | terminal
+
+" insert new uuid in current cursor location
+command Nuuid exe 'norm i' . system("uuidgen | tr -d '\n'")
+" format whole json file 
+command FormatJson %!jq .
+
+"set list | set lcs+=space:·
 
 " we can check if we using nvim in vscode plugin with exists('g:vscode')
