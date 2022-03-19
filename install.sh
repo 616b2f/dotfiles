@@ -6,13 +6,11 @@ cp ./yum.repos.d/* /etc/yum.repos.d/
 rpm-ostree update
 
 # fedora silverblue packages
-PACKAGES="code \
-fedora-workstation-repositories \
-gnome-tweak-tool \
-google-chrome-stable \
-moby-engine \
+PACKAGES="\
 git \
 git-lfs \
+polkit-gnome \
+google-chrome-stable \
 neovim \
 tmux \
 vifm \
@@ -29,4 +27,4 @@ wl-clipboard \
 brightnessctl \
 "
 
-rpm-ostree install $PACKAGES
+rpm-ostree install --allow-inactive --idempotent $PACKAGES

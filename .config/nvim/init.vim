@@ -107,6 +107,9 @@ set shiftround
 " if set, only insert spaces; otherwise insert \t and complete with spaces:
 set expandtab
 
+" show special characters like tabs and trailing spaces
+set list
+
 " reproduce the indentation of the previous line:
 set autoindent
 " keep indentation produced by 'autoindent' if leaving the line blank:
