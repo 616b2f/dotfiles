@@ -11,8 +11,11 @@ sudo dnf install -y wl-clipboard
 # install neovim nightly
 sudo dnf copr enable agriffis/neovim-nightly
 # telescope prerequisites
-sudo dnf install -y ripgrep
+sudo dnf install -y ripgrep jq
 sudo dnf install -y neovim python3-neovim
+
+# update plugins
+nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
 
 # rust prerequisites
 sudo dnf install -y gcc
@@ -25,3 +28,12 @@ sudo dnf install -y golang
 # dependecy for wally-cli
 #sudo dnf install -y libusb
 #go get -u github.com/zsa/wally-cli
+
+# patched font with icons
+sudo dnf install fontconfig
+TMP_DIR=$(mktemp -d)
+FONT_DIR="$HOME/.local/share/fonts/NerdFonts"
+curl -Lo $TMP_DIR/DejaVuSansMono.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/DejaVuSansMono.zip
+mkdir -pv $FONT_DIR
+unzip -od $FONT_DIR/ $TMP_DIR/DejaVuSansMono.zip
+fc-cache -vf "$FONT_DIR"
