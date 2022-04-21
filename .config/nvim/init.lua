@@ -196,6 +196,42 @@ vim.o.cmdheight=2
 -- delays and poor user experience.
 vim.o.updatetime=300
 
+vim.g.nvim_tree_git_hl=1 -- 0 by default, will enable file highlight for git attributes (can be used without the icons).
+vim.g.nvim_tree_add_trailing=1
+vim.g.nvim_tree_tab_open = 1 -- 0 by default, will open the tree when entering a new tab and the tree was previously open
+vim.g.nvim_tree_show_icons = {
+    git = 0,
+    folders = 1,
+    files = 0,
+}
+-- default shows no icon by default
+vim.g.nvim_tree_icons = {
+     git = {
+       unstaged = "✗",
+       staged = "✚",
+       unmerged = "═",
+       renamed = "➜",
+       untracked = "★"
+     },
+     folder = {
+       default = "",
+       open = "",
+       empty = "",
+       empty_open = ""
+     }
+ };
+
+require'nvim-tree'.setup {
+    update_cwd = false,
+    udate_focused_file = {
+        update_cwd = false
+    }
+}
+
+vim.api.nvim_set_keymap('n', '<leader>r', [[<cmd>NvimTreeRefresh<CR>]], { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>n', [[<cmd>NvimTreeToggle<CR>]], { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>nf', [[<cmd>NvimTreeFindFile<CR>]], { noremap = true, silent = true })
+
 -- Set statusbar
 require('lualine').setup {
   options = {

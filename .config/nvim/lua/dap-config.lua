@@ -1,33 +1,33 @@
-local dap_install = require("dap-install")
-local dbg_list = require("dap-install.api.debuggers").get_installed_debuggers()
+local dap_buddy = require("dap-buddy")
+-- local dbg_list = require("dap-install.api.debuggers").get_installed_debuggers()
 
-for _, debugger in ipairs(dbg_list) do
-    -- if debugger == "dnetcs" then
-    --     dap_install.config(
-    --         "dnetcs",
-    --         {
-    --             adapters = {
-    --                 type = 'executable',
-    --                 command = '~/.local/bin/netcoredbg',
-    --                 args = {'--interpreter=vscode'}
-    --             },
-    --             configurations = {
-    --                 {
-    --                     type = "netcoredbg",
-    --                     name = "launch - netcoredbg",
-    --                     request = "launch",
-    --                     program = function()
-    --                         return vim.fn.input('Path to dll', vim.fn.getcwd() .. '/bin/Debug/', 'file')
-    --                     end,
-    --                 }
-    --             }
-    --         }
-    --     )
-    -- else
-        dap_install.config(debugger)
-    -- end
-end
-
+-- for _, debugger in ipairs(dbg_list) do
+--     -- if debugger == "dnetcs" then
+--     --     dap_install.config(
+--     --         "dnetcs",
+--     --         {
+--     --             adapters = {
+--     --                 type = 'executable',
+--     --                 command = '~/.local/bin/netcoredbg',
+--     --                 args = {'--interpreter=vscode'}
+--     --             },
+--     --             configurations = {
+--     --                 {
+--     --                     type = "netcoredbg",
+--     --                     name = "launch - netcoredbg",
+--     --                     request = "launch",
+--     --                     program = function()
+--     --                         return vim.fn.input('Path to dll', vim.fn.getcwd() .. '/bin/Debug/', 'file')
+--     --                     end,
+--     --                 }
+--     --             }
+--     --         }
+--     --     )
+--     -- else
+--         dap_install.config(debugger)
+--     -- end
+-- end
+--
 require("dapui").setup()
 
 -- local dap_install = require("dap-install")
