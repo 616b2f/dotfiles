@@ -86,12 +86,17 @@ require('packer').startup(function(use)
 
   -- debugger adapter protocoll support
   use 'mfussenegger/nvim-dap'
-  use 'Pocco81/DAPInstall.nvim'
+  use 'Pocco81/dap-buddy.nvim'
   use 'rcarriga/nvim-dap-ui'
   -- use 'nvim-telescope/telescope-dap.nvim'
 
   -- file explorer like NERDtree
-  -- use 'kyazdani42/nvim-tree.lua'
+  use {
+      'kyazdani42/nvim-tree.lua',
+      requires = {
+        'kyazdani42/nvim-web-devicons', -- optional, for file icon
+      }
+  }
   -- use "nvim-telescope/telescope-file-browser.nvim"
 
   -- terraform plugin
@@ -107,6 +112,10 @@ require('packer').startup(function(use)
     require('packer').sync()
   end
 end)
+
+-- enable filetype.lua and disable filetype.vim
+vim.g.do_filetype_lua = 1
+vim.g.did_load_filetypes = 0
 
 -- sync default registers with clipboard
 vim.o.clipboard="unnamedplus"
