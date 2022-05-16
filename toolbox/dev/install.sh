@@ -8,11 +8,14 @@ sudo dnf update -y
 # wl-clipboard also needed for copy from inside neovim
 sudo dnf install -y wl-clipboard
 
+# treesitter prerequisites
+sudo dnf install -y gcc libstdc++-static
+
 # install neovim nightly
 sudo dnf copr enable agriffis/neovim-nightly -y
 
 # telescope prerequisites
-sudo dnf install -y ripgrep jq
+sudo dnf install -y ripgrep jq fd-find
 sudo dnf install -y neovim python3-neovim
 
 # update plugins

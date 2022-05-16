@@ -11,6 +11,8 @@ git \
 git-lfs \
 polkit-gnome \
 google-chrome-stable \
+fd-find \
+ripgrep \
 neovim \
 tmux \
 vifm \
