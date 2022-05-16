@@ -35,7 +35,7 @@ require('packer').startup(function(use)
   use 'nvim-treesitter/nvim-treesitter'
   -- use 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  -- We recommend updating the parsers on update
   use 'nvim-treesitter/nvim-treesitter-textobjects' -- Additional textobjects for treesitter
-  --use 'nvim-treesitter/playground'
+  use 'nvim-treesitter/playground'
 
   -- nvim lsp support
   use 'neovim/nvim-lspconfig' -- Collection of configurations for built-in LSP client
@@ -86,9 +86,13 @@ require('packer').startup(function(use)
 
   -- debugger adapter protocoll support
   use 'mfussenegger/nvim-dap'
-  use 'Pocco81/dap-buddy.nvim'
+  use { 'Pocco81/dap-buddy.nvim', branch = "dev" }
   use 'rcarriga/nvim-dap-ui'
   -- use 'nvim-telescope/telescope-dap.nvim'
+
+  -- unit test plugins
+  -- use 'klen/nvim-test'
+  use "klen/nvim-test"
 
   -- file explorer like NERDtree
   use {
@@ -207,7 +211,6 @@ vim.o.updatetime=300
 
 vim.g.nvim_tree_git_hl=1 -- 0 by default, will enable file highlight for git attributes (can be used without the icons).
 vim.g.nvim_tree_add_trailing=1
-vim.g.nvim_tree_tab_open = 1 -- 0 by default, will open the tree when entering a new tab and the tree was previously open
 vim.g.nvim_tree_show_icons = {
     git = 0,
     folders = 1,
@@ -232,7 +235,7 @@ vim.g.nvim_tree_icons = {
 
 require'nvim-tree'.setup {
     update_cwd = false,
-    udate_focused_file = {
+    update_focused_file = {
         update_cwd = false
     }
 }
@@ -397,6 +400,50 @@ require('luasnip-config')
 -- require('snippets-config')
 -- require('luasnip-config')
 
+require('nvim-test').setup {
+  run = true,                 -- run tests (using for debug)
+  commands_create = true,     -- create commands (TestFile, TestLast, ...)
+  filename_modifier = ":.",   -- modify filenames before tests run(:h filename-modifiers)
+  silent = false,             -- less notifications
+  term = "terminal",          -- a terminal to run ("terminal"|"toggleterm")
+  termOpts = {
+    direction = "vertical",   -- terminal's direction ("horizontal"|"vertical"|"float")
+    width = 96,               -- terminal's width (for vertical|float)
+    height = 24,              -- terminal's height (for horizontal|float)
+    go_back = false,          -- return focus to original window after executing
+    stopinsert = "auto",      -- exit from insert mode (true|false|"auto")
+    keep_one = true,          -- keep only one terminal for testing
+  },
+  runners = {               -- setup tests runners
+    cs = "nvim-test.runners.csharp-test",
+    go = "nvim-test.runners.go-test",
+  }
+}
+
+require('nvim-test.runners.csharp-test'):setup {
+    command = "dotnet",
+    args = { "test", "-v", "normal" },
+
+    file_pattern = "\\v(test?/.*|Tests)\\.(cs)$",
+    find_files = { "{name}.test.{ext}", "Tests.{ext}" },                  -- find testfile for a file
+
+    -- file_pattern = "\\v(__tests__/.*|(spec|test))\\.(js|jsx|coffee|ts|tsx)$",   -- determine whether a file is a testfile
+    -- find_files = { "{name}.test.{ext}", "{name}.spec.{ext}" },                  -- find testfile for a file
+
+    -- filename_modifier = nil,                                                    -- modify filename before tests run (:h filename-modifiers)
+    -- working_directory = nil,                                                    -- set working directory (cwd by default)
+  }
+
+require('nvim-test.runners.go-test'):setup {
+    command = "go",
+    args = { "test", "-v" },
+
+    file_pattern = "\\v([^.]+_test)\\.go$",   -- determine whether a file is a testfile
+    find_files = { "{name}_test.go" },                  -- find testfile for a file
+
+    -- filename_modifier = nil,                                                    -- modify filename before tests run (:h filename-modifiers)
+    -- working_directory = nil,                                                    -- set working directory (cwd by default)
+  }
 
 -- -- LSP settings
 -- local lspconfig = require 'lspconfig'

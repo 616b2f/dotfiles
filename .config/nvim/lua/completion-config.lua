@@ -38,6 +38,8 @@ cmp.setup {
       behavior = cmp.ConfirmBehavior.Replace,
       select = true,
     },
+    ['<C-n>'] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
+    ['<C-p>'] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
 
     ["<c-space>"] = cmp.mapping.complete(),
   },
@@ -114,7 +116,9 @@ cmp.setup {
 
   experimental = {
     -- I like the new menu better! Nice work hrsh7th
-    native_menu = false,
+    view = {
+        entries = 'native'
+    },
 
     -- Let's play with this for a day or two
     ghost_text = true,
