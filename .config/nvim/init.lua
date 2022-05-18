@@ -77,8 +77,10 @@ require('packer').startup(function(use)
   --use 'junegunn/fzf.vim'
 
   -- lightline plugin for pretty statusline
-  use 'nvim-lualine/lualine.nvim' -- Fancier statusline
-  use 'kyazdani42/nvim-web-devicons' -- for file icons
+  use {
+    'nvim-lualine/lualine.nvim', -- Fancier statusline
+    requires = { 'kyazdani42/nvim-web-devicons', opt = true } -- for file icons
+  }
   -- use 'itchyny/lightline.vim'
 
   -- essential plugins
