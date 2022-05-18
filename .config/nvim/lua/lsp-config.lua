@@ -1,5 +1,5 @@
 require("nvim-lsp-installer").setup {
-    ensure_installed = { "sumneko_lua", "jsonls", "yamlls", "bashls", "omnisharp" },
+    ensure_installed = { "sumneko_lua", "jsonls", "yamlls", "bashls", "omnisharp", "gopls", "rust_analyzer" },
     automatic_installation = true
 }
 
@@ -125,3 +125,9 @@ config.settings = {
     }
 }
 lspconfig.sumneko_lua.setup(config)
+
+local config = make_config()
+lspconfig.gopls.setup(config)
+
+local config = make_config()
+lspconfig.rust_analyzer.setup(config)

@@ -417,12 +417,12 @@ require('nvim-test').setup {
     keep_one = true,          -- keep only one terminal for testing
   },
   runners = {               -- setup tests runners
-    cs = "nvim-test.runners.csharp-test",
+    cs = "nvim-test.runners.dotnet",
     go = "nvim-test.runners.go-test",
   }
 }
 
-require('nvim-test.runners.csharp-test'):setup {
+require('nvim-test.runners.dotnet'):setup {
     command = "dotnet",
     args = { "test", "-v", "normal" },
 
