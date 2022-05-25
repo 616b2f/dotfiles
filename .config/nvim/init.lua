@@ -31,6 +31,16 @@ require('packer').startup(function(use)
   --use 'tpope/vim-rhubarb' -- Fugitive-companion to interact with github
   --use 'sindrets/diffview.nvim'
 
+  -- movement
+  use {
+    'phaazon/hop.nvim',
+    branch = 'v1', -- optional but strongly recommended
+    config = function()
+      -- you can configure Hop the way you like here; see :h hop-config
+      require'hop'.setup()
+    end
+  }
+
   -- Highlight, edit, and navigate code using a fast incremental parsing library
   use 'nvim-treesitter/nvim-treesitter'
   -- use 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  -- We recommend updating the parsers on update
@@ -259,6 +269,7 @@ require('lualine').setup {
 
 -- use global statusline
 -- vim.o.laststatus=3
+vim.o.winbar='%f'
 
 -- Enable Comment.nvim
 require('Comment').setup()
@@ -335,6 +346,10 @@ vim.api.nvim_set_keymap('n', '<leader>dso', [[<cmd>lua require('dap').step_out()
 vim.api.nvim_set_keymap('n', '<leader>do', [[<cmd>lua require('dap').repl.open()<CR>]], { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>drl', [[<cmd>lua require('dap').run_last()<CR>]], { noremap = true, silent = true })
 
+-- hop mappings
+vim.api.nvim_set_keymap('n', '<space>f', [[<cmd>lua require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.AFTER_CURSOR, current_line_only = false })<cr>]], {})
+vim.api.nvim_set_keymap('n', '<space>F', [[<cmd>lua require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.BEFORE_CURSOR, current_line_only = false })<cr>]], {})
+
 -- remappings for easier switching between windows
 -- vim.api.nvim_set_keymap('n', '<C-H>', '<C-W>h', { noremap = true, silent = true })
 -- vim.api.nvim_set_keymap('n', '<C-J>', '<C-W>j', { noremap = true, silent = true })
@@ -353,7 +368,7 @@ vim.api.nvim_set_keymap('n', '<leader>fgb', [[<cmd>lua require('telescope.builti
 vim.api.nvim_set_keymap('n', '<leader>fgc', [[<cmd>lua require('telescope.builtin').git_commits()<CR>]], { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>fi', [[<cmd>lua require('telescope.builtin').lsp_implementations()<CR>]], { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>fs', [[<cmd>lua require('telescope.builtin').lsp_document_symbols()<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>fm', [[<cmd>lua require('telescope.builtin').lsp_document_symbols({symbols='method'})<CR>]], { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>fm', [[<cmd>lua require('telescope.builtin').lsp_document_symbols({symbols={'method','function'}})<CR>]], { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>fsw', [[<cmd>lua require('telescope.builtin').lsp_workspace_symbols()<CR>]], { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>fc', [[<cmd>lua require('telescope.builtin').lsp_workspace_symbols({symbols='class'})<CR>]], { noremap = true, silent = true })
 
@@ -467,5 +482,8 @@ require('nvim-test.runners.go-test'):setup {
 --   vim.cmd [[ command! Format execute 'lua vim.lsp.buf.formatting()' ]]
 -- end
 --
+
+-- custom commands
+vim.api.nvim_create_user_command('GenUuid', "r !uuidgen | tr -d '\n'", {})
 
 -- vim: ts=2 sts=2 sw=2 et
