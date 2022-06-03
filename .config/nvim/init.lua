@@ -2,7 +2,8 @@
 local fn = vim.fn
 local install_path = fn.stdpath('data')..'/site/pack/packer/start/packer.nvim'
 if fn.empty(fn.glob(install_path)) > 0 then
-  packer_bootstrap = fn.system({'git', 'clone', '--depth', '1', 'https://github.com/wbthomason/packer.nvim', install_path})
+   packer_bootstrap = fn.system({'git', 'clone', '--depth', '1', 'https://github.com/wbthomason/packer.nvim', install_path})
+   vim.o.runtimepath = vim.fn.stdpath('data') .. '/site/pack/*/start/*,' .. vim.o.runtimepath
 end
 
 require('packer').startup(function(use)
@@ -31,16 +32,6 @@ require('packer').startup(function(use)
   --use 'tpope/vim-rhubarb' -- Fugitive-companion to interact with github
   --use 'sindrets/diffview.nvim'
 
-  -- movement
-  use {
-    'phaazon/hop.nvim',
-    branch = 'v1', -- optional but strongly recommended
-    config = function()
-      -- you can configure Hop the way you like here; see :h hop-config
-      require'hop'.setup()
-    end
-  }
-
   -- Highlight, edit, and navigate code using a fast incremental parsing library
   use 'nvim-treesitter/nvim-treesitter'
   -- use 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  -- We recommend updating the parsers on update
@@ -62,6 +53,25 @@ require('packer').startup(function(use)
   use 'saadparwaiz1/cmp_luasnip'
   use 'L3MON4D3/LuaSnip' -- Snippets plugin
   use 'rafamadriz/friendly-snippets' -- basic snippets
+  use {
+    "danymat/neogen", -- documentation generation
+    -- config = function()
+    --   require('neogen').setup {
+    --     enabled = true,
+    --     snippet_engine = "luasnip",
+    --     languages = {
+    --       c_sharp = {
+    --           template = {
+    --               annotation_convention = "xmldoc" -- for a full list of annotation_conventions, see supported-languages below,
+    --           }
+    --       },
+    --     }
+    --   }
+    -- end,
+    requires = "nvim-treesitter/nvim-treesitter",
+    -- Uncomment next line if you want to follow only stable versions
+    -- tag = "*"
+  }
 
   -- custom formatters
   use 'mhartington/formatter.nvim'
@@ -112,6 +122,15 @@ require('packer').startup(function(use)
       requires = {
         'kyazdani42/nvim-web-devicons', -- optional, for file icon
       }
+  }
+
+  use {
+    'phaazon/hop.nvim',
+    branch = 'v1', -- optional but strongly recommended
+    config = function()
+      -- you can configure Hop the way you like here; see :h hop-config
+      require'hop'.setup()
+    end
   }
   -- use "nvim-telescope/telescope-file-browser.nvim"
 
@@ -179,6 +198,9 @@ vim.cmd [[
 
     " this is needed for LSP terraform server to work
     autocmd BufNewFile,BufRead *.tf,*.tfvars set filetype=terraform
+
+    " set intendation for *.csproj files
+    autocmd BufNewFile,BufRead *.csproj setlocal ts=2 sts=2 sw=2 expandtab
 ]]
 
 -- Set highlight on search
@@ -221,35 +243,38 @@ vim.o.cmdheight=2
 -- delays and poor user experience.
 vim.o.updatetime=300
 
-vim.g.nvim_tree_git_hl=1 -- 0 by default, will enable file highlight for git attributes (can be used without the icons).
-vim.g.nvim_tree_add_trailing=1
-vim.g.nvim_tree_show_icons = {
-    git = 0,
-    folders = 1,
-    files = 0,
-}
--- default shows no icon by default
-vim.g.nvim_tree_icons = {
-     git = {
-       unstaged = "✗",
-       staged = "✚",
-       unmerged = "═",
-       renamed = "➜",
-       untracked = "★"
-     },
-     folder = {
-       default = "",
-       open = "",
-       empty = "",
-       empty_open = ""
-     }
- };
-
 require'nvim-tree'.setup {
-    update_cwd = false,
-    update_focused_file = {
-        update_cwd = false
+  update_cwd = false,
+  update_focused_file = {
+      update_cwd = false
+  },
+  renderer = {
+    highlight_git = true, -- 0 by default, will enable file highlight for git attributes (can be used without the icons).
+    add_trailing = true,
+    icons = {
+      show = {
+          git = false,
+          folder = true,
+          file = false,
+          folder_arrow = true,
+      },
+      glyphs = { -- default shows no icon by default
+        git = {
+          unstaged = "✗",
+          staged = "✚",
+          unmerged = "═",
+          renamed = "➜",
+          untracked = "★"
+        },
+        folder = {
+          default = "",
+          open = "",
+          empty = "",
+          empty_open = ""
+        }
+      }
     }
+  }
 }
 
 vim.api.nvim_set_keymap('n', '<leader>r', [[<cmd>NvimTreeRefresh<CR>]], { noremap = true, silent = true })
@@ -257,6 +282,7 @@ vim.api.nvim_set_keymap('n', '<leader>n', [[<cmd>NvimTreeToggle<CR>]], { noremap
 vim.api.nvim_set_keymap('n', '<leader>nf', [[<cmd>NvimTreeFindFile<CR>]], { noremap = true, silent = true })
 
 -- Set statusbar
+vim.o.winbar="%f"
 require('lualine').setup {
   options = {
     icons_enabled = true,
@@ -267,9 +293,19 @@ require('lualine').setup {
   }
 }
 
+require('neogen').setup {
+  snippet_engine = 'luasnip',
+  languages = {
+    cs = {
+      template = {
+        annotation_convention = 'xmldoc' -- for a full list of annotation_conventions, see supported-languages below,
+      }
+    },
+  }
+}
+
 -- use global statusline
 -- vim.o.laststatus=3
-vim.o.winbar='%f'
 
 -- Enable Comment.nvim
 require('Comment').setup()
@@ -323,6 +359,13 @@ require('neogit').setup {
 -- Telescope
 require('telescope').setup {
   defaults = {
+    file_ignore_patterns = {
+      -- ignore dotnet generated folders in the file search
+      "^bin/",
+      "^obj/",
+      "/bin/",
+      "/obj/",
+    },
     mappings = {
       i = {
         ['<C-u>'] = false,
@@ -346,15 +389,18 @@ vim.api.nvim_set_keymap('n', '<leader>dso', [[<cmd>lua require('dap').step_out()
 vim.api.nvim_set_keymap('n', '<leader>do', [[<cmd>lua require('dap').repl.open()<CR>]], { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>drl', [[<cmd>lua require('dap').run_last()<CR>]], { noremap = true, silent = true })
 
--- hop mappings
-vim.api.nvim_set_keymap('n', '<space>f', [[<cmd>lua require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.AFTER_CURSOR, current_line_only = false })<cr>]], {})
-vim.api.nvim_set_keymap('n', '<space>F', [[<cmd>lua require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.BEFORE_CURSOR, current_line_only = false })<cr>]], {})
-
 -- remappings for easier switching between windows
 -- vim.api.nvim_set_keymap('n', '<C-H>', '<C-W>h', { noremap = true, silent = true })
 -- vim.api.nvim_set_keymap('n', '<C-J>', '<C-W>j', { noremap = true, silent = true })
 -- vim.api.nvim_set_keymap('n', '<C-K>', '<C-W>k', { noremap = true, silent = true })
 -- vim.api.nvim_set_keymap('n', '<C-L>', '<C-W>l', { noremap = true, silent = true })
+
+-- hop mappings
+vim.api.nvim_set_keymap('n', '<space>f', [[<cmd>lua require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.AFTER_CURSOR, current_line_only = false })<CR>]], { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<space>F', [[<cmd>lua require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.BEFORE_CURSOR, current_line_only = false })<CR>]], { noremap = true, silent = true })
+
+-- neogen mappings
+vim.api.nvim_set_keymap("n", "<space>df", ":lua require('neogen').generate()<CR>", { noremap = true, silent = true })
 
 -- Enable telescope fzf native
 -- require('telescope').load_extension 'fzf'
@@ -371,6 +417,13 @@ vim.api.nvim_set_keymap('n', '<leader>fs', [[<cmd>lua require('telescope.builtin
 vim.api.nvim_set_keymap('n', '<leader>fm', [[<cmd>lua require('telescope.builtin').lsp_document_symbols({symbols={'method','function'}})<CR>]], { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>fsw', [[<cmd>lua require('telescope.builtin').lsp_workspace_symbols()<CR>]], { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>fc', [[<cmd>lua require('telescope.builtin').lsp_workspace_symbols({symbols='class'})<CR>]], { noremap = true, silent = true })
+-- vim.api.nvim_set_keymap('n', '<leader>sf', [[<cmd>lua require('telescope.builtin').find_files({previewer = false})<CR>]], { noremap = true, silent = true })
+-- vim.api.nvim_set_keymap('n', '<leader>sb', [[<cmd>lua require('telescope.builtin').current_buffer_fuzzy_find()<CR>]], { noremap = true, silent = true })
+-- vim.api.nvim_set_keymap('n', '<leader>sh', [[<cmd>lua require('telescope.builtin').help_tags()<CR>]], { noremap = true, silent = true })
+-- vim.api.nvim_set_keymap('n', '<leader>st', [[<cmd>lua require('telescope.builtin').tags()<CR>]], { noremap = true, silent = true })
+-- vim.api.nvim_set_keymap('n', '<leader>sd', [[<cmd>lua require('telescope.builtin').grep_string()<CR>]], { noremap = true, silent = true })
+-- vim.api.nvim_set_keymap('n', '<leader>so', [[<cmd>lua require('telescope.builtin').tags{ only_current_buffer = true }<CR>]], { noremap = true, silent = true })
+-- vim.api.nvim_set_keymap('n', '<leader>?', [[<cmd>lua require('telescope.builtin').oldfiles()<CR>]], { noremap = true, silent = true })
 
 -- -- custom commands
 -- -- open new terminal in the current files path
@@ -385,18 +438,6 @@ vim.cmd [[
   " configure terminal
   autocmd TermOpen * setlocal nonumber norelativenumber
 ]]
-
-
---Add leader shortcuts
--- vim.api.nvim_set_keymap('n', '<leader><space>', [[<cmd>lua require('telescope.builtin').buffers()<CR>]], { noremap = true, silent = true })
--- vim.api.nvim_set_keymap('n', '<leader>sf', [[<cmd>lua require('telescope.builtin').find_files({previewer = false})<CR>]], { noremap = true, silent = true })
--- vim.api.nvim_set_keymap('n', '<leader>sb', [[<cmd>lua require('telescope.builtin').current_buffer_fuzzy_find()<CR>]], { noremap = true, silent = true })
--- vim.api.nvim_set_keymap('n', '<leader>sh', [[<cmd>lua require('telescope.builtin').help_tags()<CR>]], { noremap = true, silent = true })
--- vim.api.nvim_set_keymap('n', '<leader>st', [[<cmd>lua require('telescope.builtin').tags()<CR>]], { noremap = true, silent = true })
--- vim.api.nvim_set_keymap('n', '<leader>sd', [[<cmd>lua require('telescope.builtin').grep_string()<CR>]], { noremap = true, silent = true })
--- vim.api.nvim_set_keymap('n', '<leader>sp', [[<cmd>lua require('telescope.builtin').live_grep()<CR>]], { noremap = true, silent = true })
--- vim.api.nvim_set_keymap('n', '<leader>so', [[<cmd>lua require('telescope.builtin').tags{ only_current_buffer = true }<CR>]], { noremap = true, silent = true })
--- vim.api.nvim_set_keymap('n', '<leader>?', [[<cmd>lua require('telescope.builtin').oldfiles()<CR>]], { noremap = true, silent = true })
 
 -- -- Diagnostic keymaps
 vim.api.nvim_set_keymap('n', '<leader>e', '<cmd>lua vim.diagnostic.open_float()<CR>', { noremap = true, silent = true })
@@ -481,7 +522,6 @@ require('nvim-test.runners.go-test'):setup {
 --   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<leader>so', [[<cmd>lua require('telescope.builtin').lsp_document_symbols()<CR>]], opts)
 --   vim.cmd [[ command! Format execute 'lua vim.lsp.buf.formatting()' ]]
 -- end
---
 
 -- custom commands
 vim.api.nvim_create_user_command('GenUuid', "r !uuidgen | tr -d '\n'", {})

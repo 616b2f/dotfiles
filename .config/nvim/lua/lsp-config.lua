@@ -34,7 +34,7 @@ local on_attach = function(client, bufnr)
   buf_set_keymap('n', '[d', '<cmd>lua vim.diagnostic.goto_prev()<CR>', opts)
   buf_set_keymap('n', ']d', '<cmd>lua vim.diagnostic.goto_next()<CR>', opts)
   buf_set_keymap('n', '<space>q', '<cmd>lua vim.diagnostic.setqflist()<CR>', opts)
-  buf_set_keymap('n', '<space>qe', '<cmd>lua vim.diagnostic.setqflist({severity_limit=\'Error\'})<CR>', opts)
+  buf_set_keymap('n', '<space>qe', '<cmd>lua vim.diagnostic.setqflist({severity=vim.diagnostic.severity.ERROR})<CR>', opts)
   buf_set_keymap('n', '<space>ql', '<cmd>lua vim.diagnostic.setloclist()<CR>', opts)
 
   -- Set some keybinds conditional on server capabilities
@@ -84,10 +84,19 @@ config.settings = {
         completion = true,
         hover = true,
         validate = true,
-        schemas = {
-            Kubernetes= "/*.yaml"
-        },
+        -- schemas = {
+        --     -- ['http://json.schemastore.org/github-workflow'] = '.github/workflows/*.{yml,yaml}',
+        --     -- "https://raw.githubusercontent.com/instrumenta/kubernetes-json-schema/master/v1.18.0-standalone-strict/all.json": [ "/*.k8s.yaml" ],
+        --     -- ["https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.22.0/deployment-apps-v1.json"] = "/*.yaml"
+        --     Kubernetes= "/*.yaml",
+        --     ["http://json.schemastore.org/kustomization"] = "kustomization.yaml",
+        --     ["https://raw.githubusercontent.com/GoogleContainerTools/skaffold/master/docs/content/en/schemas/v2beta26.json"] = "skaffold.yaml"
+        -- },
         format = {
+            enable = true
+        },
+        schemaStore = {
+            url = "https://www.schemastore.org/api/json/catalog.json",
             enable = true
         }
     },
