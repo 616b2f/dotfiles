@@ -475,6 +475,7 @@ require('nvim-test').setup {
   runners = {               -- setup tests runners
     cs = "nvim-test.runners.dotnet",
     go = "nvim-test.runners.go-test",
+    rust = "nvim-test.runners.cargo-test",
   }
 }
 
