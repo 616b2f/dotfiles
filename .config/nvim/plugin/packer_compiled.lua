@@ -166,7 +166,6 @@ _G.packer_plugins = {
     url = "https://github.com/nvim-lualine/lualine.nvim"
   },
   neogen = {
-    config = { "\27LJ\2\nœ\1\0\0\6\0\n\0\r6\0\0\0'\2\1\0B\0\2\0029\0\2\0005\2\3\0005\3\a\0005\4\5\0005\5\4\0=\5\6\4=\4\b\3=\3\t\2B\0\2\1K\0\1\0\14languages\vcsharp\1\0\0\rtemplate\1\0\0\1\0\1\26annotation_convention\vxmldoc\1\0\1\fenabled\2\nsetup\vneogen\frequire\0" },
     loaded = true,
     path = "/var/home/ak/.local/share/nvim/site/pack/packer/start/neogen",
     url = "https://github.com/danymat/neogen"
@@ -293,10 +292,6 @@ time([[Defining packer_plugins]], false)
 time([[Config for hop.nvim]], true)
 try_loadstring("\27LJ\2\n1\0\0\3\0\3\0\0066\0\0\0'\2\1\0B\0\2\0029\0\2\0B\0\1\1K\0\1\0\nsetup\bhop\frequire\0", "config", "hop.nvim")
 time([[Config for hop.nvim]], false)
--- Config for: neogen
-time([[Config for neogen]], true)
-try_loadstring("\27LJ\2\nœ\1\0\0\6\0\n\0\r6\0\0\0'\2\1\0B\0\2\0029\0\2\0005\2\3\0005\3\a\0005\4\5\0005\5\4\0=\5\6\4=\4\b\3=\3\t\2B\0\2\1K\0\1\0\14languages\vcsharp\1\0\0\rtemplate\1\0\0\1\0\1\26annotation_convention\vxmldoc\1\0\1\fenabled\2\nsetup\vneogen\frequire\0", "config", "neogen")
-time([[Config for neogen]], false)
 if should_profile then save_profiles() end
 
 end)
