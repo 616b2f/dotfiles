@@ -8,6 +8,13 @@ sudo dnf update -y
 # wl-clipboard also needed for copy from inside neovim
 sudo dnf install -y wl-clipboard
 
+# install luarocks (package manager for lua)
+# and stuff needed for nvim lua plugin development
+sudo dnf install -y luarocks compat-lua-devel gcc-c++
+
+# install vusted (for unitests of nvim lua plugins)
+luarocks --lua-version=5.1 install vusted
+
 # treesitter prerequisites
 sudo dnf install -y gcc libstdc++-static
 
