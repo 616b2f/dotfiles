@@ -55,19 +55,6 @@ require('packer').startup(function(use)
   use 'rafamadriz/friendly-snippets' -- basic snippets
   use {
     "danymat/neogen", -- documentation generation
-    -- config = function()
-    --   require('neogen').setup {
-    --     enabled = true,
-    --     snippet_engine = "luasnip",
-    --     languages = {
-    --       c_sharp = {
-    --           template = {
-    --               annotation_convention = "xmldoc" -- for a full list of annotation_conventions, see supported-languages below,
-    --           }
-    --       },
-    --     }
-    --   }
-    -- end,
     requires = "nvim-treesitter/nvim-treesitter",
     -- Uncomment next line if you want to follow only stable versions
     -- tag = "*"
@@ -104,7 +91,8 @@ require('packer').startup(function(use)
   -- use 'itchyny/lightline.vim'
 
   -- essential plugins
-  use 'tpope/vim-surround'
+  -- use 'tpope/vim-surround'
+  use { 'echasnovski/mini.nvim', branch = 'stable' }
 
   -- debugger adapter protocoll support
   use 'mfussenegger/nvim-dap'
@@ -293,7 +281,8 @@ require('lualine').setup {
   }
 }
 
-require('neogen').setup {
+require('neogen').setup
+{
   snippet_engine = 'luasnip',
   languages = {
     cs = {
@@ -457,6 +446,66 @@ require('treesitter-config')
 require('luasnip-config')
 -- require('snippets-config')
 -- require('luasnip-config')
+
+require('mini.surround').setup({
+  -- vim-surround style mappings
+  custom_surroundings = {
+    ['('] = {
+      input = { find = '%(%s-.-%s-%)', extract = '^(.%s*).-(%s*.)$' },
+      output = { left = '( ', right = ' )' },
+    },
+    ['['] = {
+      input = { find = '%[%s-.-%s-%]', extract = '^(.%s*).-(%s*.)$' },
+      output = { left = '[ ', right = ' ]' },
+    },
+    ['{'] = {
+      input = { find = '{%s-.-%s-}', extract = '^(.%s*).-(%s*.)$' },
+      output = { left = '{ ', right = ' }' },
+    },
+    ['<'] = {
+      input = { find = '<%s-.-%s->', extract = '^(.%s*).-(%s*.)$' },
+      output = { left = '< ', right = ' >' },
+    },
+    S = {
+      -- lua bracketed string mapping
+      -- 'ysiwS'  foo -> [[foo]]
+      input = { find = '%[%[.-%]%]', extract = '^(..).*(..)$' },
+      output = { left = '[[', right = ']]' },
+    },
+  },
+  mappings = {
+    add = 'ys',
+    delete = 'ds',
+    find = 'sf',
+    find_left = 'sF',
+    highlight = 'gs',     -- hijack 'gs' (sleep) for highlight
+    replace = 'cs',
+    update_n_lines = '',  -- bind for updating 'config.n_lines'
+  },
+  -- Number of lines within which surrounding is searched
+  n_lines = 62,
+
+  -- Duration (in ms) of highlight when calling `MiniSurround.highlight()`
+  highlight_duration = 2000,
+
+  -- How to search for surrounding (first inside current line, then inside
+  -- neighborhood). One of 'cover', 'cover_or_next', 'cover_or_prev',
+  -- 'cover_or_nearest'. For more details, see `:h MiniSurround.config`.
+  search_method = 'cover_or_next',
+})
+
+-- Remap adding surrounding to Visual mode selection
+vim.api.nvim_set_keymap('x', 'S', [[:<C-u>lua MiniSurround.add('visual')<CR>]], { noremap = true })
+
+-- unmap config generated `ys` mapping, prevents visual mode yank delay
+if vim.keymap then
+  vim.keymap.del("x", "ys")
+else
+  vim.cmd("xunmap ys")
+end
+
+-- Make special mapping for "add surrounding for line"
+vim.api.nvim_set_keymap('n', 'yss', 'ys_', { noremap = false })
 
 require('nvim-test').setup {
   run = true,                 -- run tests (using for debug)
