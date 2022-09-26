@@ -1,9 +1,6 @@
-require("nvim-lsp-installer").setup {
-    ensure_installed = { "sumneko_lua", "jsonls", "yamlls", "bashls", "omnisharp", "gopls", "rust_analyzer" },
-    automatic_installation = true
-}
-
 local lspconfig = require('lspconfig')
+require("mason-lspconfig").setup()
+
 local util = require('lspconfig/util')
 local cmp_nvim_lsp = require('cmp_nvim_lsp')
 local lsp_signature = require('lsp_signature')
@@ -84,14 +81,14 @@ config.settings = {
         completion = true,
         hover = true,
         validate = true,
-        -- schemas = {
-        --     -- ['http://json.schemastore.org/github-workflow'] = '.github/workflows/*.{yml,yaml}',
-        --     -- "https://raw.githubusercontent.com/instrumenta/kubernetes-json-schema/master/v1.18.0-standalone-strict/all.json": [ "/*.k8s.yaml" ],
-        --     -- ["https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.22.0/deployment-apps-v1.json"] = "/*.yaml"
-        --     Kubernetes= "/*.yaml",
-        --     ["http://json.schemastore.org/kustomization"] = "kustomization.yaml",
-        --     ["https://raw.githubusercontent.com/GoogleContainerTools/skaffold/master/docs/content/en/schemas/v2beta26.json"] = "skaffold.yaml"
-        -- },
+        schemas = {
+            -- ['http://json.schemastore.org/github-workflow'] = '.github/workflows/*.{yml,yaml}',
+            -- Kubernetes= "/*.yaml",
+            -- "https://raw.githubusercontent.com/instrumenta/kubernetes-json-schema/master/v1.18.0-standalone-strict/all.json": [ "/*.k8s.yaml" ],
+            ["https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.22.0/deployment-apps-v1.json"] = "/*.yaml",
+            ["http://json.schemastore.org/kustomization"] = "kustomization.yaml",
+            ["https://raw.githubusercontent.com/GoogleContainerTools/skaffold/master/docs/content/en/schemas/v2beta26.json"] = "skaffold.yaml"
+        },
         format = {
             enable = true
         },
@@ -135,8 +132,11 @@ config.settings = {
 }
 lspconfig.sumneko_lua.setup(config)
 
-local config = make_config()
-lspconfig.gopls.setup(config)
+--local config = make_config()
+--lspconfig.gopls.setup(config)
+
+--local config = make_config()
+--lspconfig.rust_analyzer.setup(config)
 
 local config = make_config()
-lspconfig.rust_analyzer.setup(config)
+lspconfig.terraformls.setup(config)

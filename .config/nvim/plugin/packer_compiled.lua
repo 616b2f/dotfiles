@@ -165,6 +165,26 @@ _G.packer_plugins = {
     path = "/var/home/ak/.local/share/nvim/site/pack/packer/start/lualine.nvim",
     url = "https://github.com/nvim-lualine/lualine.nvim"
   },
+  ["mason-lspconfig.nvim"] = {
+    loaded = true,
+    path = "/var/home/ak/.local/share/nvim/site/pack/packer/start/mason-lspconfig.nvim",
+    url = "https://github.com/williamboman/mason-lspconfig.nvim"
+  },
+  ["mason-tool-installer.nvim"] = {
+    loaded = true,
+    path = "/var/home/ak/.local/share/nvim/site/pack/packer/start/mason-tool-installer.nvim",
+    url = "https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim"
+  },
+  ["mason.nvim"] = {
+    loaded = true,
+    path = "/var/home/ak/.local/share/nvim/site/pack/packer/start/mason.nvim",
+    url = "https://github.com/williamboman/mason.nvim"
+  },
+  ["mini.nvim"] = {
+    loaded = true,
+    path = "/var/home/ak/.local/share/nvim/site/pack/packer/start/mini.nvim",
+    url = "https://github.com/echasnovski/mini.nvim"
+  },
   neogen = {
     loaded = true,
     path = "/var/home/ak/.local/share/nvim/site/pack/packer/start/neogen",
@@ -199,11 +219,6 @@ _G.packer_plugins = {
     loaded = true,
     path = "/var/home/ak/.local/share/nvim/site/pack/packer/start/nvim-dap-ui",
     url = "https://github.com/rcarriga/nvim-dap-ui"
-  },
-  ["nvim-lsp-installer"] = {
-    loaded = true,
-    path = "/var/home/ak/.local/share/nvim/site/pack/packer/start/nvim-lsp-installer",
-    url = "https://github.com/williamboman/nvim-lsp-installer"
   },
   ["nvim-lspconfig"] = {
     loaded = true,
@@ -274,11 +289,6 @@ _G.packer_plugins = {
     loaded = true,
     path = "/var/home/ak/.local/share/nvim/site/pack/packer/start/vim-one",
     url = "https://github.com/rakr/vim-one"
-  },
-  ["vim-surround"] = {
-    loaded = true,
-    path = "/var/home/ak/.local/share/nvim/site/pack/packer/start/vim-surround",
-    url = "https://github.com/tpope/vim-surround"
   },
   ["vim-terraform"] = {
     loaded = true,

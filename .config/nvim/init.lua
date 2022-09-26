@@ -39,8 +39,12 @@ require('packer').startup(function(use)
   use 'nvim-treesitter/playground'
 
   -- nvim lsp support
-  use 'neovim/nvim-lspconfig' -- Collection of configurations for built-in LSP client
-  use 'williamboman/nvim-lsp-installer' -- plugin to install lsp servers
+  use {
+    "williamboman/mason.nvim",
+    "williamboman/mason-lspconfig.nvim", -- for better integration with lspconfig
+    "neovim/nvim-lspconfig", -- Collection of configurations for built-in LSP client
+    "WhoIsSethDaniel/mason-tool-installer.nvim", -- for easier installing tools
+  }
 
   -- complete support
   use 'hrsh7th/nvim-cmp' -- Autocompletion plugin
@@ -138,7 +142,6 @@ end)
 
 -- enable filetype.lua and disable filetype.vim
 vim.g.do_filetype_lua = 1
-vim.g.did_load_filetypes = 0
 
 -- sync default registers with clipboard
 vim.o.clipboard="unnamedplus"
@@ -437,6 +440,50 @@ vim.api.nvim_set_keymap('n', '<leader>q', '<cmd>lua vim.diagnostic.setloclist()<
 -- neogit keymaps
 vim.api.nvim_set_keymap('n', '<leader>g', '<cmd>lua require("neogit").open()<CR>', { noremap = true, silent = true })
 
+-- mason setup
+require("mason").setup()
+require'mason-tool-installer'.setup {
+
+    -- a list of all tools you want to ensure are installed upon
+    -- start; they should be the names Mason uses for each tool
+    ensure_installed = {
+
+        -- LSP
+        -- you can turn off/on auto_update per tool
+        { 'bash-language-server', auto_update = true },
+        'lua-language-server',
+        'yaml-language-server',
+        'vim-language-server',
+        'omnisharp',
+        'gopls',
+        'rust-analyzer',
+        'terraform-ls',
+
+        -- linter
+        'shellcheck',
+        'editorconfig-checker',
+        -- you can pin a tool to a particular version
+        -- { 'golangci-lint', version = '1.47.0' },
+
+        -- DAP
+        'netcoredbg',
+
+        -- 'luacheck',
+        -- 'stylua',
+        -- 'gofumpt',
+        -- 'golines',
+        -- 'gomodifytags',
+        -- 'gotests',
+        -- 'impl',
+        -- 'json-to-struct',
+        -- 'misspell',
+        -- 'revive',
+        -- 'shfmt',
+        -- 'staticcheck',
+        -- 'vint',
+    }
+}
+
 -- custom config
 require('completion-config')
 require('lsp-config')
@@ -524,34 +571,33 @@ require('nvim-test').setup {
   runners = {               -- setup tests runners
     cs = "nvim-test.runners.dotnet",
     go = "nvim-test.runners.go-test",
-    rust = "nvim-test.runners.cargo-test",
   }
 }
 
-require('nvim-test.runners.dotnet'):setup {
-    command = "dotnet",
-    args = { "test", "-v", "normal" },
-
-    file_pattern = "\\v(test?/.*|Tests)\\.(cs)$",
-    find_files = { "{name}.test.{ext}", "Tests.{ext}" },                  -- find testfile for a file
-
-    -- file_pattern = "\\v(__tests__/.*|(spec|test))\\.(js|jsx|coffee|ts|tsx)$",   -- determine whether a file is a testfile
-    -- find_files = { "{name}.test.{ext}", "{name}.spec.{ext}" },                  -- find testfile for a file
-
-    -- filename_modifier = nil,                                                    -- modify filename before tests run (:h filename-modifiers)
-    -- working_directory = nil,                                                    -- set working directory (cwd by default)
-  }
-
-require('nvim-test.runners.go-test'):setup {
-    command = "go",
-    args = { "test", "-v" },
-
-    file_pattern = "\\v([^.]+_test)\\.go$",   -- determine whether a file is a testfile
-    find_files = { "{name}_test.go" },                  -- find testfile for a file
-
-    -- filename_modifier = nil,                                                    -- modify filename before tests run (:h filename-modifiers)
-    -- working_directory = nil,                                                    -- set working directory (cwd by default)
-  }
+-- require('nvim-test.runners.dotnet'):setup {
+--     command = "dotnet",
+--     args = { "test", "-v", "normal" },
+-- 
+--     file_pattern = "\\v(test?/.*|Tests)\\.(cs)$",
+--     find_files = { "{name}.test.{ext}", "Tests.{ext}" },                  -- find testfile for a file
+-- 
+--     -- file_pattern = "\\v(__tests__/.*|(spec|test))\\.(js|jsx|coffee|ts|tsx)$",   -- determine whether a file is a testfile
+--     -- find_files = { "{name}.test.{ext}", "{name}.spec.{ext}" },                  -- find testfile for a file
+-- 
+--     -- filename_modifier = nil,                                                    -- modify filename before tests run (:h filename-modifiers)
+--     -- working_directory = nil,                                                    -- set working directory (cwd by default)
+--   }
+-- 
+-- require('nvim-test.runners.go-test'):setup {
+--     command = "go",
+--     args = { "test", "-v" },
+-- 
+--     file_pattern = "\\v([^.]+_test)\\.go$",   -- determine whether a file is a testfile
+--     find_files = { "{name}_test.go" },                  -- find testfile for a file
+-- 
+--     -- filename_modifier = nil,                                                    -- modify filename before tests run (:h filename-modifiers)
+--     -- working_directory = nil,                                                    -- set working directory (cwd by default)
+--   }
 
 -- -- LSP settings
 -- local lspconfig = require 'lspconfig'
