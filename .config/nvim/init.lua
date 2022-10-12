@@ -130,7 +130,12 @@ require('packer').startup(function(use)
   use 'hashivim/vim-terraform'
 
   -- nice helper for registers
-  use 'tversteeg/registers.nvim'
+  use {
+    'tversteeg/registers.nvim',
+    config = function ()
+      require("registers").setup()
+    end,
+  }
 
   -- plugin to show function signatures in a better way
   use 'ray-x/lsp_signature.nvim'
