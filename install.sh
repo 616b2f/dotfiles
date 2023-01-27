@@ -17,6 +17,7 @@ neovim \
 tmux \
 vifm \
 sway \
+wlroots \
 grim \
 slurp \
 mako \
