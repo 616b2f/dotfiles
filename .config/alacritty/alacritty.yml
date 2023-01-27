@@ -1,0 +1,29 @@
+# shell:
+#   program: /bin/bash
+#   args:
+#     - -l
+#     - -c
+#     - "tmux attach || tmux"
+
+# The FreeType rasterizer needs to know the device DPI for best results
+dpi:
+  x: 96.0
+  y: 96.0
+
+# Font configuration
+font:
+  # family: DejaVu Sans Mono
+  family: DroidSansMono Nerd Font
+  style: Book
+  bold_style: Bold
+  italic_style: Italic
+  # Point size of the font
+  size: 9.0
+  # Offset is the extra space around each character. offset.y can be thought of
+  # as modifying the linespacing, and offset.x as modifying the letter spacing.
+  #offset:
+  #  x: 0.0
+  #  y: -2.0
+
+# Should display the render timer
+render_timer: false

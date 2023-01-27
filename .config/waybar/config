@@ -2,22 +2,22 @@
     "layer": "bottom", // Waybar at top layer
     // "position": "bottom", // Waybar position (top|bottom|left|right)
     "height": 20, // Waybar height (to be removed for auto height)
-    // "width": 1280, // Waybar width
+    //"width": 1280, // Waybar width
     // Choose the order of the modules
     "modules-left": ["sway/workspaces", "sway/mode"],
     "modules-center": ["sway/window"],
     "modules-right": [
-        "tray",
-        "idle_inhibitor",
-        "pulseaudio",
-        "network",
-        "cpu",
-        "memory",
-        "temperature",
-        "backlight",
-        "sway/language",
-        "battery",
-        "battery#bat2",
+	    "tray",
+	    "idle_inhibitor",
+	    "network",
+	    "pulseaudio",
+	    "cpu",
+	    "memory",
+	    "temperature",
+	    "backlight",
+	    "sway/language",
+	    "battery",
+	    "battery#bat2",
         "clock"
     ],
     // Modules configuration
@@ -51,9 +51,9 @@
         "spacing": 10
     },
     "clock": {
-        // "timezone": "America/New_York",
+        "timezone": "Europe/Berlin",
         "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
-        "format-alt": "{:%Y-%m-%d}"
+        "format": "{:%Y-%m-%d %H:%M}"
     },
     "cpu": {
         "format": "{usage}% ",
@@ -99,6 +99,13 @@
         "format-linked": "{ifname} (No IP) ",
         "format-disconnected": "Disconnected ⚠",
         "format-alt": "{ifname}: {ipaddr}/{cidr}"
+    },
+    "custom/vpn": {
+        "format": "VPN ",
+        "exec": "echo '{\"class\": \"connected\"}'",
+        "exec-if": "test -d /proc/sys/net/ipv4/conf/vpn0",
+        "return-type": "json",
+        "interval": 5
     },
     "pulseaudio": {
         // "scroll-step": 1, // %, can be a float

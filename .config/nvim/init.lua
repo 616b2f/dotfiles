@@ -14,7 +14,6 @@ require('packer').startup(function(use)
   -- UI to select things (files, grep results, open buffers...)
   use { 'nvim-telescope/telescope.nvim', requires = { 'nvim-lua/plenary.nvim' } }
   -- use {'nvim-telescope/telescope-fzf-native.nvim', run = 'make' }
-  use 'nvim-lua/popup.nvim'
 
   -- Add indentation guides even on blank lines
   use 'lukas-reineke/indent-blankline.nvim'
@@ -44,6 +43,8 @@ require('packer').startup(function(use)
     "williamboman/mason-lspconfig.nvim", -- for better integration with lspconfig
     "neovim/nvim-lspconfig", -- Collection of configurations for built-in LSP client
     "WhoIsSethDaniel/mason-tool-installer.nvim", -- for easier installing tools
+    -- specific for csharp allows goto definition for decompiled binaries
+    "Hoffs/omnisharp-extended-lsp.nvim",
   }
 
   -- complete support
@@ -148,6 +149,9 @@ end)
 -- enable filetype.lua and disable filetype.vim
 vim.g.do_filetype_lua = 1
 
+-- dont fix end of line in files
+vim.g.fixendofline = false
+
 -- sync default registers with clipboard
 vim.o.clipboard="unnamedplus"
 
@@ -243,6 +247,9 @@ require'nvim-tree'.setup {
   update_cwd = false,
   update_focused_file = {
       update_cwd = false
+  },
+  view = {
+    width = 70
   },
   renderer = {
     highlight_git = true, -- 0 by default, will enable file highlight for git attributes (can be used without the icons).
@@ -576,7 +583,6 @@ require('nvim-test').setup {
   runners = {               -- setup tests runners
     cs = "nvim-test.runners.dotnet",
     go = "nvim-test.runners.go-test",
-    rust = "nvim-test.runners.cargo-test",
   }
 }
 
@@ -604,26 +610,6 @@ require('nvim-test').setup {
 --     -- filename_modifier = nil,                                                    -- modify filename before tests run (:h filename-modifiers)
 --     -- working_directory = nil,                                                    -- set working directory (cwd by default)
 --   }
-
--- -- LSP settings
--- local lspconfig = require 'lspconfig'
--- local on_attach = function(_, bufnr)
---   local opts = { noremap = true, silent = true }
---   vim.api.nvim_buf_set_keymap(bufnr, 'n', 'gD', '<cmd>lua vim.lsp.buf.declaration()<CR>', opts)
---   vim.api.nvim_buf_set_keymap(bufnr, 'n', 'gd', '<cmd>lua vim.lsp.buf.definition()<CR>', opts)
---   vim.api.nvim_buf_set_keymap(bufnr, 'n', 'K', '<cmd>lua vim.lsp.buf.hover()<CR>', opts)
---   vim.api.nvim_buf_set_keymap(bufnr, 'n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<CR>', opts)
---   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<C-k>', '<cmd>lua vim.lsp.buf.signature_help()<CR>', opts)
---   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<leader>wa', '<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>', opts)
---   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<leader>wr', '<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>', opts)
---   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<leader>wl', '<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>', opts)
---   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<leader>D', '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
---   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<leader>rn', '<cmd>lua vim.lsp.buf.rename()<CR>', opts)
---   vim.api.nvim_buf_set_keymap(bufnr, 'n', 'gr', '<cmd>lua vim.lsp.buf.references()<CR>', opts)
---   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<leader>ca', '<cmd>lua vim.lsp.buf.code_action()<CR>', opts)
---   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<leader>so', [[<cmd>lua require('telescope.builtin').lsp_document_symbols()<CR>]], opts)
---   vim.cmd [[ command! Format execute 'lua vim.lsp.buf.formatting()' ]]
--- end
 
 -- custom commands
 vim.api.nvim_create_user_command('GenUuid', "r !uuidgen | tr -d '\n'", {})
