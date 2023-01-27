@@ -104,8 +104,8 @@ fi
 # misc tooling
 ###
 sudo dnf install -y \
-    fzf \ # fuzzy finder
-    gh    # github cli tool
+    fzf \
+    gh
 
 ###
 # install fonts
@@ -116,17 +116,18 @@ TMP_DIR=$(mktemp -d)
 FONT_DIR="$HOME/.local/share/fonts/NerdFonts"
 mkdir -pv $FONT_DIR
 
-# install DejaVueSansMono
+echo "Install DejaVueSansMono font"
 curl -Lo $TMP_DIR/DejaVuSansMono.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/DejaVuSansMono.zip
 unzip -od $FONT_DIR/ $TMP_DIR/DejaVuSansMono.zip
-# install nerd-fonts
-curl -fLo "$TMP_DIR/Droid Sans Mono for Powerline Nerd Font Complete.otf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/DroidSansMono/complete/Droid%20Sans%20Mono%20Nerd%20Font%20Complete.otf
 
-# refresh font cache
+echo "Install Droid Sans Mono font"
+curl -fLo "$FONT_DIR/Droid Sans Mono Nerd Font Complete.otf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/DroidSansMono/complete/Droid%20Sans%20Mono%20Nerd%20Font%20Complete.otf
+
+echo "Refresh font cache"
 fc-cache -vf "$FONT_DIR"
 
-# install GNU info command
-sudo dnf install info
+echo "Install GNU info command"
+sudo dnf install -y info
 
-# setup mandb to be able to use "man -k X"
-sudo mandb -c
+echo "Setup mandb to be able to use 'man -k X'"
+""sudo mandb -c
