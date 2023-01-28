@@ -1,9 +1,10 @@
 -- Install packer
-local fn = vim.fn
-local install_path = fn.stdpath('data')..'/site/pack/packer/start/packer.nvim'
-if fn.empty(fn.glob(install_path)) > 0 then
-   packer_bootstrap = fn.system({'git', 'clone', '--depth', '1', 'https://github.com/wbthomason/packer.nvim', install_path})
-   vim.o.runtimepath = vim.fn.stdpath('data') .. '/site/pack/*/start/*,' .. vim.o.runtimepath
+local install_path = vim.fn.stdpath 'data' .. '/site/pack/packer/start/packer.nvim'
+local is_bootstrap = false
+if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
+  is_bootstrap = true
+  vim.fn.execute('!git clone https://github.com/wbthomason/packer.nvim ' .. install_path)
+  vim.cmd [[packadd packer.nvim]]
 end
 
 require('packer').startup(function(use)
@@ -141,10 +142,26 @@ require('packer').startup(function(use)
   -- plugin to show function signatures in a better way
   use 'ray-x/lsp_signature.nvim'
 
-  if packer_bootstrap then
+  -- for easier resizing windows
+  use {"dimfred/resize-mode.nvim"}
+
+  if is_bootstrap then
     require('packer').sync()
   end
 end)
+
+-- When we are bootstrapping a configuration, it doesn't
+-- make sense to execute the rest of the init.lua.
+--
+-- You'll need to restart nvim, and then it will work.
+if is_bootstrap then
+  print '=================================='
+  print '    Plugins are being installed'
+  print '    Wait until Packer completes,'
+  print '       then restart nvim'
+  print '=================================='
+  return
+end
 
 -- enable filetype.lua and disable filetype.vim
 vim.g.do_filetype_lua = 1
@@ -381,17 +398,17 @@ require('telescope').setup {
 
 -- setup dap key bindings
 -- REPL (Read Evaluate Print Loop)
-vim.api.nvim_set_keymap('n', '<leader>dd', [[<cmd>lua require('dapui').toggle()<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>db', [[<cmd>lua require('dap').toggle_breakpoint()<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>dBc', [[<cmd>lua require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: '))<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>dBl', [[<cmd>lua require('dap').set_breakpoint(nil, nil, vim.fn.input('Log point message: '))<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>dc', [[<cmd>lua require('dap').continue()<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>dn', [[<cmd>lua require('dap').step_over()<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>dp', [[<cmd>lua require('dap').step_back()<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>dsi', [[<cmd>lua require('dap').step_into()<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>dso', [[<cmd>lua require('dap').step_out()<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>do', [[<cmd>lua require('dap').repl.open()<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>drl', [[<cmd>lua require('dap').run_last()<CR>]], { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>dd', require('dapui').toggle, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>db', require('dap').toggle_breakpoint, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>dBc', function() require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: ')) end, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>dBl', function() require('dap').set_breakpoint(nil, nil, vim.fn.input('Log point message: ')) end, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>dc', require('dap').continue, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>dn', require('dap').step_over, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>dp', require('dap').step_back, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>dsi', require('dap').step_into, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>dso', require('dap').step_out, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>do', require('dap').repl.open, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>drl', require('dap').run_last, { noremap = true, silent = true })
 
 -- remappings for easier switching between windows
 -- vim.api.nvim_set_keymap('n', '<C-H>', '<C-W>h', { noremap = true, silent = true })
@@ -400,34 +417,34 @@ vim.api.nvim_set_keymap('n', '<leader>drl', [[<cmd>lua require('dap').run_last()
 -- vim.api.nvim_set_keymap('n', '<C-L>', '<C-W>l', { noremap = true, silent = true })
 
 -- hop mappings
-vim.api.nvim_set_keymap('n', '<space>f', [[<cmd>lua require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.AFTER_CURSOR, current_line_only = false })<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<space>F', [[<cmd>lua require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.BEFORE_CURSOR, current_line_only = false })<CR>]], { noremap = true, silent = true })
+vim.keymap.set('n', '<space>f', function() require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.AFTER_CURSOR, current_line_only = false }) end, { noremap = true, silent = true })
+vim.keymap.set('n', '<space>F', function() require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.BEFORE_CURSOR, current_line_only = false }) end, { noremap = true, silent = true })
 
 -- neogen mappings
-vim.api.nvim_set_keymap("n", "<space>df", ":lua require('neogen').generate()<CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<space>df", require('neogen').generate, { noremap = true, silent = true })
 
 -- Enable telescope fzf native
 -- require('telescope').load_extension 'fzf'
 
-vim.api.nvim_set_keymap('n', '<leader>ff', [[<cmd>lua require('telescope.builtin').find_files()<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>fw', [[<cmd>lua require('telescope.builtin').grep_string({search=vim.fn.expand('<cword>')})<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>fb', [[<cmd>lua require('telescope.builtin').buffers()<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>fh', [[<cmd>lua require('telescope.builtin').help_tags()<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>fgg', [[<cmd>lua require('telescope.builtin').live_grep()<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>fgb', [[<cmd>lua require('telescope.builtin').git_branches()<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>fgc', [[<cmd>lua require('telescope.builtin').git_commits()<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>fi', [[<cmd>lua require('telescope.builtin').lsp_implementations()<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>fs', [[<cmd>lua require('telescope.builtin').lsp_document_symbols()<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>fm', [[<cmd>lua require('telescope.builtin').lsp_document_symbols({symbols={'method','function'}})<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>fsw', [[<cmd>lua require('telescope.builtin').lsp_workspace_symbols()<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>fc', [[<cmd>lua require('telescope.builtin').lsp_workspace_symbols({symbols='class'})<CR>]], { noremap = true, silent = true })
--- vim.api.nvim_set_keymap('n', '<leader>sf', [[<cmd>lua require('telescope.builtin').find_files({previewer = false})<CR>]], { noremap = true, silent = true })
--- vim.api.nvim_set_keymap('n', '<leader>sb', [[<cmd>lua require('telescope.builtin').current_buffer_fuzzy_find()<CR>]], { noremap = true, silent = true })
--- vim.api.nvim_set_keymap('n', '<leader>sh', [[<cmd>lua require('telescope.builtin').help_tags()<CR>]], { noremap = true, silent = true })
--- vim.api.nvim_set_keymap('n', '<leader>st', [[<cmd>lua require('telescope.builtin').tags()<CR>]], { noremap = true, silent = true })
--- vim.api.nvim_set_keymap('n', '<leader>sd', [[<cmd>lua require('telescope.builtin').grep_string()<CR>]], { noremap = true, silent = true })
--- vim.api.nvim_set_keymap('n', '<leader>so', [[<cmd>lua require('telescope.builtin').tags{ only_current_buffer = true }<CR>]], { noremap = true, silent = true })
--- vim.api.nvim_set_keymap('n', '<leader>?', [[<cmd>lua require('telescope.builtin').oldfiles()<CR>]], { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>ff', require('telescope.builtin').find_files, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>fw', function() require('telescope.builtin').grep_string({search=vim.fn.expand('<cword>')}) end, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>fb', require('telescope.builtin').buffers, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>fh', require('telescope.builtin').help_tags, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>fgg', require('telescope.builtin').live_grep, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>fgb', require('telescope.builtin').git_branches, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>fgc', require('telescope.builtin').git_commits, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>fi', require('telescope.builtin').lsp_implementations, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>fs', require('telescope.builtin').lsp_document_symbols, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>fm', function() require('telescope.builtin').lsp_document_symbols({symbols={'method','function'}}) end, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>fsw', require('telescope.builtin').lsp_workspace_symbols, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>fc', function() require('telescope.builtin').lsp_workspace_symbols({symbols='class'}) end, { noremap = true, silent = true })
+-- vim.keymap.set('n', '<leader>sf', function() require('telescope.builtin').find_files({previewer = false}) end, { noremap = true, silent = true })
+-- vim.keymap.set('n', '<leader>sb', require('telescope.builtin').current_buffer_fuzzy_find, { noremap = true, silent = true })
+-- vim.keymap.set('n', '<leader>sh', require('telescope.builtin').help_tags, { noremap = true, silent = true })
+-- vim.keymap.set('n', '<leader>st', require('telescope.builtin').tags, { noremap = true, silent = true })
+-- vim.keymap.set('n', '<leader>sd', require('telescope.builtin').grep_string, { noremap = true, silent = true })
+-- vim.keymap.set('n', '<leader>so', require('telescope.builtin').tags{ only_current_buffer = true }, { noremap = true, silent = true })
+-- vim.keymap.set('n', '<leader>?', require('telescope.builtin').oldfiles, { noremap = true, silent = true })
 
 -- -- custom commands
 -- -- open new terminal in the current files path
@@ -444,13 +461,13 @@ vim.cmd [[
 ]]
 
 -- -- Diagnostic keymaps
-vim.api.nvim_set_keymap('n', '<leader>e', '<cmd>lua vim.diagnostic.open_float()<CR>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '[d', '<cmd>lua vim.diagnostic.goto_prev()<CR>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', ']d', '<cmd>lua vim.diagnostic.goto_next()<CR>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>q', '<cmd>lua vim.diagnostic.setloclist()<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>e', function() vim.diagnostic.open_float() end, { noremap = true, silent = true })
+vim.keymap.set('n', '[d', function() vim.diagnostic.goto_prev() end, { noremap = true, silent = true })
+vim.keymap.set('n', ']d', function() vim.diagnostic.goto_next() end, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>q', function() vim.diagnostic.setloclist() end, { noremap = true, silent = true })
 
 -- neogit keymaps
-vim.api.nvim_set_keymap('n', '<leader>g', '<cmd>lua require("neogit").open()<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>g', require("neogit").open, { noremap = true, silent = true })
 
 -- mason setup
 require("mason").setup()
@@ -554,7 +571,7 @@ require('mini.surround').setup({
 })
 
 -- Remap adding surrounding to Visual mode selection
-vim.api.nvim_set_keymap('x', 'S', [[:<C-u>lua MiniSurround.add('visual')<CR>]], { noremap = true })
+vim.keymap.set('x', 'S', function() MiniSurround.add('visual') end, { noremap = true })
 
 -- unmap config generated `ys` mapping, prevents visual mode yank delay
 if vim.keymap then
@@ -564,7 +581,7 @@ else
 end
 
 -- Make special mapping for "add surrounding for line"
-vim.api.nvim_set_keymap('n', 'yss', 'ys_', { noremap = false })
+vim.keymap.set('n', 'yss', 'ys_', { noremap = false })
 
 require('nvim-test').setup {
   run = true,                 -- run tests (using for debug)
@@ -583,33 +600,30 @@ require('nvim-test').setup {
   runners = {               -- setup tests runners
     cs = "nvim-test.runners.dotnet",
     go = "nvim-test.runners.go-test",
+    rust = "nvim-test.runners.cargo-test",
+    javascript = "nvim-test.runners.mocha"
   }
 }
 
--- require('nvim-test.runners.dotnet'):setup {
---     command = "dotnet",
---     args = { "test", "-v", "normal" },
--- 
---     file_pattern = "\\v(test?/.*|Tests)\\.(cs)$",
---     find_files = { "{name}.test.{ext}", "Tests.{ext}" },                  -- find testfile for a file
--- 
---     -- file_pattern = "\\v(__tests__/.*|(spec|test))\\.(js|jsx|coffee|ts|tsx)$",   -- determine whether a file is a testfile
---     -- find_files = { "{name}.test.{ext}", "{name}.spec.{ext}" },                  -- find testfile for a file
--- 
---     -- filename_modifier = nil,                                                    -- modify filename before tests run (:h filename-modifiers)
---     -- working_directory = nil,                                                    -- set working directory (cwd by default)
---   }
--- 
--- require('nvim-test.runners.go-test'):setup {
---     command = "go",
---     args = { "test", "-v" },
--- 
---     file_pattern = "\\v([^.]+_test)\\.go$",   -- determine whether a file is a testfile
---     find_files = { "{name}_test.go" },                  -- find testfile for a file
--- 
---     -- filename_modifier = nil,                                                    -- modify filename before tests run (:h filename-modifiers)
---     -- working_directory = nil,                                                    -- set working directory (cwd by default)
---   }
+require("resize-mode").setup {
+  horizontal_amount = 9,
+  vertical_amount = 5,
+  quit_key = "<ESC>",
+  enable_mapping = true,
+  resize_keys = {
+      "h", -- increase to the left
+      "j", -- increase to the bottom
+      "k", -- increase to the top
+      "l", -- increase to the right
+      "H", -- decrease to the left
+      "J", -- decrease to the bottom
+      "K", -- decrease to the top
+      "L"  -- decrease to the right
+  }
+}
+
+
+vim.keymap.set('n', '<leader>wr', require("resize-mode").start, { noremap = true, silent = true })
 
 -- custom commands
 vim.api.nvim_create_user_command('GenUuid', "r !uuidgen | tr -d '\n'", {})

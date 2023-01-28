@@ -2,43 +2,45 @@ local dap = require('dap')
 local reg = require('mason-registry')
 local api = vim.api
 
+-- C#
+if (reg.is_installed('netcoredbg')) then
+    local netcoredbg = reg.get_package('netcoredbg')
+
+    dap.adapters.coreclr = {
+        type = 'executable',
+        command = netcoredbg:get_install_path() .. '/netcoredbg',
+        args = {'--interpreter=vscode'}
+    }
+
+    dap.configurations.cs = {
+        {
+            type = "coreclr",
+            name = "launch - netcoredbg",
+            request = "launch",
+            program = function()
+                return vim.fn.input('Path to dll: ', vim.fn.getcwd() .. '/bin/Debug/', 'file')
+            end,
+        },
+        {
+            name = "debug unittests - netcoredbg",
+            type = "coreclr",
+            request = "attach",
+            processId  = require('dap.utils').pick_process,
+            justMyCode = true, -- set to `true` in debug configuration and `false` in release configuration
+        },
+        {
+            name = "attach - netcoredbg",
+            type = "coreclr",
+            request = "attach",
+            processId  = function()
+                return vim.fn.input('Process ID: ')
+            end,
+            justMyCode = true, -- set to `true` in debug configuration and `false` in release configuration
+        }
+    }
+end
+
 local keymap_restore = {}
-
-local netcoredbg = reg.get_package('netcoredbg')
-
-dap.adapters.coreclr = {
-  type = 'executable',
-  command = netcoredbg:get_install_path() .. '/netcoredbg', --'/path/to/dotnet/netcoredbg/netcoredbg',
-  args = {'--interpreter=vscode'}
-}
-
-dap.configurations.cs = {
-  {
-    type = "coreclr",
-    name = "launch - netcoredbg",
-    request = "launch",
-    program = function()
-        return vim.fn.input('Path to dll: ', vim.fn.getcwd() .. '/bin/Debug/', 'file')
-    end,
-  },
-  {
-    name = "debug unittests - netcoredbg",
-    type = "coreclr",
-    request = "attach",
-    processId  = require('dap.utils').pick_process,
-    justMyCode = true, -- set to `true` in debug configuration and `false` in release configuration
-  },
-  {
-    name = "attach - netcoredbg",
-    type = "coreclr",
-    request = "attach",
-    processId  = function()
-        return vim.fn.input('Process ID: ')
-    end,
-    justMyCode = true, -- set to `true` in debug configuration and `false` in release configuration
-  }
-}
-
 dap.listeners.after['event_initialized']['me'] = function()
   for _, buf in pairs(api.nvim_list_bufs()) do
     local keymaps = api.nvim_buf_get_keymap(buf, 'n')
@@ -64,6 +66,41 @@ dap.listeners.after['event_terminated']['me'] = function()
     )
   end
   keymap_restore = {}
+end
+
+-- C++
+if (reg.is_installed('cpptools')) then
+    local cpptools = reg.get_package('cpptools')
+
+    dap.adapters.cppdbg = {
+        id = 'cppdbg',
+        type = 'executable',
+        command = cpptools:get_install_path() .. '/extension/debugAdapters/bin/OpenDebugAD7',
+    }
+    dap.configurations.cpp = {
+        {
+            name = "Launch file",
+            type = "cppdbg",
+            request = "launch",
+            program = function()
+            return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+            end,
+            cwd = '${workspaceFolder}',
+            stopAtEntry = true,
+        },
+        {
+            name = 'Attach to gdbserver :1234',
+            type = 'cppdbg',
+            request = 'launch',
+            MIMode = 'gdb',
+            miDebuggerServerAddress = 'localhost:1234',
+            miDebuggerPath = '/usr/bin/gdb',
+            cwd = '${workspaceFolder}',
+            program = function()
+            return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+            end,
+        },
+    }
 end
 
 require("dapui").setup()

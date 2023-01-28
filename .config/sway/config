@@ -33,7 +33,7 @@ set $menu-desktop j4-dmenu-desktop --term="$term -e" --dmenu="BEMENU_BACKEND=way
 #
 # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
 # output * bg /usr/share/backgrounds/fedora-workstation/aurora-over-iceland.png fill
-output * bg /usr/share/backgrounds/gnome/adwaita-d.jpg fill
+output * bg /usr/share/backgrounds/gnome/adwaita-d.webp fill
 
 # set fractional scaling
 output * scale 1.5
@@ -111,8 +111,8 @@ input type:touchpad {
     bindsym $mod+Shift+q kill
 
     # Start your launcher
-    bindsym $mod+d exec $menu
-    bindsym $mod+Shift+d exec $menu-desktop
+    bindsym $mod+d exec $menu-desktop
+    bindsym $mod+Shift+d exec $menu
 
     # Drag floating windows by holding down $mod and left mouse button.
     # Resize them with right mouse button + $mod.
@@ -267,10 +267,11 @@ for_window [app_id="nm-connection-editor"] floating enable
 # Cmd+Alt+p Current output
 # Cmd+Ctrl+p Select a window
 
-bindsym $mod+p       exec grimshot save active
-bindsym $mod+Shift+p exec grimshot save area
-bindsym $mod+Mod1+p  exec grimshot save output
-bindsym $mod+Ctrl+p  exec grimshot save window
+# bindsym $mod+p       exec grimshot save active
+# bindsym $mod+Shift+p exec grimshot save area
+# bindsym $mod+Mod1+p  exec grimshot save output
+# bindsym $mod+Ctrl+p  exec grimshot save window
+bindsym $mod+Shift+s exec flatpak run --env=XDG_CURRENT_DESKTOP=sway org.flameshot.Flameshot gui -r | wl-copy
 
 # remove title bar for all applications
 # pixel means we want a small border around windows

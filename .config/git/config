@@ -17,12 +17,8 @@
 	dv = difftool
 	gl = config --global -l
 	se = !"git rev-list --all | xargs git grep -F"
-  su = !"git submodule update --remote --merge"
-  sui = !"git submodule update --remote --merge --init"
-[includeIf "gitdir:~/devel/"]
-    path = config.work
-[includeIf "gitdir:~/devel/ext/"]
-    path = config.oss
+    su = !"git submodule update --remote --merge"
+    sui = !"git submodule update --remote --merge --init"
 [diff]
 	algorithm = histogram
 	tool = nvimdiff

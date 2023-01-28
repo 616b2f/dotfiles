@@ -3,12 +3,20 @@ shopt -s globstar
 
 # set neovim as default editor
 export EDITOR=nvim
+# use nvim for manpages
+export MANPAGER='nvim +Man!'
+export MANWIDTH=999
 
 # increase bash command history size
 export HISTSIZE=20000
 export HISTFILESIZE=20000
 
-export PATH=~/.local/bin:$PATH
+# User specific environment
+if ! [[ "$PATH" =~ "$HOME/.local/bin:" ]]
+then
+    PATH="$HOME/.local/bin:$PATH"
+fi
+export PATH
 
 # don't send telementry data for dotnet tools
 export DOTNET_CLI_TELEMETRY_OPTOUT=1
@@ -22,15 +30,20 @@ alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
 
-alias tb=toolbox
-alias tbe="toolbox enter"
+# Uncomment the following line if you don't like systemctl's auto-paging feature:
+# export SYSTEMD_PAGER=
 
 # setup keybindings for fzf
 if [ -x "$(command -v fzf)"  ]; then
-    source /usr/share/fzf/shell/key-bindings.bash
+
+    [ -f ~/.fzf.bash ] && source ~/.fzf.bash
+
+    if [ -f /usr/share/fzf/shell/key-bindings.bash ]; then
+        source /usr/share/fzf/shell/key-bindings.bash
+    fi
 fi
 
-. "$HOME/.cargo/env"
+source "$HOME/.cargo/env"
 
 if [ -x "$(command -v kubectl)"  ]; then
     alias k=kubectl
