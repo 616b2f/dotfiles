@@ -1,7 +1,5 @@
 #!/bin/bash
 
-[ -f ~/.bash_prompt ] && source ~/.bash_prompt
-
 __kube_ps1()
 {
   if [ -x "$(command -v kubectl)" ]; then
