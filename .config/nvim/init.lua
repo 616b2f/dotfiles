@@ -44,8 +44,12 @@ require('packer').startup(function(use)
     "williamboman/mason-lspconfig.nvim", -- for better integration with lspconfig
     "neovim/nvim-lspconfig", -- Collection of configurations for built-in LSP client
     "WhoIsSethDaniel/mason-tool-installer.nvim", -- for easier installing tools
+
     -- specific for csharp allows goto definition for decompiled binaries
     "Hoffs/omnisharp-extended-lsp.nvim",
+
+    -- Additional lua configuration, makes nvim stuff amazing
+    'folke/neodev.nvim',
   }
 
   -- complete support
@@ -185,21 +189,18 @@ vim.o.shiftwidth=0
 -- (so that it behaves like Ctrl-D / Ctrl-T):
 vim.o.shiftround=true
 
+vim.o.scrolloff = 8
+
 -- if set, only insert spaces; otherwise insert \t and complete with spaces:
 vim.o.expandtab=true
 
 -- show special characters like tabs and trailing spaces
-vim.o.list=true
+vim.o.list = true
 
 -- reproduce the indentation of the previous line:
-vim.o.autoindent=true
--- keep indentation produced by 'autoindent' if leaving the line blank:
---set cpoptions+=I
--- try to be smart (increase the indenting level after ‘{’,
--- decrease it after ‘}’, and so on):
---set smartindent
--- a stricter alternative which works better for the C language:
---set cindent
+vim.o.autoindent = true
+-- indent after { and so on
+vim.o.smartindent = true
 
 -- fix indentation for file types
 vim.cmd [[
@@ -222,6 +223,7 @@ vim.cmd [[
 
 -- Set highlight on search
 vim.o.hlsearch = false
+vim.o.incsearch = true
 
 -- Make line numbers default
 vim.wo.number = true
@@ -242,6 +244,8 @@ vim.o.smartcase = true
 -- Decrease update time
 vim.o.updatetime = 250
 vim.wo.signcolumn = 'yes'
+
+vim.o.colorcolumn = "80"
 
 -- Set colorscheme
 vim.o.termguicolors = true
@@ -446,6 +450,9 @@ vim.keymap.set('n', '<leader>fc', function() require('telescope.builtin').lsp_wo
 -- vim.keymap.set('n', '<leader>so', require('telescope.builtin').tags{ only_current_buffer = true }, { noremap = true, silent = true })
 -- vim.keymap.set('n', '<leader>?', require('telescope.builtin').oldfiles, { noremap = true, silent = true })
 
+vim.keymap.set('n', 'Q', "<nop>")
+vim.keymap.set('n', '<space>rw', ":s/\\<<C-r><C-w>\\>/<C-r><C-w>/g<Left><Left>")
+
 -- -- custom commands
 -- -- open new terminal in the current files path
 -- command Dterm new %:p:h | lcd % | terminal
@@ -513,6 +520,9 @@ require'mason-tool-installer'.setup {
     }
 }
 
+-- Setup neovim lua configuration
+require('neodev').setup()
+
 -- custom config
 require('completion-config')
 require('lsp-config')
@@ -520,8 +530,6 @@ require('dap-config')
 require('formatter-config')
 require('treesitter-config')
 require('luasnip-config')
--- require('snippets-config')
--- require('luasnip-config')
 
 require('mini.surround').setup({
   -- vim-surround style mappings
