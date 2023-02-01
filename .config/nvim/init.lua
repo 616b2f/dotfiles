@@ -112,7 +112,23 @@ require('packer').startup(function(use)
 
   -- unit test plugins
   -- use 'klen/nvim-test'
-  use "klen/nvim-test"
+  -- use "616b2f/nvim-test"
+  use {
+    "nvim-neotest/neotest",
+    requires = {
+      "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter",
+      "antoinemadec/FixCursorHold.nvim"
+    }
+  }
+  use({
+    "Issafalcon/neotest-dotnet",
+    requires = {
+      {
+        "nvim-neotest/neotest",
+      },
+    }
+  })
 
   -- file explorer like NERDtree
   use {
@@ -301,10 +317,6 @@ require'nvim-tree'.setup {
   }
 }
 
-vim.api.nvim_set_keymap('n', '<leader>r', [[<cmd>NvimTreeRefresh<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>n', [[<cmd>NvimTreeToggle<CR>]], { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>nf', [[<cmd>NvimTreeFindFile<CR>]], { noremap = true, silent = true })
-
 -- Set statusbar
 vim.o.winbar="%f"
 require('lualine').setup {
@@ -400,82 +412,6 @@ require('telescope').setup {
   },
 }
 
--- setup dap key bindings
--- REPL (Read Evaluate Print Loop)
-vim.keymap.set('n', '<leader>dd', require('dapui').toggle, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>db', require('dap').toggle_breakpoint, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>dBc', function() require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: ')) end, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>dBl', function() require('dap').set_breakpoint(nil, nil, vim.fn.input('Log point message: ')) end, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>dc', require('dap').continue, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>dn', require('dap').step_over, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>dp', require('dap').step_back, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>dsi', require('dap').step_into, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>dso', require('dap').step_out, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>do', require('dap').repl.open, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>drl', require('dap').run_last, { noremap = true, silent = true })
-
--- remappings for easier switching between windows
--- vim.api.nvim_set_keymap('n', '<C-H>', '<C-W>h', { noremap = true, silent = true })
--- vim.api.nvim_set_keymap('n', '<C-J>', '<C-W>j', { noremap = true, silent = true })
--- vim.api.nvim_set_keymap('n', '<C-K>', '<C-W>k', { noremap = true, silent = true })
--- vim.api.nvim_set_keymap('n', '<C-L>', '<C-W>l', { noremap = true, silent = true })
-
--- hop mappings
-vim.keymap.set('n', '<space>f', function() require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.AFTER_CURSOR, current_line_only = false }) end, { noremap = true, silent = true })
-vim.keymap.set('n', '<space>F', function() require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.BEFORE_CURSOR, current_line_only = false }) end, { noremap = true, silent = true })
-
--- neogen mappings
-vim.keymap.set("n", "<space>df", require('neogen').generate, { noremap = true, silent = true })
-
--- Enable telescope fzf native
--- require('telescope').load_extension 'fzf'
-
-vim.keymap.set('n', '<leader>ff', require('telescope.builtin').find_files, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>fw', function() require('telescope.builtin').grep_string({search=vim.fn.expand('<cword>')}) end, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>fb', require('telescope.builtin').buffers, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>fh', require('telescope.builtin').help_tags, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>fgg', require('telescope.builtin').live_grep, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>fgb', require('telescope.builtin').git_branches, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>fgc', require('telescope.builtin').git_commits, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>fi', require('telescope.builtin').lsp_implementations, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>fs', require('telescope.builtin').lsp_document_symbols, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>fm', function() require('telescope.builtin').lsp_document_symbols({symbols={'method','function'}}) end, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>fsw', require('telescope.builtin').lsp_workspace_symbols, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>fc', function() require('telescope.builtin').lsp_workspace_symbols({symbols='class'}) end, { noremap = true, silent = true })
--- vim.keymap.set('n', '<leader>sf', function() require('telescope.builtin').find_files({previewer = false}) end, { noremap = true, silent = true })
--- vim.keymap.set('n', '<leader>sb', require('telescope.builtin').current_buffer_fuzzy_find, { noremap = true, silent = true })
--- vim.keymap.set('n', '<leader>sh', require('telescope.builtin').help_tags, { noremap = true, silent = true })
--- vim.keymap.set('n', '<leader>st', require('telescope.builtin').tags, { noremap = true, silent = true })
--- vim.keymap.set('n', '<leader>sd', require('telescope.builtin').grep_string, { noremap = true, silent = true })
--- vim.keymap.set('n', '<leader>so', require('telescope.builtin').tags{ only_current_buffer = true }, { noremap = true, silent = true })
--- vim.keymap.set('n', '<leader>?', require('telescope.builtin').oldfiles, { noremap = true, silent = true })
-
-vim.keymap.set('n', 'Q', "<nop>")
-vim.keymap.set('n', '<space>rw', ":s/\\<<C-r><C-w>\\>/<C-r><C-w>/g<Left><Left>")
-
--- -- custom commands
--- -- open new terminal in the current files path
--- command Dterm new %:p:h | lcd % | terminal
--- command Sterm split | terminal
--- command Vterm vsplit | terminal
--- -- insert new uuid in current cursor location
--- command Nuuid exe 'norm i' . system("uuidgen | tr -d '\n'")
--- -- format whole json file 
--- command FormatJson %!jq .
-vim.cmd [[
-  " configure terminal
-  autocmd TermOpen * setlocal nonumber norelativenumber
-]]
-
--- -- Diagnostic keymaps
-vim.keymap.set('n', '<leader>e', function() vim.diagnostic.open_float() end, { noremap = true, silent = true })
-vim.keymap.set('n', '[d', function() vim.diagnostic.goto_prev() end, { noremap = true, silent = true })
-vim.keymap.set('n', ']d', function() vim.diagnostic.goto_next() end, { noremap = true, silent = true })
-vim.keymap.set('n', '<leader>q', function() vim.diagnostic.setloclist() end, { noremap = true, silent = true })
-
--- neogit keymaps
-vim.keymap.set('n', '<leader>g', require("neogit").open, { noremap = true, silent = true })
-
 -- mason setup
 require("mason").setup()
 require'mason-tool-installer'.setup {
@@ -520,8 +456,37 @@ require'mason-tool-installer'.setup {
     }
 }
 
--- Setup neovim lua configuration
-require('neodev').setup()
+-- Setup neovim specific lua support
+require('neodev').setup({
+  library = { plugins = { "neotest" }, types = true },
+})
+
+require("neotest").setup({
+  adapters = {
+    require("neotest-dotnet")
+  },
+  icons = {
+    -- Ascii:
+    -- { "/", "|", "\\", "-", "/", "|", "\\", "-"},
+    -- Unicode:
+    -- { "", "🞅", "🞈", "🞉", "", "", "🞉", "🞈", "🞅", "", },
+    -- {"◴" ,"◷" ,"◶", "◵"},
+    -- {"◢", "◣", "◤", "◥"},
+    -- {"◐", "◓", "◑", "◒"},
+    -- {"◰", "◳", "◲", "◱"},
+    -- {"⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"},
+    -- {"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"},
+    -- {"⠋", "⠙", "⠚", "⠞", "⠖", "⠦", "⠴", "⠲", "⠳", "⠓"},
+    -- {"⠄", "⠆", "⠇", "⠋", "⠙", "⠸", "⠰", "⠠", "⠰", "⠸", "⠙", "⠋", "⠇", "⠆"},
+    -- { "⠋", "⠙", "⠚", "⠒", "⠂", "⠂", "⠒", "⠲", "⠴", "⠦", "⠖", "⠒", "⠐", "⠐", "⠒", "⠓", "⠋" },
+    running_animated = { "/", "|", "\\", "-", "/", "|", "\\", "-" },
+    passed = "✔",
+    running = "🗘",
+    failed = "✖",
+    skipped = "ﰸ",
+    unknown = "?",
+  }
+})
 
 -- custom config
 require('completion-config')
@@ -531,87 +496,29 @@ require('formatter-config')
 require('treesitter-config')
 require('luasnip-config')
 
-require('mini.surround').setup({
-  -- vim-surround style mappings
-  custom_surroundings = {
-    ['('] = {
-      input = { find = '%(%s-.-%s-%)', extract = '^(.%s*).-(%s*.)$' },
-      output = { left = '( ', right = ' )' },
-    },
-    ['['] = {
-      input = { find = '%[%s-.-%s-%]', extract = '^(.%s*).-(%s*.)$' },
-      output = { left = '[ ', right = ' ]' },
-    },
-    ['{'] = {
-      input = { find = '{%s-.-%s-}', extract = '^(.%s*).-(%s*.)$' },
-      output = { left = '{ ', right = ' }' },
-    },
-    ['<'] = {
-      input = { find = '<%s-.-%s->', extract = '^(.%s*).-(%s*.)$' },
-      output = { left = '< ', right = ' >' },
-    },
-    S = {
-      -- lua bracketed string mapping
-      -- 'ysiwS'  foo -> [[foo]]
-      input = { find = '%[%[.-%]%]', extract = '^(..).*(..)$' },
-      output = { left = '[[', right = ']]' },
-    },
-  },
-  mappings = {
-    add = 'ys',
-    delete = 'ds',
-    find = 'sf',
-    find_left = 'sF',
-    highlight = 'gs',     -- hijack 'gs' (sleep) for highlight
-    replace = 'cs',
-    update_n_lines = '',  -- bind for updating 'config.n_lines'
-  },
-  -- Number of lines within which surrounding is searched
-  n_lines = 62,
+require('mini.surround').setup({})
 
-  -- Duration (in ms) of highlight when calling `MiniSurround.highlight()`
-  highlight_duration = 2000,
-
-  -- How to search for surrounding (first inside current line, then inside
-  -- neighborhood). One of 'cover', 'cover_or_next', 'cover_or_prev',
-  -- 'cover_or_nearest'. For more details, see `:h MiniSurround.config`.
-  search_method = 'cover_or_next',
-})
-
--- Remap adding surrounding to Visual mode selection
-vim.keymap.set('x', 'S', function() MiniSurround.add('visual') end, { noremap = true })
-
--- unmap config generated `ys` mapping, prevents visual mode yank delay
-if vim.keymap then
-  vim.keymap.del("x", "ys")
-else
-  vim.cmd("xunmap ys")
-end
-
--- Make special mapping for "add surrounding for line"
-vim.keymap.set('n', 'yss', 'ys_', { noremap = false })
-
-require('nvim-test').setup {
-  run = true,                 -- run tests (using for debug)
-  commands_create = true,     -- create commands (TestFile, TestLast, ...)
-  filename_modifier = ":.",   -- modify filenames before tests run(:h filename-modifiers)
-  silent = false,             -- less notifications
-  term = "terminal",          -- a terminal to run ("terminal"|"toggleterm")
-  termOpts = {
-    direction = "vertical",   -- terminal's direction ("horizontal"|"vertical"|"float")
-    width = 96,               -- terminal's width (for vertical|float)
-    height = 24,              -- terminal's height (for horizontal|float)
-    go_back = false,          -- return focus to original window after executing
-    stopinsert = "auto",      -- exit from insert mode (true|false|"auto")
-    keep_one = true,          -- keep only one terminal for testing
-  },
-  runners = {               -- setup tests runners
-    cs = "nvim-test.runners.dotnet",
-    go = "nvim-test.runners.go-test",
-    rust = "nvim-test.runners.cargo-test",
-    javascript = "nvim-test.runners.mocha"
-  }
-}
+-- require('nvim-test').setup {
+--   run = true,                 -- run tests (using for debug)
+--   commands_create = true,     -- create commands (TestFile, TestLast, ...)
+--   filename_modifier = ":.",   -- modify filenames before tests run(:h filename-modifiers)
+--   silent = false,             -- less notifications
+--   term = "terminal",          -- a terminal to run ("terminal"|"toggleterm")
+--   termOpts = {
+--     direction = "vertical",   -- terminal's direction ("horizontal"|"vertical"|"float")
+--     width = 96,               -- terminal's width (for vertical|float)
+--     height = 24,              -- terminal's height (for horizontal|float)
+--     go_back = false,          -- return focus to original window after executing
+--     stopinsert = "auto",      -- exit from insert mode (true|false|"auto")
+--     keep_one = true,          -- keep only one terminal for testing
+--   },
+--   runners = {               -- setup tests runners
+--     cs = "nvim-test.runners.dotnet",
+--     go = "nvim-test.runners.go-test",
+--     rust = "nvim-test.runners.cargo-test",
+--     javascript = "nvim-test.runners.mocha"
+--   }
+-- }
 
 require("resize-mode").setup {
   horizontal_amount = 9,
@@ -630,10 +537,101 @@ require("resize-mode").setup {
   }
 }
 
-
-vim.keymap.set('n', '<leader>wr', require("resize-mode").start, { noremap = true, silent = true })
-
 -- custom commands
 vim.api.nvim_create_user_command('GenUuid', "r !uuidgen | tr -d '\n'", {})
 
+-- setup extra surround mappings
+vim.keymap.set('x', 'S', function() require('mini.surround').add('visual') end, { noremap = true })
+-- -- Make special mapping for "add surrounding for line"
+-- vim.keymap.set('n', 'yss', 'ys_', { noremap = false })
+
+-- setup nvim-tree keybinding
+vim.keymap.set('n', '<leader>nr', require("nvim-tree.api").tree.reload)
+vim.keymap.set('n', '<leader>n', require("nvim-tree.api").tree.toggle)
+vim.keymap.set('n', '<leader>nf', function() require("nvim-tree.api").tree.open({find_file=true}) end)
+
+-- setup dap key bindings
+-- REPL (Read Evaluate Print Loop)
+vim.keymap.set('n', '<leader>dd', require('dapui').toggle)
+vim.keymap.set('n', '<leader>db', require('dap').toggle_breakpoint)
+vim.keymap.set('n', '<leader>dBc', function() require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: ')) end)
+vim.keymap.set('n', '<leader>dBl', function() require('dap').set_breakpoint(nil, nil, vim.fn.input('Log point message: ')) end)
+vim.keymap.set('n', '<leader>dc', require('dap').continue)
+vim.keymap.set('n', '<leader>dn', require('dap').step_over)
+vim.keymap.set('n', '<leader>dp', require('dap').step_back)
+vim.keymap.set('n', '<leader>dsi', require('dap').step_into)
+vim.keymap.set('n', '<leader>dso', require('dap').step_out)
+vim.keymap.set('n', '<leader>do', require('dap').repl.open)
+vim.keymap.set('n', '<leader>drl', require('dap').run_last)
+
+-- remappings for easier switching between windows
+-- vim.api.nvim_set_keymap('n', '<C-H>', '<C-W>h')
+-- vim.api.nvim_set_keymap('n', '<C-J>', '<C-W>j')
+-- vim.api.nvim_set_keymap('n', '<C-K>', '<C-W>k')
+-- vim.api.nvim_set_keymap('n', '<C-L>', '<C-W>l')
+
+-- hop mappings
+vim.keymap.set('n', '<space>f', function() require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.AFTER_CURSOR, current_line_only = false }) end)
+vim.keymap.set('n', '<space>F', function() require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.BEFORE_CURSOR, current_line_only = false }) end)
+
+-- neogen mappings
+vim.keymap.set("n", "<space>df", require('neogen').generate)
+
+-- Enable telescope fzf native
+-- require('telescope').load_extension 'fzf'
+
+vim.keymap.set('n', '<leader>ff', require('telescope.builtin').find_files)
+vim.keymap.set('n', '<leader>fw', function() require('telescope.builtin').grep_string({search=vim.fn.expand('<cword>')}) end)
+vim.keymap.set('n', '<leader>fb', require('telescope.builtin').buffers)
+vim.keymap.set('n', '<leader>fh', require('telescope.builtin').help_tags)
+vim.keymap.set('n', '<leader>fgg', require('telescope.builtin').live_grep)
+vim.keymap.set('n', '<leader>fgb', require('telescope.builtin').git_branches)
+vim.keymap.set('n', '<leader>fgc', require('telescope.builtin').git_commits)
+vim.keymap.set('n', '<leader>fi', require('telescope.builtin').lsp_implementations)
+vim.keymap.set('n', '<leader>fs', require('telescope.builtin').lsp_document_symbols)
+vim.keymap.set('n', '<leader>fm', function() require('telescope.builtin').lsp_document_symbols({symbols={'method','function'}}) end)
+vim.keymap.set('n', '<leader>fsw', require('telescope.builtin').lsp_workspace_symbols)
+vim.keymap.set('n', '<leader>fc', function() require('telescope.builtin').lsp_workspace_symbols({symbols='class'}) end)
+-- vim.keymap.set('n', '<leader>sf', function() require('telescope.builtin').find_files({previewer = false}) end)
+-- vim.keymap.set('n', '<leader>sb', require('telescope.builtin').current_buffer_fuzzy_find)
+-- vim.keymap.set('n', '<leader>sh', require('telescope.builtin').help_tags)
+-- vim.keymap.set('n', '<leader>st', require('telescope.builtin').tags)
+-- vim.keymap.set('n', '<leader>sd', require('telescope.builtin').grep_string)
+-- vim.keymap.set('n', '<leader>so', require('telescope.builtin').tags{ only_current_buffer = true })
+-- vim.keymap.set('n', '<leader>?', require('telescope.builtin').oldfiles)
+
+vim.keymap.set('n', 'Q', "<nop>")
+vim.keymap.set('n', '<space>rw', ":s/\\<<C-r><C-w>\\>/<C-r><C-w>/g<Left><Left>")
+
+-- -- custom commands
+-- -- open new terminal in the current files path
+-- command Dterm new %:p:h | lcd % | terminal
+-- command Sterm split | terminal
+-- command Vterm vsplit | terminal
+-- -- insert new uuid in current cursor location
+-- command Nuuid exe 'norm i' . system("uuidgen | tr -d '\n'")
+-- -- format whole json file 
+-- command FormatJson %!jq .
+vim.cmd [[
+  " configure terminal
+  autocmd TermOpen * setlocal nonumber norelativenumber
+]]
+
+-- -- Diagnostic keymaps
+vim.keymap.set('n', '<leader>e', function() vim.diagnostic.open_float() end, { noremap = true, silent = true })
+vim.keymap.set('n', '[d', function() vim.diagnostic.goto_prev() end, { noremap = true, silent = true })
+vim.keymap.set('n', ']d', function() vim.diagnostic.goto_next() end, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>q', function() vim.diagnostic.setloclist() end, { noremap = true, silent = true })
+
+-- neogit keymaps
+vim.keymap.set('n', '<leader>g', require("neogit").open, { noremap = true, silent = true })
+
+-- keybinding for neotest
+vim.keymap.set('n', '<leader>rn', require("neotest").run.run)
+vim.keymap.set('n', '<leader>rs', require("neotest").run.stop)
+vim.keymap.set('n', '<leader>ra', require("neotest").run.attach)
+vim.keymap.set('n', '<leader>rf', function() require('neotest').run.run({vim.fn.expand('%')}) end)
+vim.keymap.set('n', '<leader>rd', function() require('neotest').run.run({strategy='dap'}) end)
+
+vim.keymap.set('n', '<leader>wr', require("resize-mode").start, { noremap = true, silent = true })
 -- vim: ts=2 sts=2 sw=2 et

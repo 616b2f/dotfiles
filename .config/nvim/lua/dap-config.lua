@@ -6,11 +6,14 @@ local api = vim.api
 if (reg.is_installed('netcoredbg')) then
     local netcoredbg = reg.get_package('netcoredbg')
 
-    dap.adapters.coreclr = {
+    local adapter_config = {
         type = 'executable',
         command = netcoredbg:get_install_path() .. '/netcoredbg',
         args = {'--interpreter=vscode'}
     }
+    -- neotest-dotnet needs 'netcoredbg'
+    dap.adapters.netcoredbg = adapter_config
+    dap.adapters.coreclr = adapter_config
 
     dap.configurations.cs = {
         {
