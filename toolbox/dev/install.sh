@@ -27,7 +27,7 @@ luarocks --lua-version=5.1 install vusted
 sudo dnf install -y gcc libstdc++-static
 
 # install neovim nightly
-sudo dnf copr enable agriffis/neovim-nightly -y
+sudo dnf copr enable -y agriffis/neovim-nightly
 
 # telescope prerequisites
 sudo dnf install -y ripgrep jq fd-find
@@ -39,6 +39,13 @@ sudo dnf install -y neovim python3-neovim
 
 # update plugins
 nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
+
+
+###
+# install helix
+###
+sudo dnf copr enable -y varlad/helix
+sudo dnf install -y helix
 
 ###
 # install wally-cli (for Moonlander firmware update)
