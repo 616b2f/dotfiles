@@ -2,6 +2,18 @@ local dap = require('dap')
 local reg = require('mason-registry')
 local api = vim.api
 
+-- setup icons
+-- vim.fn.sign_define('DapBreakpoint', {text='', texthl='', linehl='', numhl=''})
+vim.api.nvim_set_hl(0, 'DapBreakpoint', { fg='#3d59a1' })
+vim.api.nvim_set_hl(0, 'DapLogPoint', { fg='#3d59a1' })
+vim.api.nvim_set_hl(0, 'DapStopped', { fg='#9ece6a' })
+
+vim.fn.sign_define('DapBreakpoint', {text='', texthl='DapBreakpoint', linehl='', numhl=''})
+vim.fn.sign_define('DapBreakpointCondition', {text='', texthl='DapBreakpoint', linehl='', numhl=''})
+vim.fn.sign_define('DapLogPoint', {text='󰣕', texthl='DapLogPoint', linehl='', numhl=''})
+vim.fn.sign_define('DapStopped', {text='', texthl='DapStopped', linehl='', numhl=''})
+vim.fn.sign_define('DapBreakpointRejected', {text='', texthl='', linehl='', numhl=''})
+
 -- C#
 if (reg.is_installed('netcoredbg')) then
     local netcoredbg = reg.get_package('netcoredbg')

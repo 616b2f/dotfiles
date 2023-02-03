@@ -580,6 +580,7 @@ vim.keymap.set("n", "<space>df", require('neogen').generate)
 -- Enable telescope fzf native
 -- require('telescope').load_extension 'fzf'
 
+-- telescope keybindins
 vim.keymap.set('n', '<leader>ff', require('telescope.builtin').find_files)
 vim.keymap.set('n', '<leader>fw', function() require('telescope.builtin').grep_string({search=vim.fn.expand('<cword>')}) end)
 vim.keymap.set('n', '<leader>fb', require('telescope.builtin').buffers)
@@ -589,6 +590,7 @@ vim.keymap.set('n', '<leader>fgb', require('telescope.builtin').git_branches)
 vim.keymap.set('n', '<leader>fgc', require('telescope.builtin').git_commits)
 vim.keymap.set('n', '<leader>fi', require('telescope.builtin').lsp_implementations)
 vim.keymap.set('n', '<leader>fs', require('telescope.builtin').lsp_document_symbols)
+vim.keymap.set('n', '<leader>fk', require('telescope.builtin').keymaps,{desc="find keybindings"})
 vim.keymap.set('n', '<leader>fm', function() require('telescope.builtin').lsp_document_symbols({symbols={'method','function'}}) end)
 vim.keymap.set('n', '<leader>fsw', require('telescope.builtin').lsp_workspace_symbols)
 vim.keymap.set('n', '<leader>fc', function() require('telescope.builtin').lsp_workspace_symbols({symbols='class'}) end)
@@ -601,6 +603,7 @@ vim.keymap.set('n', '<leader>fc', function() require('telescope.builtin').lsp_wo
 -- vim.keymap.set('n', '<leader>?', require('telescope.builtin').oldfiles)
 
 vim.keymap.set('n', 'Q', "<nop>")
+vim.keymap.set('n', '<leader>gb', ":b#<CR>",{desc="switch between two last active buffers"})
 vim.keymap.set('n', '<space>rw', ":s/\\<<C-r><C-w>\\>/<C-r><C-w>/g<Left><Left>")
 
 -- -- custom commands
@@ -609,7 +612,6 @@ vim.keymap.set('n', '<space>rw', ":s/\\<<C-r><C-w>\\>/<C-r><C-w>/g<Left><Left>")
 -- command Sterm split | terminal
 -- command Vterm vsplit | terminal
 -- -- insert new uuid in current cursor location
--- command Nuuid exe 'norm i' . system("uuidgen | tr -d '\n'")
 -- -- format whole json file 
 -- command FormatJson %!jq .
 vim.cmd [[
@@ -627,10 +629,11 @@ vim.keymap.set('n', '<leader>q', function() vim.diagnostic.setloclist() end, { n
 vim.keymap.set('n', '<leader>g', require("neogit").open, { noremap = true, silent = true })
 
 -- keybinding for neotest
-vim.keymap.set('n', '<leader>rn', require("neotest").run.run)
+vim.keymap.set('n', '<leader>rn', require("neotest").run.run, { desc = "run nearest test"})
 vim.keymap.set('n', '<leader>rs', require("neotest").run.stop)
 vim.keymap.set('n', '<leader>ra', require("neotest").run.attach)
 vim.keymap.set('n', '<leader>rf', function() require('neotest').run.run({vim.fn.expand('%')}) end)
+vim.keymap.set('n', '<leader>rs', function() require('neotest').run.run({suite=true}) end)
 vim.keymap.set('n', '<leader>rd', function() require('neotest').run.run({strategy='dap'}) end)
 
 vim.keymap.set('n', '<leader>wr', require("resize-mode").start, { noremap = true, silent = true })
