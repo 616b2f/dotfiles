@@ -1,187 +1,177 @@
--- Install packer
-local install_path = vim.fn.stdpath 'data' .. '/site/pack/packer/start/packer.nvim'
-local is_bootstrap = false
-if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-  is_bootstrap = true
-  vim.fn.execute('!git clone https://github.com/wbthomason/packer.nvim ' .. install_path)
-  vim.cmd [[packadd packer.nvim]]
+-- Install LazyVim
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.loop.fs_stat(lazypath) then
+  vim.fn.system({
+    "git",
+    "clone",
+    "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git",
+    "--branch=stable", -- latest stable release
+    lazypath,
+  })
 end
+vim.opt.rtp:prepend(lazypath)
 
-require('packer').startup(function(use)
-  use 'wbthomason/packer.nvim' -- Package manager
-
-  -- use 'ludovicchabant/vim-gutentags' -- Automatic tags management
-
+require('lazy').setup({
   -- UI to select things (files, grep results, open buffers...)
-  use { 'nvim-telescope/telescope.nvim', requires = { 'nvim-lua/plenary.nvim' } }
-  -- use {'nvim-telescope/telescope-fzf-native.nvim', run = 'make' }
+  { 'nvim-telescope/telescope.nvim', dependencies = { 'nvim-lua/plenary.nvim' } },
 
   -- Add indentation guides even on blank lines
-  use 'lukas-reineke/indent-blankline.nvim'
+  'lukas-reineke/indent-blankline.nvim',
   -- Add git related info in the signs columns and popups
-  use { 'lewis6991/gitsigns.nvim', requires = { 'nvim-lua/plenary.nvim' } }
+  { 'lewis6991/gitsigns.nvim', dependencies = { 'nvim-lua/plenary.nvim' } },
   -- git plugin
-  use {
+  {
     'TimUntersberger/neogit',
-    requires = {
+    dependencies = {
       'nvim-lua/plenary.nvim',
       'sindrets/diffview.nvim'
     }
-  }
-  -- use 'tpope/vim-fugitive' -- Git commands in nvim
-  --use 'tpope/vim-rhubarb' -- Fugitive-companion to interact with github
-  --use 'sindrets/diffview.nvim'
+  },
+  --'tpope/vim-fugitive', -- Git commands in nvim
+  --'tpope/vim-rhubarb', -- Fugitive-companion to interact with github
 
   -- Highlight, edit, and navigate code using a fast incremental parsing library
-  use 'nvim-treesitter/nvim-treesitter'
-  -- use 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  -- We recommend updating the parsers on update
-  use 'nvim-treesitter/nvim-treesitter-textobjects' -- Additional textobjects for treesitter
-  use 'nvim-treesitter/playground'
+  'nvim-treesitter/nvim-treesitter',
+  'nvim-treesitter/nvim-treesitter-textobjects', -- Additional textobjects for treesitter
+  'nvim-treesitter/playground',
 
   -- nvim lsp support
-  use {
-    "williamboman/mason.nvim",
-    "williamboman/mason-lspconfig.nvim", -- for better integration with lspconfig
-    "neovim/nvim-lspconfig", -- Collection of configurations for built-in LSP client
-    "WhoIsSethDaniel/mason-tool-installer.nvim", -- for easier installing tools
+  "williamboman/mason.nvim",
+  "williamboman/mason-lspconfig.nvim", -- for better integration with lspconfig
+  "neovim/nvim-lspconfig", -- Collection of configurations for built-in LSP client
+  "WhoIsSethDaniel/mason-tool-installer.nvim", -- for easier installing tools
 
-    -- specific for csharp allows goto definition for decompiled binaries
-    "Hoffs/omnisharp-extended-lsp.nvim",
+  -- specific for csharp allows goto definition for decompiled binaries
+  "Hoffs/omnisharp-extended-lsp.nvim",
 
-    -- Additional lua configuration, makes nvim stuff amazing
-    'folke/neodev.nvim',
-  }
+  -- Additional lua configuration, makes nvim stuff amazing
+  'folke/neodev.nvim',
 
   -- complete support
-  use 'hrsh7th/nvim-cmp' -- Autocompletion plugin
-  use 'hrsh7th/cmp-nvim-lsp'
-  use 'hrsh7th/cmp-buffer'
-  use 'hrsh7th/cmp-path'
-  use 'hrsh7th/cmp-nvim-lua'
-  use 'onsails/lspkind-nvim'
-  use 'tjdevries/complextras.nvim'
-  use 'saadparwaiz1/cmp_luasnip'
-  use 'L3MON4D3/LuaSnip' -- Snippets plugin
-  use 'rafamadriz/friendly-snippets' -- basic snippets
-  use {
+  'hrsh7th/nvim-cmp', -- Autocompletion plugin
+  'hrsh7th/cmp-nvim-lsp',
+  'hrsh7th/cmp-buffer',
+  'hrsh7th/cmp-path',
+  'hrsh7th/cmp-nvim-lua',
+  'onsails/lspkind-nvim',
+  'tjdevries/complextras.nvim',
+  'saadparwaiz1/cmp_luasnip',
+  'L3MON4D3/LuaSnip', -- Snippets plugin
+  'rafamadriz/friendly-snippets', -- basic snippets
+  {
     "danymat/neogen", -- documentation generation
-    requires = "nvim-treesitter/nvim-treesitter",
-    -- Uncomment next line if you want to follow only stable versions
-    -- tag = "*"
-  }
+    dependencies = "nvim-treesitter/nvim-treesitter",
+  },
 
   -- custom formatters
-  use 'mhartington/formatter.nvim'
+  'mhartington/formatter.nvim',
 
   -- color schemes
-  use 'tomasiser/vim-code-dark'
-  use 'rakr/vim-one'
-  use 'arcticicestudio/nord-vim'
-  -- use 'mjlbach/onedark.nvim' -- Theme inspired by Atom
+  'tomasiser/vim-code-dark',
+  'rakr/vim-one',
+  'arcticicestudio/nord-vim',
+
   -- colorscheme helper
-  use 'tjdevries/colorbuddy.nvim'
+  'tjdevries/colorbuddy.nvim',
 
   -- colorizer (show colors for RGB and there like)
-  use 'norcalli/nvim-colorizer.lua'
+  'norcalli/nvim-colorizer.lua',
 
   -- comment plugins
-  use 'numToStr/Comment.nvim' -- "gc" to comment visual regions/lines
-  --use 'tomtom/tcomment_vim'
-  --use 'preservim/nerdcommenter'
+  'numToStr/Comment.nvim', -- "gc" to comment visual regions/lines
+  --'tomtom/tcomment_vim',
+  --'preservim/nerdcommenter',
 
   -- Plugin outside ~/.vim/plugged with post-update hook
-  --use 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
-  --use 'junegunn/fzf.vim'
+  --'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' },
+  --'junegunn/fzf.vim',
 
   -- lightline plugin for pretty statusline
-  use {
+  {
     'nvim-lualine/lualine.nvim', -- Fancier statusline
-    requires = { 'kyazdani42/nvim-web-devicons', opt = true } -- for file icons
-  }
-  -- use 'itchyny/lightline.vim'
+    dependencies = { 'kyazdani42/nvim-web-devicons', lazy = true } -- for file icons
+  },
+  -- 'itchyny/lightline.vim',
 
-  -- essential plugins
-  -- use 'tpope/vim-surround'
-  use { 'echasnovski/mini.nvim', branch = 'stable' }
+  -- essential plugins,
+  -- 'tpope/vim-surround',
+  { 'echasnovski/mini.nvim', branch = 'stable' },
 
   -- debugger adapter protocoll support
-  use 'mfussenegger/nvim-dap'
-  use { 'Pocco81/dap-buddy.nvim', branch = "dev" }
-  use 'rcarriga/nvim-dap-ui'
-  -- use 'nvim-telescope/telescope-dap.nvim'
+  'mfussenegger/nvim-dap',
+  { 'Pocco81/dap-buddy.nvim', branch = "dev" },
+  'rcarriga/nvim-dap-ui',
+  -- 'nvim-telescope/telescope-dap.nvim',
 
   -- unit test plugins
-  -- use 'klen/nvim-test'
-  -- use "616b2f/nvim-test"
-  use {
+  -- 'klen/nvim-test',
+  -- "616b2f/nvim-test",
+  {
     "nvim-neotest/neotest",
-    requires = {
+    dependencies = {
       "nvim-lua/plenary.nvim",
       "nvim-treesitter/nvim-treesitter",
       "antoinemadec/FixCursorHold.nvim"
     }
-  }
-  use({
+  },
+  {
     "Issafalcon/neotest-dotnet",
-    requires = {
+    dependencies = {
       {
         "nvim-neotest/neotest",
       },
     }
-  })
+  },
 
   -- file explorer like NERDtree
-  use {
+  {
       'kyazdani42/nvim-tree.lua',
-      requires = {
+      dependencies = {
         'kyazdani42/nvim-web-devicons', -- optional, for file icon
       }
-  }
+  },
 
-  use {
+  {
     'phaazon/hop.nvim',
     branch = 'v1', -- optional but strongly recommended
     config = function()
       -- you can configure Hop the way you like here; see :h hop-config
       require'hop'.setup()
     end
-  }
-  -- use "nvim-telescope/telescope-file-browser.nvim"
+  },
+  -- "nvim-telescope/telescope-file-browser.nvim"
 
   -- terraform plugin
-  use 'hashivim/vim-terraform'
+  'hashivim/vim-terraform',
 
   -- nice helper for registers
-  use {
+  {
     'tversteeg/registers.nvim',
     config = function ()
       require("registers").setup()
     end,
-  }
+  },
 
   -- plugin to show function signatures in a better way
-  use 'ray-x/lsp_signature.nvim'
+  'ray-x/lsp_signature.nvim',
 
   -- for easier resizing windows
-  use {"dimfred/resize-mode.nvim"}
-
-  if is_bootstrap then
-    require('packer').sync()
-  end
-end)
+  {"dimfred/resize-mode.nvim"},
+})
 
 -- When we are bootstrapping a configuration, it doesn't
 -- make sense to execute the rest of the init.lua.
 --
 -- You'll need to restart nvim, and then it will work.
-if is_bootstrap then
-  print '=================================='
-  print '    Plugins are being installed'
-  print '    Wait until Packer completes,'
-  print '       then restart nvim'
-  print '=================================='
-  return
-end
+-- if is_bootstrap then
+--   print '=================================='
+--   print '    Plugins are being installed'
+--   print '    Wait until Packer completes,'
+--   print '       then restart nvim'
+--   print '=================================='
+--   return
+-- end
 
 -- enable filetype.lua and disable filetype.vim
 vim.g.do_filetype_lua = 1
