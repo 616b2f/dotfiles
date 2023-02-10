@@ -126,10 +126,22 @@ require('lazy').setup({
 
   -- file explorer like NERDtree
   {
-      'kyazdani42/nvim-tree.lua',
-      dependencies = {
-        'kyazdani42/nvim-web-devicons', -- optional, for file icon
-      }
+    'kyazdani42/nvim-tree.lua',
+    dependencies = {
+      'kyazdani42/nvim-web-devicons', -- optional, for file icon
+    }
+  },
+  {
+    'gnikdroy/projections.nvim',
+    config = function()
+      require("projections").setup({
+        workspaces = {                        -- Default workspaces to search for 
+          { "~/devel/ext", { ".git" } },      -- devel/ext is a workspace. patterns = { ".git" }
+          { "~/devel", { ".git" } },          -- devel is a workspace. patterns = { ".git" }
+        },
+      })
+      require('telescope').load_extension('projections')
+    end
   },
 
   {
@@ -410,25 +422,29 @@ require'mason-tool-installer'.setup {
     -- start; they should be the names Mason uses for each tool
     ensure_installed = {
 
-        -- LSP
         -- you can turn off/on auto_update per tool
         { 'bash-language-server', auto_update = true },
         'lua-language-server',
         'yaml-language-server',
         'vim-language-server',
-        'omnisharp',
         'gopls',
         'rust-analyzer',
         'terraform-ls',
 
-        -- linter
+        -- misc linter
         'shellcheck',
         'editorconfig-checker',
         -- you can pin a tool to a particular version
         -- { 'golangci-lint', version = '1.47.0' },
 
-        -- DAP
-        'netcoredbg',
+        -- csharp
+        'omnisharp', -- LSP
+        'netcoredbg', -- DAP
+
+        -- java
+        'jdtls',
+        'java-debug-adapter',
+        'java-test'
 
         -- 'luacheck',
         -- 'stylua',
@@ -529,6 +545,7 @@ require("resize-mode").setup {
 
 -- custom commands
 vim.api.nvim_create_user_command('GenUuid', "r !uuidgen | tr -d '\n'", {})
+vim.api.nvim_create_user_command('OpenConfig', "e ~/.config/nvim/init.lua", {})
 
 -- setup extra surround mappings
 vim.keymap.set('x', 'S', function() require('mini.surround').add('visual') end, { noremap = true })
@@ -584,6 +601,7 @@ vim.keymap.set('n', '<leader>fk', require('telescope.builtin').keymaps,{desc="fi
 vim.keymap.set('n', '<leader>fm', function() require('telescope.builtin').lsp_document_symbols({symbols={'method','function'}}) end)
 vim.keymap.set('n', '<leader>fsw', require('telescope.builtin').lsp_workspace_symbols)
 vim.keymap.set('n', '<leader>fc', function() require('telescope.builtin').lsp_workspace_symbols({symbols='class'}) end)
+vim.keymap.set("n", "<leader>fp", function() vim.cmd("Telescope projections") end, {desc="find projects"})
 -- vim.keymap.set('n', '<leader>sf', function() require('telescope.builtin').find_files({previewer = false}) end)
 -- vim.keymap.set('n', '<leader>sb', require('telescope.builtin').current_buffer_fuzzy_find)
 -- vim.keymap.set('n', '<leader>sh', require('telescope.builtin').help_tags)
@@ -616,7 +634,7 @@ vim.keymap.set('n', ']d', function() vim.diagnostic.goto_next() end, { noremap =
 vim.keymap.set('n', '<leader>q', function() vim.diagnostic.setloclist() end, { noremap = true, silent = true })
 
 -- neogit keymaps
-vim.keymap.set('n', '<leader>g', require("neogit").open, { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>gg', require("neogit").open, { desc = "open neogit overview" })
 
 -- keybinding for neotest
 vim.keymap.set('n', '<leader>rn', require("neotest").run.run, { desc = "run nearest test"})
