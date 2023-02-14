@@ -220,8 +220,12 @@ vim.o.autoindent = true
 -- indent after { and so on
 vim.o.smartindent = true
 
+-- diff customizations
+vim.o.fillchars='diff:╱'
+
 -- fix indentation for file types
 vim.cmd [[
+    autocmd FileType lua setlocal ts=2 sts=2 sw=2 expandtab
     autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
     autocmd FileType json setlocal ts=2 sts=2 sw=2 expandtab
     autocmd FileType tf setlocal ts=2 sts=2 sw=2 expandtab
@@ -394,6 +398,10 @@ require('neogit').setup {
     diffview = true
   }
 }
+
+require('diffview').setup({
+  -- enhanced_diff_hl=true
+})
 
 -- Telescope
 require('telescope').setup {
@@ -645,4 +653,20 @@ vim.keymap.set('n', '<leader>rs', function() require('neotest').run.run({suite=t
 vim.keymap.set('n', '<leader>rd', function() require('neotest').run.run({strategy='dap'}) end)
 
 vim.keymap.set('n', '<leader>wr', require("resize-mode").start, { noremap = true, silent = true })
+
+vim.keymap.set("n","<C-e>", ":TSHighlightCapturesUnderCursor<CR>")
+
+vim.api.nvim_set_hl(0, 'DiffAdd', { bg='#A3BE8C'})
+vim.api.nvim_set_hl(0, 'DiffDelete', { bg='#BF616A'})
+vim.api.nvim_set_hl(0, 'DiffChange', { bg='#EBCB8B'})
+vim.api.nvim_set_hl(0, 'DiffText', { bg='#D08770'})
+vim.api.nvim_set_hl(0, 'DiffviewStatusModified', { fg='#EBCB8B'})
+vim.api.nvim_set_hl(0, 'DiffviewStatusUnmerged', { fg='#EBCB8B'})
+vim.api.nvim_set_hl(0, 'DiffviewFilePanelDeletions', { fg='#BF616A'})
+vim.api.nvim_set_hl(0, 'DiffviewFilePanelInsertions', { fg='#A3BE8C'})
+-- vim.api.nvim_set_hl(0, 'DiffAdd', { bg='#283B4D', fg='NONE' })
+-- vim.api.nvim_set_hl(0, 'DiffChange', { bg='#283B4D', fg='NONE' })
+-- vim.api.nvim_set_hl(0, 'DiffDelete', { bg='#3C2C3C', fg='#4d384d' })
+-- vim.api.nvim_set_hl(0, 'DiffText', { bg='#365069', fg='NONE' })
+
 -- vim: ts=2 sts=2 sw=2 et
