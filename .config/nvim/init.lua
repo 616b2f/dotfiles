@@ -70,7 +70,7 @@ require('lazy').setup({
   -- color schemes
   'tomasiser/vim-code-dark',
   'rakr/vim-one',
-  'arcticicestudio/nord-vim',
+  'gbprod/nord.nvim',
 
   -- colorscheme helper
   'tjdevries/colorbuddy.nvim',
@@ -271,7 +271,11 @@ vim.o.colorcolumn = "80"
 
 -- Set colorscheme
 vim.o.termguicolors = true
-vim.cmd [[colorscheme nord]]
+vim.g.nord_borders = true
+vim.g.nord_contrast = true
+vim.g.nord_italic = false
+vim.g.nord_uniform_diff_background = false
+vim.cmd[[colorscheme nord]]
 
 vim.o.hidden=true
 
@@ -656,14 +660,15 @@ vim.keymap.set('n', '<leader>wr', require("resize-mode").start, { noremap = true
 
 vim.keymap.set("n","<C-e>", ":TSHighlightCapturesUnderCursor<CR>")
 
-vim.api.nvim_set_hl(0, 'DiffAdd', { bg='#A3BE8C'})
-vim.api.nvim_set_hl(0, 'DiffDelete', { bg='#BF616A'})
-vim.api.nvim_set_hl(0, 'DiffChange', { bg='#EBCB8B'})
-vim.api.nvim_set_hl(0, 'DiffText', { bg='#D08770'})
-vim.api.nvim_set_hl(0, 'DiffviewStatusModified', { fg='#EBCB8B'})
-vim.api.nvim_set_hl(0, 'DiffviewStatusUnmerged', { fg='#EBCB8B'})
-vim.api.nvim_set_hl(0, 'DiffviewFilePanelDeletions', { fg='#BF616A'})
-vim.api.nvim_set_hl(0, 'DiffviewFilePanelInsertions', { fg='#A3BE8C'})
+-- vim.api.nvim_set_hl(0, 'DiffAdd', { bg='#A3BE8C'})
+-- vim.api.nvim_set_hl(0, 'DiffDelete', { bg='#BF616A'})
+-- vim.api.nvim_set_hl(0, 'DiffChange', { bg='#EBCB8B'})
+-- vim.api.nvim_set_hl(0, 'DiffText', { bg='#D08770'})
+-- vim.api.nvim_set_hl(0, 'DiffviewStatusModified', { fg='#EBCB8B'})
+-- vim.api.nvim_set_hl(0, 'DiffviewStatusUnmerged', { fg='#EBCB8B'})
+-- vim.api.nvim_set_hl(0, 'DiffviewFilePanelDeletions', { fg='#BF616A'})
+-- vim.api.nvim_set_hl(0, 'DiffviewFilePanelInsertions', { fg='#A3BE8C'})
+
 -- vim.api.nvim_set_hl(0, 'DiffAdd', { bg='#283B4D', fg='NONE' })
 -- vim.api.nvim_set_hl(0, 'DiffChange', { bg='#283B4D', fg='NONE' })
 -- vim.api.nvim_set_hl(0, 'DiffDelete', { bg='#3C2C3C', fg='#4d384d' })
