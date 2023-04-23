@@ -1,14 +1,15 @@
 #!/bin/bash
+set -e -o pipefail
 
 ###
 # setup additional repos
 ###
-sudo cp ../../yum.repos.d/* /etc/yum.repos.d/
+# sudo cp ../../yum.repos.d/* /etc/yum.repos.d/
 
 ###
 # update all installed packages to latest version
 ###
-sudo dnf update -y
+#sudo dnf update -y
 
 ###
 # install neovim
@@ -28,6 +29,7 @@ sudo dnf install -y gcc libstdc++-static
 
 # install neovim nightly
 sudo dnf copr enable -y agriffis/neovim-nightly
+#sudo dnf update -y
 
 # telescope prerequisites
 sudo dnf install -y ripgrep jq fd-find
@@ -38,7 +40,7 @@ sudo dnf install -y nodejs
 sudo dnf install -y neovim python3-neovim
 
 # update plugins
-nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
+#nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
 
 
 ###
