@@ -4,12 +4,12 @@ set -e -o pipefail
 ###
 # setup additional repos
 ###
-# sudo cp ../../yum.repos.d/* /etc/yum.repos.d/
+sudo cp ../../yum.repos.d/* /etc/yum.repos.d/
 
 ###
 # update all installed packages to latest version
 ###
-#sudo dnf update -y
+sudo dnf update -y
 
 ###
 # install neovim
@@ -40,7 +40,7 @@ sudo dnf install -y nodejs
 sudo dnf install -y neovim python3-neovim
 
 # update plugins
-#nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
+nvim --headless -c '+Lazy! restore' +qa
 
 
 ###
@@ -123,15 +123,14 @@ sudo dnf install -y \
 sudo dnf install -y fontconfig
 TMP_DIR=$(mktemp -d)
 FONT_DIR="$HOME/.local/share/fonts/NerdFonts"
-mkdir -pv $FONT_DIR
+mkdir -pv "$FONT_DIR"
 
 echo "Install DejaVueSansMono font"
-curl -Lo $TMP_DIR/DejaVuSansMono.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/DejaVuSansMono.zip
-unzip -od $FONT_DIR/ $TMP_DIR/DejaVuSansMono.zip
+curl -Lo "$TMP_DIR/DejaVuSansMono.zip" https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/DejaVuSansMono.zip
+unzip -od "$FONT_DIR/" "$TMP_DIR/DejaVuSansMono.zip"
 
 echo "Install Droid Sans Mono font"
-curl -fLo "$FONT_DIR/Droid Sans Mono Nerd Font Complete.otf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/DroidSansMono/complete/Droid%20Sans%20Mono%20Nerd%20Font%20Complete.otf
-
+curl -fLo "$FONT_DIR/DroidSansMNerdFontMono-Regular.otf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/DroidSansMono/DroidSansMNerdFontMono-Regular.otf
 echo "Refresh font cache"
 fc-cache -vf "$FONT_DIR"
 
@@ -139,4 +138,4 @@ echo "Install GNU info command"
 sudo dnf install -y info
 
 echo "Setup mandb to be able to use 'man -k X'"
-""sudo mandb -c
+sudo mandb -c
