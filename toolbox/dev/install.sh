@@ -4,7 +4,7 @@ set -e -o pipefail
 ###
 # setup additional repos
 ###
-sudo cp ../../yum.repos.d/* /etc/yum.repos.d/
+sudo cp ./yum.repos.d/* /etc/yum.repos.d/
 
 ###
 # update all installed packages to latest version
