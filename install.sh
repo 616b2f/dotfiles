@@ -16,6 +16,7 @@ neovim \
 tmux \
 vifm \
 sway \
+alacritty \
 wlroots \
 grim \
 slurp \
