@@ -45,6 +45,8 @@ Delegate=yes
 EOF
 sudo systemctl daemon-reload
 
+cp -R ./.bashrc.d ~/
+
 # cat <<EOF > /etc/modules-load.d/iptables.conf
 # ip6_tables
 # ip6table_nat

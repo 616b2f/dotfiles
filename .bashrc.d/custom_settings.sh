@@ -43,7 +43,9 @@ if [ -x "$(command -v fzf)"  ]; then
     fi
 fi
 
-source "$HOME/.cargo/env"
+if [ -f "$HOME/.cargo/env" ]; then
+    source "$HOME/.cargo/env"
+fi
 
 if [ -x "$(command -v kubectl)"  ]; then
     alias k=kubectl
