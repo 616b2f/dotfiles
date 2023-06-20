@@ -7,7 +7,6 @@ rpm-ostree update
 
 # fedora silverblue packages
 packages="\
-git \
 git-lfs \
 polkit-gnome \
 fd-find \

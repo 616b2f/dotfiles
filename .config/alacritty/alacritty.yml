@@ -13,7 +13,7 @@ dpi:
 # Font configuration
 font:
   # family: DejaVu Sans Mono
-  family: DroidSansMono Nerd Font
+  family: DroidSansM Nerd Font Mono
   style: Book
   bold_style: Bold
   italic_style: Italic
