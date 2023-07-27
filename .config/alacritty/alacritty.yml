@@ -28,23 +28,5 @@ font:
 # Should display the render timer
 render_timer: false
 
-# #window:
-# #  decorations: "none"
-# font:
-#   normal:
-#     family: DejaVuSansMono
-#     style: Regular
-#
-#   bold:
-#     family: DejaVuSansMono
-#     style: Bold
-#
-#   italic:
-#     family: DejaVuSansMono
-#     style: Oblique
-#
-#   bold_italic:
-#     family: DejaVuSansMono
-#     style: Bold Oblique
-#
-#   size: 11
+# to see in window title what is running in shell
+dynamic_title: true

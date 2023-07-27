@@ -35,6 +35,7 @@
 	rebase = merges
 [push]
 	default = current
+	autoSetupRemote = true # so you don't need to use git push -u origin branch_name
 [filter "lfs"]
 	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f

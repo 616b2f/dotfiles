@@ -1,4 +1,5 @@
 local lspconfig = require('lspconfig')
+local lspconfig_util = require('lspconfig.util')
 require("mason-lspconfig").setup()
 
 -- local util = require('lspconfig/util')
@@ -9,9 +10,6 @@ local on_attach = function(client, bufnr)
     local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
 
     lsp_signature.on_attach({})
-
-    -- disable semantic tokens till omnisharp fixes the issue
-    client.server_capabilities.semanticTokensProvider = nil
 
     -- Mappings.
     local opts = { noremap=true, silent=true }
@@ -43,7 +41,7 @@ local on_attach = function(client, bufnr)
 
     -- Set autocommands conditional on server_capabilities
     if client.server_capabilities.document_highlight then
-        vim.api.nvim_exec([[
+        vim.api.nvim_exec2([[
         hi LspReferenceRead cterm=bold ctermbg=red guibg=LightYellow
         hi LspReferenceText cterm=bold ctermbg=red guibg=LightYellow
         hi LspReferenceWrite cterm=bold ctermbg=red guibg=LightYellow
@@ -52,7 +50,7 @@ local on_attach = function(client, bufnr)
             autocmd CursorHold <buffer> lua vim.lsp.buf.document_highlight()
             autocmd CursorMoved <buffer> lua vim.lsp.buf.clear_references()
         augroup END
-        ]], false)
+        ]])
     end
     end
 
@@ -71,67 +69,158 @@ end
 
 -- Register a handler that will be called for all installed servers.
  require("mason-lspconfig").setup_handlers {
-        -- The first entry (without a key) will be the default handler
-        -- and will be called for each installed server that doesn't have
-        -- a dedicated handler.
-        function (server_name) -- default handler (optional)
-            local config = make_config()
-            lspconfig[server_name].setup(config)
-        end,
+  -- The first entry (without a key) will be the default handler
+  -- and will be called for each installed server that doesn't have
+  -- a dedicated handler.
+  function (server_name) -- default handler (optional)
+    local config = make_config()
+    lspconfig[server_name].setup(config)
+  end,
 
-        -- Next, you can provide a dedicated handler for specific servers.
-        ["lua_ls"] = function ()
-            local config = make_config()
-            config.settings = {
-                Lua = {
-                    workspace = {
-                        checkThirdParty = false, -- stop asking for config env as openresty
-                    },
-                    -- Do not send telemetry data containing a randomized but unique identifier
-                    telemetry = {
-                        enable = false,
-                    },
-                }
-            }
-            lspconfig.lua_ls.setup(config)
-        end,
+  -- Next, you can provide a dedicated handler for specific servers.
+  -- ["jdtls"] = function ()
+  --   local mason_registry = require("mason-registry")
+  --   local jdtls = mason_registry.get_package("jdtls") -- note that this will error if you provide a non-existent package name
+  --   local config = make_config()
+  --
+  --   local env = {
+  --     HOME = vim.loop.os_homedir(),
+  --     XDG_CACHE_HOME = os.getenv 'XDG_CACHE_HOME',
+  --     JDTLS_JVM_ARGS = os.getenv 'JDTLS_JVM_ARGS',
+  --   }
+  --
+  --   local function get_cache_dir()
+  --     return env.XDG_CACHE_HOME and env.XDG_CACHE_HOME or lspconfig_util.path.join(env.HOME, '.cache')
+  --   end
+  --
+  --   local function get_jdtls_cache_dir()
+  --     return lspconfig_util.path.join(get_cache_dir(), 'jdtls')
+  --   end
+  --
+  --   local function get_jdtls_config_dir()
+  --     return lspconfig_util.path.join(get_jdtls_cache_dir(), 'config')
+  --   end
+  --
+  --   local function get_jdtls_workspace_dir()
+  --     return lspconfig_util.path.join(get_jdtls_cache_dir(), 'workspace')
+  --   end
+  --
+  --   local function get_jdtls_jvm_args()
+  --     local args = {}
+  --     for a in string.gmatch((env.JDTLS_JVM_ARGS or ''), '%S+') do
+  --       local arg = string.format('--jvm-arg=%s', a)
+  --       table.insert(args, arg)
+  --     end
+  --     return unpack(args)
+  --   end
+  --
+  --   config.cmd = {
+  --     'java',
+  --     '-Declipse.application=org.eclipse.jdt.ls.core.id1',
+  --     '-Dosgi.bundles.defaultStartLevel=4',
+  --     '-Declipse.product=org.eclipse.jdt.ls.core.product',
+  --     '-Dlog.protocol=true',
+  --     '-Dlog.level=ALL',
+  --     '-Xmx1g',
+  --     '--add-modules=ALL-SYSTEM',
+  --     '--add-opens', 'java.base/java.util=ALL-UNNAMED',
+  --     '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+  --     -- 💀
+  --     '-jar', jdtls:get_install_path() .. "/plugins/org.eclipse.equinox.launcher_*.jar",
+  --     '-configuration', get_jdtls_config_dir(),
+  --     -- See `data directory configuration` section in the README
+  --     '-data', get_jdtls_workspace_dir()
+  --   }
+  --   config.root_dir = require('jdtls.setup').find_root({'.git', 'mvnw', 'gradlew'})
+  --   -- Here you can configure eclipse.jdt.ls specific settings
+  --   -- See https://github.com/eclipse/eclipse.jdt.ls/wiki/Running-the-JAVA-LS-server-from-the-command-line#initialize-request
+  --   -- for a list of options
+  --   config.settings = {
+  --     java = {}
+  --   }
+  --
+  --   -- Language server `initializationOptions`
+  --   -- You need to extend the `bundles` with paths to jar files
+  --   -- if you want to use additional eclipse.jdt.ls plugins.
+  --   --
+  --   -- See https://github.com/mfussenegger/nvim-jdtls#java-debug-installation
+  --   --
+  --   -- If you don't plan on using the debugger or other eclipse.jdt.ls plugins you can remove this
+  --   config.init_options = {
+  --     bundles = {}
+  --   }
+  --
+  --   -- special case here because we use nvim-jdtls
+  --   require('jdtls').start_or_attach(config)
+  -- end,
 
-        ["omnisharp"] = function ()
-            local config = make_config()
-            config.handlers = {
-                ["textDocument/definition"] = require('omnisharp_extended').handler,
-            }
-            lspconfig.omnisharp.setup(config)
-        end,
-
-        ["yamlls"] = function ()
-            local config = make_config()
-            config.settings = {
-                yaml = {
-                    completion = true,
-                    hover = true,
-                    validate = true,
-                    schemas = {
-                        -- ['http://json.schemastore.org/github-workflow'] = '.github/workflows/*.{yml,yaml}',
-                        -- Kubernetes= "/*.yaml",
-                        -- "https://raw.githubusercontent.com/instrumenta/kubernetes-json-schema/master/v1.18.0-standalone-strict/all.json": [ "/*.k8s.yaml" ],
-                        ["https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.22.0/deployment-apps-v1.json"] = "/*.yaml",
-                        ["http://json.schemastore.org/kustomization"] = "kustomization.yaml",
-                        ["https://raw.githubusercontent.com/GoogleContainerTools/skaffold/master/docs/content/en/schemas/v2beta26.json"] = "skaffold.yaml"
-                    },
-                    format = {
-                        enable = true
-                    },
-                    schemaStore = {
-                        url = "https://www.schemastore.org/api/json/catalog.json",
-                        enable = true
-                    }
-                },
-                http = {
-                    proxyStrictSSL = true
-                }
-            }
-            lspconfig.yamlls.setup(config)
-        end
+  ["lua_ls"] = function ()
+    local config = make_config()
+    config.settings = {
+      Lua = {
+        workspace = {
+          checkThirdParty = false, -- stop asking for config env as openresty
+        },
+        -- Do not send telemetry data containing a randomized but unique identifier
+        telemetry = {
+          enable = false,
+        },
+      }
     }
+    lspconfig.lua_ls.setup(config)
+  end,
+
+  ["pylsp"] = function ()
+    local config = make_config()
+    config.settings = {
+      pylsp = {
+        plugins = {
+          pycodestyle = {
+            -- ignore = {'W391'},
+            maxLineLength = 100
+          }
+        }
+      }
+    }
+    lspconfig.pylsp.setup(config)
+  end,
+
+  ["omnisharp"] = function ()
+    local config = make_config()
+    config.handlers = {
+      ["textDocument/definition"] = require('omnisharp_extended').handler,
+    }
+    lspconfig.omnisharp.setup(config)
+  end,
+
+  ["yamlls"] = function ()
+    local config = make_config()
+    config.settings = {
+      yaml = {
+        completion = true,
+        hover = true,
+        validate = true,
+        schemas = {
+          -- ['http://json.schemastore.org/github-workflow'] = '.github/workflows/*.{yml,yaml}',
+          -- Kubernetes= "/*.yaml",
+          -- "https://raw.githubusercontent.com/instrumenta/kubernetes-json-schema/master/v1.18.0-standalone-strict/all.json": [ "/*.k8s.yaml" ],
+          ["https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.22.0/deployment-apps-v1.json"] = "/*.yaml",
+          ["http://json.schemastore.org/kustomization"] = "kustomization.yaml",
+          ["https://raw.githubusercontent.com/GoogleContainerTools/skaffold/master/docs/content/en/schemas/v4beta6.json"] = "skaffold.yaml"
+        },
+        format = {
+          enable = true
+        },
+        schemaStore = {
+          url = "https://www.schemastore.org/api/json/catalog.json",
+          enable = true
+        }
+      },
+      http = {
+        proxyStrictSSL = true
+      }
+    }
+    lspconfig.yamlls.setup(config)
+  end
+}
 

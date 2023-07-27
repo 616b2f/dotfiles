@@ -61,4 +61,13 @@ set_prompt()
    # good old prompt, $ for user, # for root
    PS1+="\n\\$ "
 }
-PROMPT_COMMAND='set_prompt'
+
+prompt_command()
+{
+    set_prompt
+
+    # sets the title of bash to have more usable window title
+    echo -ne "\033]0;bash: ${PWD##*/}\007"
+}
+
+PROMPT_COMMAND='prompt_command'

@@ -1,3 +1,6 @@
+-- use new loader
+vim.loader.enable()
+
 -- Install LazyVim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
@@ -15,6 +18,11 @@ vim.opt.rtp:prepend(lazypath)
 require('lazy').setup({
   -- UI to select things (files, grep results, open buffers...)
   { 'nvim-telescope/telescope.nvim', dependencies = { 'nvim-lua/plenary.nvim' } },
+  { 'nvim-telescope/telescope-ui-select.nvim',
+    config = function ()
+      require("telescope").load_extension("ui-select")
+    end
+  },
 
   -- Add indentation guides even on blank lines
   'lukas-reineke/indent-blankline.nvim',
@@ -22,7 +30,7 @@ require('lazy').setup({
   { 'lewis6991/gitsigns.nvim', dependencies = { 'nvim-lua/plenary.nvim' } },
   -- git plugin
   {
-    'TimUntersberger/neogit',
+    'NeogitOrg/neogit',
     dependencies = {
       'nvim-lua/plenary.nvim',
       'sindrets/diffview.nvim'
@@ -41,9 +49,17 @@ require('lazy').setup({
   "williamboman/mason-lspconfig.nvim", -- for better integration with lspconfig
   "neovim/nvim-lspconfig", -- Collection of configurations for built-in LSP client
   "WhoIsSethDaniel/mason-tool-installer.nvim", -- for easier installing tools
+  -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
+  {
+    'j-hui/fidget.nvim',
+    opts = {},
+    tag = "legacy"
+  }, -- Useful status updates for LSP
 
   -- specific for csharp allows goto definition for decompiled binaries
   "Hoffs/omnisharp-extended-lsp.nvim",
+
+  "mfussenegger/nvim-jdtls", -- specific for java, add some special config
 
   -- Additional lua configuration, makes nvim stuff amazing
   'folke/neodev.nvim',
@@ -70,6 +86,7 @@ require('lazy').setup({
   -- color schemes
   'tomasiser/vim-code-dark',
   'rakr/vim-one',
+  -- 'nordtheme/vim', official nord theme
   'gbprod/nord.nvim',
 
   -- colorscheme helper
@@ -133,6 +150,7 @@ require('lazy').setup({
   },
   {
     'gnikdroy/projections.nvim',
+    branch = "pre_release",
     config = function()
       require("projections").setup({
         workspaces = {                        -- Default workspaces to search for 
@@ -170,6 +188,12 @@ require('lazy').setup({
 
   -- for easier resizing windows
   {"dimfred/resize-mode.nvim"},
+
+  -- vscode like task runner
+  {
+    'stevearc/overseer.nvim',
+    opts = {},
+  }
 })
 
 -- When we are bootstrapping a configuration, it doesn't
@@ -187,6 +211,9 @@ require('lazy').setup({
 
 -- enable filetype.lua and disable filetype.vim
 vim.g.do_filetype_lua = 1
+
+vim.o.title = true
+vim.o.titlestring = "nvim: %t"
 
 -- dont fix end of line in files
 vim.g.fixendofline = false
@@ -220,6 +247,12 @@ vim.o.autoindent = true
 -- indent after { and so on
 vim.o.smartindent = true
 
+-- activate word diff and char diff
+-- vim.o.diffopt = { worddiff = '100', chardiff= '100' }
+--vim.o.diffopt = 'worddiff:100,chardiff:100'
+vim.cmd [[
+    set diffopt+=linematch:100
+]]
 -- diff customizations
 vim.o.fillchars='diff:╱'
 
@@ -267,7 +300,8 @@ vim.o.smartcase = true
 vim.o.updatetime = 250
 vim.wo.signcolumn = 'yes'
 
-vim.o.colorcolumn = "80"
+-- show max width column, to gide you howlong the line should be
+-- vim.o.colorcolumn = "80"
 
 -- Set colorscheme
 vim.o.termguicolors = true
@@ -275,7 +309,7 @@ vim.g.nord_borders = true
 vim.g.nord_contrast = true
 vim.g.nord_italic = false
 vim.g.nord_uniform_diff_background = false
-vim.cmd[[colorscheme nord]]
+vim.cmd [[colorscheme nord]]
 
 vim.o.hidden=true
 
@@ -293,7 +327,7 @@ vim.o.updatetime=300
 require'nvim-tree'.setup {
   update_cwd = false,
   update_focused_file = {
-      update_cwd = false
+    update_cwd = false
   },
   view = {
     width = 70
@@ -303,10 +337,10 @@ require'nvim-tree'.setup {
     add_trailing = true,
     icons = {
       show = {
-          git = false,
-          folder = true,
-          file = false,
-          folder_arrow = true,
+        git = false,
+        folder = true,
+        file = true,
+        folder_arrow = true,
       },
       glyphs = { -- default shows no icon by default
         git = {
@@ -328,8 +362,32 @@ require'nvim-tree'.setup {
 }
 
 -- Set statusbar
+local project_name_display = function ()
+    local projections_available, Session = pcall(require, 'projections.session')
+    if projections_available then
+        local info = Session.info(vim.loop.cwd())
+        if info ~= nil then
+            -- local session_file_path = tostring(info.path)
+            -- local project_workspace_patterns = info.project.workspace.patterns
+            -- local project_workspace_path = tostring(info.project.workspace)
+            local project_name = info.project.name
+            return '󱂵 ' .. project_name
+        end
+    end
+    local cwd = vim.loop.cwd()
+    if cwd then
+      return vim.fs.basename(cwd)
+    else
+      return nil
+    end
+end
+
 vim.o.winbar="%f"
 require('lualine').setup {
+  sections = {
+    lualine_b = { project_name_display, 'branch', 'diff', 'diagnostics'},
+    lualine_x = { "overseer" },
+  },
   options = {
     icons_enabled = true,
     theme = 'onedark',
@@ -396,20 +454,19 @@ require('gitsigns').setup {
   },
 }
 
--- neogit
-require('neogit').setup {
-  integrations = {
-    diffview = true
-  }
-}
-
-require('diffview').setup({
-  -- enhanced_diff_hl=true
-})
-
 -- Telescope
 require('telescope').setup {
   defaults = {
+    vimgrep_arguments = {
+      "rg",
+      "--color=never",
+      "--no-heading",
+      "--with-filename",
+      "--line-number",
+      "--column",
+      "--hidden",
+      "--smart-case"
+    },
     file_ignore_patterns = {
       -- ignore dotnet generated folders in the file search
       "^bin/",
@@ -424,54 +481,71 @@ require('telescope').setup {
       },
     },
   },
+  extensions = {
+    ["ui-select"] = {
+      require("telescope.themes").get_dropdown {
+      },
+    }
+  }
+}
+
+-- neogit
+require('neogit').setup {
+  integrations = {
+    telescope = false,
+    diffview = true
+  }
 }
 
 -- mason setup
 require("mason").setup()
 require'mason-tool-installer'.setup {
 
-    -- a list of all tools you want to ensure are installed upon
-    -- start; they should be the names Mason uses for each tool
-    ensure_installed = {
+  -- a list of all tools you want to ensure are installed upon
+  -- start; they should be the names Mason uses for each tool
+  ensure_installed = {
 
-        -- you can turn off/on auto_update per tool
-        { 'bash-language-server', auto_update = true },
-        'lua-language-server',
-        'yaml-language-server',
-        'vim-language-server',
-        'gopls',
-        'rust-analyzer',
-        'terraform-ls',
+    -- you can turn off/on auto_update per tool
+    { 'bash-language-server', auto_update = true },
+    'lua-language-server',
+    'yaml-language-server',
+    'vim-language-server',
+    'gopls',
+    'rust-analyzer',
+    'terraform-ls',
 
-        -- misc linter
-        'shellcheck',
-        'editorconfig-checker',
-        -- you can pin a tool to a particular version
-        -- { 'golangci-lint', version = '1.47.0' },
+    -- misc linter
+    'shellcheck',
+    'editorconfig-checker',
+    -- you can pin a tool to a particular version
+    -- { 'golangci-lint', version = '1.47.0' },
 
-        -- csharp
-        'omnisharp', -- LSP
-        'netcoredbg', -- DAP
+    -- csharp
+    'omnisharp', -- LSP
+    'netcoredbg', -- DAP
 
-        -- java
-        'jdtls',
-        'java-debug-adapter',
-        'java-test'
+    -- java
+    'jdtls',
+    'java-debug-adapter',
+    'java-test',
 
-        -- 'luacheck',
-        -- 'stylua',
-        -- 'gofumpt',
-        -- 'golines',
-        -- 'gomodifytags',
-        -- 'gotests',
-        -- 'impl',
-        -- 'json-to-struct',
-        -- 'misspell',
-        -- 'revive',
-        -- 'shfmt',
-        -- 'staticcheck',
-        -- 'vint',
-    }
+    -- python
+    'python-lsp-server'
+
+    -- 'luacheck',
+    -- 'stylua',
+    -- 'gofumpt',
+    -- 'golines',
+    -- 'gomodifytags',
+    -- 'gotests',
+    -- 'impl',
+    -- 'json-to-struct',
+    -- 'misspell',
+    -- 'revive',
+    -- 'shfmt',
+    -- 'staticcheck',
+    -- 'vint',
+  }
 }
 
 -- Setup neovim specific lua support
@@ -483,6 +557,9 @@ require("neotest").setup({
   adapters = {
     require("neotest-dotnet")
   },
+  -- consumers = {
+  --   overseer = require("neotest.consumers.overseer"),
+  -- },
   icons = {
     -- Ascii:
     -- { "/", "|", "\\", "-", "/", "|", "\\", "-"},
@@ -541,23 +618,23 @@ require('mini.surround').setup({})
 require("resize-mode").setup {
   horizontal_amount = 9,
   vertical_amount = 5,
-  quit_key = "<ESC>",
+  quit_key = "<CR>",
   enable_mapping = true,
   resize_keys = {
-      "h", -- increase to the left
-      "j", -- increase to the bottom
-      "k", -- increase to the top
-      "l", -- increase to the right
-      "H", -- decrease to the left
-      "J", -- decrease to the bottom
-      "K", -- decrease to the top
-      "L"  -- decrease to the right
+    "h", -- increase to the left
+    "j", -- increase to the bottom
+    "k", -- increase to the top
+    "l", -- increase to the right
+    "H", -- decrease to the left
+    "J", -- decrease to the bottom
+    "K", -- decrease to the top
+    "L"  -- decrease to the right
   }
 }
 
 -- custom commands
 vim.api.nvim_create_user_command('GenUuid', "r !uuidgen | tr -d '\n'", {})
-vim.api.nvim_create_user_command('OpenConfig', "e ~/.config/nvim/init.lua", {})
+vim.api.nvim_create_user_command('EditConfig', "e ~/.config/nvim/init.lua", {})
 
 -- setup extra surround mappings
 vim.keymap.set('x', 'S', function() require('mini.surround').add('visual') end, { noremap = true })
@@ -613,14 +690,17 @@ vim.keymap.set('n', '<leader>fk', require('telescope.builtin').keymaps,{desc="fi
 vim.keymap.set('n', '<leader>fm', function() require('telescope.builtin').lsp_document_symbols({symbols={'method','function'}}) end)
 vim.keymap.set('n', '<leader>fsw', require('telescope.builtin').lsp_workspace_symbols)
 vim.keymap.set('n', '<leader>fc', function() require('telescope.builtin').lsp_workspace_symbols({symbols='class'}) end)
+-- vim.keymap.set("n", "<leader>fp", require('telescope').extensions.projections, {desc="find projects"})
 vim.keymap.set("n", "<leader>fp", function() vim.cmd("Telescope projections") end, {desc="find projects"})
 -- vim.keymap.set('n', '<leader>sf', function() require('telescope.builtin').find_files({previewer = false}) end)
 -- vim.keymap.set('n', '<leader>sb', require('telescope.builtin').current_buffer_fuzzy_find)
--- vim.keymap.set('n', '<leader>sh', require('telescope.builtin').help_tags)
--- vim.keymap.set('n', '<leader>st', require('telescope.builtin').tags)
--- vim.keymap.set('n', '<leader>sd', require('telescope.builtin').grep_string)
--- vim.keymap.set('n', '<leader>so', require('telescope.builtin').tags{ only_current_buffer = true })
--- vim.keymap.set('n', '<leader>?', require('telescope.builtin').oldfiles)
+vim.keymap.set('n', '<space>/', function()
+  -- You can pass additional configuration to telescope to change theme, layout, etc.
+  require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
+    winblend = 10,
+    previewer = false,
+  })
+end, { desc = '[/] Fuzzily search in current buffer' })
 
 vim.keymap.set('n', 'Q', "<nop>")
 vim.keymap.set('n', '<leader>gb', ":b#<CR>",{desc="switch between two last active buffers"})
@@ -639,6 +719,28 @@ vim.cmd [[
   autocmd TermOpen * setlocal nonumber norelativenumber
 ]]
 
+--- Find the root directory based on an indicating pattern
+local find_root_dir = function(source, indicator_pattern)
+  local fn_match_file = function (filename)
+    local match = string.match(filename, indicator_pattern)
+    if match then
+      return true
+    end
+    return false
+  end
+  local path;
+  local matches = vim.fs.find(fn_match_file, {
+    path = source,
+    upward = true,
+    type = "directory"
+  })
+  if matches and #matches > 0 then
+    path = vim.fn.fnamemodify(matches[1], ":p:h:h")
+  end
+
+  return path
+end
+
 -- -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>e', function() vim.diagnostic.open_float() end, { noremap = true, silent = true })
 vim.keymap.set('n', '[d', function() vim.diagnostic.goto_prev() end, { noremap = true, silent = true })
@@ -646,32 +748,18 @@ vim.keymap.set('n', ']d', function() vim.diagnostic.goto_next() end, { noremap =
 vim.keymap.set('n', '<leader>q', function() vim.diagnostic.setloclist() end, { noremap = true, silent = true })
 
 -- neogit keymaps
-vim.keymap.set('n', '<leader>gg', require("neogit").open, { desc = "open neogit overview" })
+vim.keymap.set('n', '<leader>gg', function() require("neogit").open({kind="replace",cwd=find_root_dir(vim.fn.expand('%:p:h'), ".git")}) end, { desc = "open neogit overview" })
 
 -- keybinding for neotest
-vim.keymap.set('n', '<leader>rn', require("neotest").run.run, { desc = "run nearest test"})
-vim.keymap.set('n', '<leader>rs', require("neotest").run.stop)
-vim.keymap.set('n', '<leader>ra', require("neotest").run.attach)
-vim.keymap.set('n', '<leader>rf', function() require('neotest').run.run({vim.fn.expand('%')}) end)
-vim.keymap.set('n', '<leader>rs', function() require('neotest').run.run({suite=true}) end)
-vim.keymap.set('n', '<leader>rd', function() require('neotest').run.run({strategy='dap'}) end)
+vim.keymap.set('n', '<leader>tn', require("neotest").run.run, { desc = "run nearest test"})
+vim.keymap.set('n', '<leader>ts', require("neotest").run.stop)
+vim.keymap.set('n', '<leader>ta', require("neotest").run.attach)
+vim.keymap.set('n', '<leader>tf', function() require('neotest').run.run({vim.fn.expand('%')}) end, {desc="run test in current file"})
+vim.keymap.set('n', '<leader>ts', function() require('neotest').run.run({suite=true}) end, {desc="run test for the whole suite"})
+vim.keymap.set('n', '<leader>td', function() require('neotest').run.run({strategy='dap'}) end, {desc="run nearest test in debug mode"})
 
 vim.keymap.set('n', '<leader>wr', require("resize-mode").start, { noremap = true, silent = true })
 
-vim.keymap.set("n","<C-e>", ":TSHighlightCapturesUnderCursor<CR>")
+-- vim.keymap.set("n","<C-e>", ":TSHighlightCapturesUnderCursor<CR>")
 
--- vim.api.nvim_set_hl(0, 'DiffAdd', { bg='#A3BE8C'})
--- vim.api.nvim_set_hl(0, 'DiffDelete', { bg='#BF616A'})
--- vim.api.nvim_set_hl(0, 'DiffChange', { bg='#EBCB8B'})
--- vim.api.nvim_set_hl(0, 'DiffText', { bg='#D08770'})
--- vim.api.nvim_set_hl(0, 'DiffviewStatusModified', { fg='#EBCB8B'})
--- vim.api.nvim_set_hl(0, 'DiffviewStatusUnmerged', { fg='#EBCB8B'})
--- vim.api.nvim_set_hl(0, 'DiffviewFilePanelDeletions', { fg='#BF616A'})
--- vim.api.nvim_set_hl(0, 'DiffviewFilePanelInsertions', { fg='#A3BE8C'})
-
--- vim.api.nvim_set_hl(0, 'DiffAdd', { bg='#283B4D', fg='NONE' })
--- vim.api.nvim_set_hl(0, 'DiffChange', { bg='#283B4D', fg='NONE' })
--- vim.api.nvim_set_hl(0, 'DiffDelete', { bg='#3C2C3C', fg='#4d384d' })
--- vim.api.nvim_set_hl(0, 'DiffText', { bg='#365069', fg='NONE' })
-
--- vim: ts=2 sts=2 sw=2 et
+  -- vim: ts=2 sts=2 sw=2 et
