@@ -62,12 +62,22 @@ set_prompt()
    PS1+="\n\\$ "
 }
 
+export HISTCONTROL=ignoredups:erasedups  # no duplicate entries
+export HISTSIZE=100000                   # big big history
+export HISTFILESIZE=100000               # big big history
+shopt -s histappend                      # append to history, don't overwrite it
+
 prompt_command()
 {
     set_prompt
 
     # sets the title of bash to have more usable window title
     echo -ne "\033]0;bash: ${PWD##*/}\007"
+
+    # workaround to preserve bash history between multiple sessions
+    history -a # append to history file
+    history -c # clear current history in the session
+    history -r # reread the history file
 }
 
 PROMPT_COMMAND='prompt_command'
