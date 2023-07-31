@@ -157,7 +157,42 @@ require('lazy').setup({
           { "~/devel/ext", { ".git" } },      -- devel/ext is a workspace. patterns = { ".git" }
           { "~/devel", { ".git" } },          -- devel is a workspace. patterns = { ".git" }
         },
+        store_hooks = {
+          pre = function()
+            -- some workaround to not save tab state of some plugins,
+            -- restoring the session with those tabs open results in an bad UX
+
+            -- close nvim tree tab if open
+            local nvim_tree_present, nvim_tree_api = pcall(require, "nvim-tree.api")
+            if nvim_tree_present then nvim_tree_api.tree.close() end
+
+            -- close neogit status tab if open
+            local neogit_present, neogit_api = pcall(require, "neogit")
+            if neogit_present and neogit_api.status.status_buffer then
+              neogit_api.status.close()
+            end
+          end
+        }
       })
+
+      -- configure projection to also switch cwd in nvim-tree
+      -- when project is switched
+      local switcher = require("projections.switcher")
+      local nvim_tree_present, api = pcall(require, "nvim-tree.api")
+      if nvim_tree_present then
+        local original_switch_function = switcher.switch
+        switcher.switch = function(spath)
+          -- pre hooks here
+          local result = original_switch_function(spath)
+          -- unconditional post hooks here
+          if result then
+            --- post hook that only runs if project switching was successful
+            api.tree.change_root(spath)
+          end
+          return result
+        end
+      end
+
       require('telescope').load_extension('projections')
     end
   },
@@ -642,9 +677,9 @@ vim.keymap.set('x', 'S', function() require('mini.surround').add('visual') end, 
 -- vim.keymap.set('n', 'yss', 'ys_', { noremap = false })
 
 -- setup nvim-tree keybinding
-vim.keymap.set('n', '<leader>nr', require("nvim-tree.api").tree.reload)
-vim.keymap.set('n', '<leader>n', require("nvim-tree.api").tree.toggle)
-vim.keymap.set('n', '<leader>nf', function() require("nvim-tree.api").tree.open({find_file=true}) end)
+vim.keymap.set('n', '<leader>nr', require("nvim-tree.api").tree.reload, { desc="my: reload nvim-tree" })
+vim.keymap.set('n', '<leader>nn', require("nvim-tree.api").tree.toggle, { desc="my: toggle nvim-tree" })
+vim.keymap.set('n', '<leader>nf', function() require("nvim-tree.api").tree.open({find_file=true}) end, { desc="my: jump to current file in nvim-treee" })
 
 -- setup dap key bindings
 -- REPL (Read Evaluate Print Loop)
@@ -686,12 +721,11 @@ vim.keymap.set('n', '<leader>fgb', require('telescope.builtin').git_branches)
 vim.keymap.set('n', '<leader>fgc', require('telescope.builtin').git_commits)
 vim.keymap.set('n', '<leader>fi', require('telescope.builtin').lsp_implementations)
 vim.keymap.set('n', '<leader>fs', require('telescope.builtin').lsp_document_symbols)
-vim.keymap.set('n', '<leader>fk', require('telescope.builtin').keymaps,{desc="find keybindings"})
+vim.keymap.set('n', '<leader>fk', require('telescope.builtin').keymaps,{desc="my: find keybindings"})
 vim.keymap.set('n', '<leader>fm', function() require('telescope.builtin').lsp_document_symbols({symbols={'method','function'}}) end)
 vim.keymap.set('n', '<leader>fsw', require('telescope.builtin').lsp_workspace_symbols)
 vim.keymap.set('n', '<leader>fc', function() require('telescope.builtin').lsp_workspace_symbols({symbols='class'}) end)
--- vim.keymap.set("n", "<leader>fp", require('telescope').extensions.projections, {desc="find projects"})
-vim.keymap.set("n", "<leader>fp", function() vim.cmd("Telescope projections") end, {desc="find projects"})
+vim.keymap.set("n", "<leader>fp", function() vim.cmd("Telescope projections") end, {desc="my: find projects"})
 -- vim.keymap.set('n', '<leader>sf', function() require('telescope.builtin').find_files({previewer = false}) end)
 -- vim.keymap.set('n', '<leader>sb', require('telescope.builtin').current_buffer_fuzzy_find)
 vim.keymap.set('n', '<space>/', function()
@@ -703,7 +737,7 @@ vim.keymap.set('n', '<space>/', function()
 end, { desc = '[/] Fuzzily search in current buffer' })
 
 vim.keymap.set('n', 'Q', "<nop>")
-vim.keymap.set('n', '<leader>gb', ":b#<CR>",{desc="switch between two last active buffers"})
+vim.keymap.set('n', '<leader>gb', ":b#<CR>",{desc="my: switch between two last active buffers"})
 vim.keymap.set('n', '<space>rw', ":s/\\<<C-r><C-w>\\>/<C-r><C-w>/g<Left><Left>")
 
 -- -- custom commands
@@ -719,8 +753,10 @@ vim.cmd [[
   autocmd TermOpen * setlocal nonumber norelativenumber
 ]]
 
+local my = {}
+my.helper = {}
 --- Find the root directory based on an indicating pattern
-local find_root_dir = function(source, indicator_pattern)
+my.helper.find_root_dir = function(source, indicator_pattern)
   local fn_match_file = function (filename)
     local match = string.match(filename, indicator_pattern)
     if match then
@@ -740,6 +776,10 @@ local find_root_dir = function(source, indicator_pattern)
 
   return path
 end
+-- Find git directory for current file
+my.helper.get_git_dir = function ()
+  my.helper.find_root_dir(vim.fn.expand('%:p:h'), ".git")
+end
 
 -- -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>e', function() vim.diagnostic.open_float() end, { noremap = true, silent = true })
@@ -748,18 +788,53 @@ vim.keymap.set('n', ']d', function() vim.diagnostic.goto_next() end, { noremap =
 vim.keymap.set('n', '<leader>q', function() vim.diagnostic.setloclist() end, { noremap = true, silent = true })
 
 -- neogit keymaps
-vim.keymap.set('n', '<leader>gg', function() require("neogit").open({kind="replace",cwd=find_root_dir(vim.fn.expand('%:p:h'), ".git")}) end, { desc = "open neogit overview" })
+vim.keymap.set('n', '<leader>gg', function() require("neogit").open({kind="replace",cwd=my.helper.get_git_dir()}) end, { desc = "my: open neogit overview" })
 
 -- keybinding for neotest
-vim.keymap.set('n', '<leader>tn', require("neotest").run.run, { desc = "run nearest test"})
+vim.keymap.set('n', '<leader>tt', require("neotest").summary.toggle, { desc="my: toggle test summary window"})
+vim.keymap.set('n', '<leader>tn', require("neotest").run.run, { desc = "my: run nearest test"})
 vim.keymap.set('n', '<leader>ts', require("neotest").run.stop)
 vim.keymap.set('n', '<leader>ta', require("neotest").run.attach)
-vim.keymap.set('n', '<leader>tf', function() require('neotest').run.run({vim.fn.expand('%')}) end, {desc="run test in current file"})
-vim.keymap.set('n', '<leader>ts', function() require('neotest').run.run({suite=true}) end, {desc="run test for the whole suite"})
-vim.keymap.set('n', '<leader>td', function() require('neotest').run.run({strategy='dap'}) end, {desc="run nearest test in debug mode"})
+vim.keymap.set('n', '<leader>tf', function() require('neotest').run.run({vim.fn.expand('%')}) end, {desc="my: run test in current file"})
+vim.keymap.set('n', '<leader>ts', function() require('neotest').run.run({suite=true}) end, {desc="my: run test for the whole suite"})
+vim.keymap.set('n', '<leader>td', function() require('neotest').run.run({strategy='dap'}) end, {desc="my: run nearest test in debug mode"})
 
 vim.keymap.set('n', '<leader>wr', require("resize-mode").start, { noremap = true, silent = true })
 
--- vim.keymap.set("n","<C-e>", ":TSHighlightCapturesUnderCursor<CR>")
+-- Global mappings.
+-- See `:help vim.diagnostic.*` for documentation on any of the below functions
+vim.keymap.set('n', '<space>e', vim.diagnostic.open_float)
+vim.keymap.set('n', '[d', vim.diagnostic.goto_prev)
+vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
+vim.keymap.set('n', '<space>q', vim.diagnostic.setqflist)
+vim.keymap.set('n', '<space>qe', function() vim.diagnostic.setqflist({severity=vim.diagnostic.severity.ERROR}) end)
+vim.keymap.set('n', '<space>ql', vim.diagnostic.setloclist)
+
+-- Use LspAttach autocommand to only map the following keys
+-- after the language server attaches to the current buffer
+vim.api.nvim_create_autocmd('LspAttach', {
+  group = vim.api.nvim_create_augroup('UserLspConfig', {}),
+  callback = function(ev)
+    -- Buffer local mappings.
+    -- See `:help vim.lsp.*` for documentation on any of the below functions
+    local opts = { buffer = ev.buf }
+    vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
+    vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+    vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
+    vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
+    vim.keymap.set('n', '<space>k', vim.lsp.buf.signature_help, opts)
+    vim.keymap.set('n', '<space>wa', vim.lsp.buf.add_workspace_folder, opts)
+    vim.keymap.set('n', '<space>wr', vim.lsp.buf.remove_workspace_folder, opts)
+    vim.keymap.set('n', '<space>wl', function() print(vim.inspect(vim.lsp.buf.list_workspace_folders())) end, opts)
+    vim.keymap.set('n', '<space>D', vim.lsp.buf.type_definition, opts)
+    vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, opts)
+    vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
+    vim.keymap.set({ 'n', 'v' }, '<space>a', vim.lsp.buf.code_action, opts)
+    vim.keymap.set({ 'n', 'v' }, '<space>cf', function()
+      vim.lsp.buf.format({ async = true})
+    end, opts)
+
+  end,
+})
 
   -- vim: ts=2 sts=2 sw=2 et
