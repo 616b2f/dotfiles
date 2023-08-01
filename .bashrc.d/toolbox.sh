@@ -1,14 +1,12 @@
 #!/bin/bash
 
-# if [ -n "${TOOLBOX_PATH:-}" ]; then
-# fi
-
 alias tb=toolbox
 alias tbe="toolbox enter"
 
 if [ -f /run/.toolboxenv ]; then
     alias podman="flatpak-spawn --host podman"
 
+    # aliases for container
     export PATH=$PATH:~/.toolbox/bin/
     export PATH=~/.local/tb-bin:$PATH
     export PATH=$PATH:~/.luarocks/bin/

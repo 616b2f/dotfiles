@@ -5,6 +5,9 @@
 
 # start notification daemon
 exec mako
+#
+# /usr/bin/gnome-keyring-daemon --daemonize --login
+# /usr/bin/gnome-keyring-daemon --start --foreground --components=secrets
 
 ### Colors
 #
@@ -33,7 +36,7 @@ set $menu-desktop j4-dmenu-desktop --term="$term -e" --dmenu="BEMENU_BACKEND=way
 #
 # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
 # output * bg /usr/share/backgrounds/fedora-workstation/aurora-over-iceland.png fill
-output * bg /usr/share/backgrounds/gnome/adwaita-d.webp fill
+output * bg /usr/share/backgrounds/gnome/adwaita-d.jpg fill
 
 # set fractional scaling
 output * scale 1.5

@@ -49,10 +49,9 @@ require('lazy').setup({
   "williamboman/mason-lspconfig.nvim", -- for better integration with lspconfig
   "neovim/nvim-lspconfig", -- Collection of configurations for built-in LSP client
   "WhoIsSethDaniel/mason-tool-installer.nvim", -- for easier installing tools
-  -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
   {
     'j-hui/fidget.nvim',
-    opts = {},
+    opts = {}, -- `opts = {}` is the same as calling `require('fidget').setup({})`
     tag = "legacy"
   }, -- Useful status updates for LSP
 
@@ -86,7 +85,6 @@ require('lazy').setup({
   -- color schemes
   'tomasiser/vim-code-dark',
   'rakr/vim-one',
-  -- 'nordtheme/vim', official nord theme
   'gbprod/nord.nvim',
 
   -- colorscheme helper
@@ -282,14 +280,16 @@ vim.o.autoindent = true
 -- indent after { and so on
 vim.o.smartindent = true
 
--- activate word diff and char diff
--- vim.o.diffopt = { worddiff = '100', chardiff= '100' }
---vim.o.diffopt = 'worddiff:100,chardiff:100'
-vim.cmd [[
-    set diffopt+=linematch:100
-]]
 -- diff customizations
 vim.o.fillchars='diff:╱'
+
+-- activate word diff and char diff
+--vim.o.diffopt = { worddiff = '100', chardiff= '100' }
+--vim.o.diffopt = 'worddiff:100,chardiff:100'
+vim.cmd [[
+  " set diffopt+=worddiff:100
+  set diffopt+=linematch:100
+]]
 
 -- fix indentation for file types
 vim.cmd [[
@@ -344,7 +344,7 @@ vim.g.nord_borders = true
 vim.g.nord_contrast = true
 vim.g.nord_italic = false
 vim.g.nord_uniform_diff_background = false
-vim.cmd [[colorscheme nord]]
+vim.cmd[[colorscheme nord]]
 
 vim.o.hidden=true
 
@@ -489,6 +489,10 @@ require('gitsigns').setup {
   },
 }
 
+require('diffview').setup({
+  -- enhanced_diff_hl=true
+})
+
 -- Telescope
 require('telescope').setup {
   defaults = {
@@ -566,20 +570,6 @@ require'mason-tool-installer'.setup {
 
     -- python
     'python-lsp-server'
-
-    -- 'luacheck',
-    -- 'stylua',
-    -- 'gofumpt',
-    -- 'golines',
-    -- 'gomodifytags',
-    -- 'gotests',
-    -- 'impl',
-    -- 'json-to-struct',
-    -- 'misspell',
-    -- 'revive',
-    -- 'shfmt',
-    -- 'staticcheck',
-    -- 'vint',
   }
 }
 
@@ -728,6 +718,11 @@ vim.keymap.set('n', '<leader>fc', function() require('telescope.builtin').lsp_wo
 vim.keymap.set("n", "<leader>fp", function() vim.cmd("Telescope projections") end, {desc="my: find projects"})
 -- vim.keymap.set('n', '<leader>sf', function() require('telescope.builtin').find_files({previewer = false}) end)
 -- vim.keymap.set('n', '<leader>sb', require('telescope.builtin').current_buffer_fuzzy_find)
+-- vim.keymap.set('n', '<leader>sh', require('telescope.builtin').help_tags)
+-- vim.keymap.set('n', '<leader>st', require('telescope.builtin').tags)
+-- vim.keymap.set('n', '<leader>sd', require('telescope.builtin').grep_string)
+-- vim.keymap.set('n', '<leader>so', require('telescope.builtin').tags{ only_current_buffer = true })
+-- vim.keymap.set('n', '<leader>?', require('telescope.builtin').oldfiles)
 vim.keymap.set('n', '<space>/', function()
   -- You can pass additional configuration to telescope to change theme, layout, etc.
   require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
@@ -837,4 +832,4 @@ vim.api.nvim_create_autocmd('LspAttach', {
   end,
 })
 
-  -- vim: ts=2 sts=2 sw=2 et
+-- vim: ts=2 sts=2 sw=2 et
