@@ -42,7 +42,6 @@ require('lazy').setup({
   -- Highlight, edit, and navigate code using a fast incremental parsing library
   'nvim-treesitter/nvim-treesitter',
   'nvim-treesitter/nvim-treesitter-textobjects', -- Additional textobjects for treesitter
-  'nvim-treesitter/playground',
 
   -- nvim lsp support
   "williamboman/mason.nvim",
@@ -186,6 +185,11 @@ require('lazy').setup({
           if result then
             --- post hook that only runs if project switching was successful
             api.tree.change_root(spath)
+
+            local lualine_present, lualine_api = pcall(require, "lualine")
+            if lualine_present then
+              lualine_api.refresh()
+            end
           end
           return result
         end
@@ -340,10 +344,9 @@ vim.wo.signcolumn = 'yes'
 
 -- Set colorscheme
 vim.o.termguicolors = true
-vim.g.nord_borders = true
-vim.g.nord_contrast = true
-vim.g.nord_italic = false
-vim.g.nord_uniform_diff_background = false
+require("nord").setup({
+  diff = { mode = "fg" }, -- enables/disables colorful backgrounds when used in diff mode. values : [bg|fg]
+})
 vim.cmd[[colorscheme nord]]
 
 vim.o.hidden=true
@@ -512,6 +515,9 @@ require('telescope').setup {
       "^obj/",
       "/bin/",
       "/obj/",
+      -- ignore .git folders (usefull when using hidden=true option)
+      "^.git/",
+      "/.git/",
     },
     mappings = {
       i = {
@@ -608,6 +614,19 @@ require("neotest").setup({
   }
 })
 
+
+  -- hi LspReferenceRead link Visual cterm=bold ctermbg=red guibg=LightYellow
+  -- hi LspReferenceText cterm=bold ctermbg=red guibg=LightYellow
+  -- hi LspReferenceWrite cterm=bold ctermbg=red guibg=LightYellow
+vim.api.nvim_exec2([[
+  hi link LspReferenceRead Visual
+  hi link LspReferenceText Visual
+  hi link LspReferenceWrite Visual
+]],
+{
+  output=true
+})
+
 -- custom config
 require('completion-config')
 require('lsp-config')
@@ -658,8 +677,15 @@ require("resize-mode").setup {
 }
 
 -- custom commands
-vim.api.nvim_create_user_command('GenUuid', "r !uuidgen | tr -d '\n'", {})
-vim.api.nvim_create_user_command('EditConfig', "e ~/.config/nvim/init.lua", {})
+-- -- open new terminal in the current files path
+-- command Dterm new %:p:h | lcd % | terminal
+-- command Sterm split | terminal
+-- command Vterm vsplit | terminal
+-- -- insert new uuid in current cursor location
+-- -- format whole json file 
+-- command FormatJson %!jq .
+vim.api.nvim_create_user_command('GenUuid', "r !uuidgen | tr -d '\n'", {desc="my: generate a new UUID and paste it on your cursors position."})
+vim.api.nvim_create_user_command('EditConfig', "e ~/.config/nvim/init.lua", {desc="my: open init.lua file for editing "})
 
 -- setup extra surround mappings
 vim.keymap.set('x', 'S', function() require('mini.surround').add('visual') end, { noremap = true })
@@ -670,20 +696,6 @@ vim.keymap.set('x', 'S', function() require('mini.surround').add('visual') end, 
 vim.keymap.set('n', '<leader>nr', require("nvim-tree.api").tree.reload, { desc="my: reload nvim-tree" })
 vim.keymap.set('n', '<leader>nn', require("nvim-tree.api").tree.toggle, { desc="my: toggle nvim-tree" })
 vim.keymap.set('n', '<leader>nf', function() require("nvim-tree.api").tree.open({find_file=true}) end, { desc="my: jump to current file in nvim-treee" })
-
--- setup dap key bindings
--- REPL (Read Evaluate Print Loop)
-vim.keymap.set('n', '<leader>dd', require('dapui').toggle)
-vim.keymap.set('n', '<leader>db', require('dap').toggle_breakpoint)
-vim.keymap.set('n', '<leader>dBc', function() require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: ')) end)
-vim.keymap.set('n', '<leader>dBl', function() require('dap').set_breakpoint(nil, nil, vim.fn.input('Log point message: ')) end)
-vim.keymap.set('n', '<leader>dc', require('dap').continue)
-vim.keymap.set('n', '<leader>dn', require('dap').step_over)
-vim.keymap.set('n', '<leader>dp', require('dap').step_back)
-vim.keymap.set('n', '<leader>dsi', require('dap').step_into)
-vim.keymap.set('n', '<leader>dso', require('dap').step_out)
-vim.keymap.set('n', '<leader>do', require('dap').repl.open)
-vim.keymap.set('n', '<leader>drl', require('dap').run_last)
 
 -- remappings for easier switching between windows
 -- vim.api.nvim_set_keymap('n', '<C-H>', '<C-W>h')
@@ -702,7 +714,7 @@ vim.keymap.set("n", "<space>df", require('neogen').generate)
 -- require('telescope').load_extension 'fzf'
 
 -- telescope keybindins
-vim.keymap.set('n', '<leader>ff', require('telescope.builtin').find_files)
+vim.keymap.set('n', '<leader>ff', function() require('telescope.builtin').find_files({hidden=true,no_ignore=false,no_ignore_parent=false}) end)
 vim.keymap.set('n', '<leader>fw', function() require('telescope.builtin').grep_string({search=vim.fn.expand('<cword>')}) end)
 vim.keymap.set('n', '<leader>fb', require('telescope.builtin').buffers)
 vim.keymap.set('n', '<leader>fh', require('telescope.builtin').help_tags)
@@ -735,14 +747,6 @@ vim.keymap.set('n', 'Q', "<nop>")
 vim.keymap.set('n', '<leader>gb', ":b#<CR>",{desc="my: switch between two last active buffers"})
 vim.keymap.set('n', '<space>rw', ":s/\\<<C-r><C-w>\\>/<C-r><C-w>/g<Left><Left>")
 
--- -- custom commands
--- -- open new terminal in the current files path
--- command Dterm new %:p:h | lcd % | terminal
--- command Sterm split | terminal
--- command Vterm vsplit | terminal
--- -- insert new uuid in current cursor location
--- -- format whole json file 
--- command FormatJson %!jq .
 vim.cmd [[
   " configure terminal
   autocmd TermOpen * setlocal nonumber norelativenumber
@@ -783,7 +787,23 @@ vim.keymap.set('n', ']d', function() vim.diagnostic.goto_next() end, { noremap =
 vim.keymap.set('n', '<leader>q', function() vim.diagnostic.setloclist() end, { noremap = true, silent = true })
 
 -- neogit keymaps
-vim.keymap.set('n', '<leader>gg', function() require("neogit").open({kind="replace",cwd=my.helper.get_git_dir()}) end, { desc = "my: open neogit overview" })
+-- vim.keymap.set('n', '<leader>gg', function() require("neogit").open({kind="replace",cwd=my.helper.get_git_dir()}) end, { desc = "my: open neogit overview" })
+vim.keymap.set('n', '<leader>gg', function() require("neogit").open({cwd=my.helper.get_git_dir()}) end, { desc = "my: open neogit overview" })
+
+-- setup dap key bindings
+-- REPL (Read Evaluate Print Loop)
+vim.keymap.set('n', '<leader>dd', require('dapui').toggle)
+vim.keymap.set('n', '<leader>db', require('dap').toggle_breakpoint)
+vim.keymap.set('n', '<leader>dBc', function() require('dap').set_breakpoint(vim.fn.input('Breakpoint condition: ')) end)
+vim.keymap.set('n', '<leader>dBl', function() require('dap').set_breakpoint(nil, nil, vim.fn.input('Log point message: ')) end)
+vim.keymap.set('n', '<leader>dc', require('dap').continue)
+vim.keymap.set('n', '<leader>dn', require('dap').step_over)
+vim.keymap.set('n', '<leader>dp', require('dap').step_back)
+vim.keymap.set('n', '<leader>dsi', require('dap').step_into)
+vim.keymap.set('n', '<leader>dso', require('dap').step_out)
+vim.keymap.set('n', '<leader>do', require('dap').repl.open)
+vim.keymap.set('n', '<leader>drl', require('dap').run_last)
+vim.keymap.set('n', '<leader>dt', function() require('neotest').run.run({vim.fn.expand('%'),strategy='dap'}) end, {desc="my: run test for current file in debug mode"})
 
 -- keybinding for neotest
 vim.keymap.set('n', '<leader>tt', require("neotest").summary.toggle, { desc="my: toggle test summary window"})

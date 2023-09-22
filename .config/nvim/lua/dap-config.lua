@@ -27,6 +27,42 @@ if (reg.is_installed('netcoredbg')) then
     dap.adapters.netcoredbg = adapter_config
     dap.adapters.coreclr = adapter_config
 
+    dap.adapters.skaffold = function(cb, config)
+      if config.request == 'attach' then
+        -- ---@diagnostic disable-next-line: undefined-field
+        -- local port = (config.connect or config).port
+        -- ---@diagnostic disable-next-line: undefined-field
+        -- local host = (config.connect or config).host or '127.0.0.1'
+        -- cb({
+        --   type = 'server',
+        --   port = assert(port, '`connect.port` is required for a python `attach` configuration'),
+        --   host = host,
+        --   options = {
+        --     source_filetype = 'python',
+        --   },
+        -- })
+      else -- launch part
+        local name_of_pod = "<NAME_OF_YOUR_POD>"
+        local kube_context = "<my_kube_context>"
+        cb({
+          type = 'server',
+          command = 'kubectl',
+          pipeCwd = "${workspaceFolder}",
+          debuggerPath = "/dbg/netcore/vsdbg", -- location where vsdbg binary installed.
+          args = {
+            "--context=" .. kube_context
+            "exec",
+            "-i",
+            name_of_pod, -- name of the pod you debug.
+            "--"
+          },
+          options = {
+            source_filetype = 'cs',
+          },
+        })
+      end
+    end
+
     dap.configurations.cs = {
         {
             type = "coreclr",
@@ -51,6 +87,24 @@ if (reg.is_installed('netcoredbg')) then
                 return vim.fn.input('Process ID: ')
             end,
             justMyCode = true, -- set to `true` in debug configuration and `false` in release configuration
+        },
+        {
+            name = "Skaffold Debug",
+            type = "skaffold",
+            request = "attach",
+            processId  = 1,
+            justMyCode = true, -- set to `true` in debug configuration and `false` in release configuration
+            pipeTransport = function()
+
+            end,
+            sourceFileMap = {
+                -- Change this mapping if your app in not deployed in /src or /app in your docker image
+                ["/src"] = "${workspaceFolder}",
+                ["/app"] = "${workspaceFolder}"
+                -- May also be like this, depending of your repository layout
+                -- "/src" = "${workspaceFolder}/src",
+                -- "/app" = "${workspaceFolder}/src/<YOUR PROJECT TO DEBUG>"
+            }
         }
     }
 end

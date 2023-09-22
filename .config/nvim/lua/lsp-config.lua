@@ -1,5 +1,5 @@
 local lspconfig = require('lspconfig')
-local lspconfig_util = require('lspconfig.util')
+-- local lspconfig_util = require('lspconfig.util')
 require("mason-lspconfig").setup()
 
 -- local util = require('lspconfig/util')
@@ -17,15 +17,18 @@ local on_attach = function(client, bufnr)
   -- Set autocommands conditional on server_capabilities
   if client.supports_method("textDocument/documentHighlight") then
     vim.api.nvim_exec2([[
-    hi LspReferenceRead cterm=bold ctermbg=red guibg=LightYellow
-    hi LspReferenceText cterm=bold ctermbg=red guibg=LightYellow
-    hi LspReferenceWrite cterm=bold ctermbg=red guibg=LightYellow
     augroup lsp_document_highlight
         autocmd! * <buffer>
         autocmd CursorHold <buffer> lua vim.lsp.buf.document_highlight()
         autocmd CursorMoved <buffer> lua vim.lsp.buf.clear_references()
     augroup END
-    ]])
+    ]],
+    {output=true})
+  end
+
+  -- enable semantic tokens highligting hints
+  if client.supports_method("textDocument/semanticTokens") then
+    client.server_capabilities.semanticTokensProvider = true
   end
 end
 
@@ -33,6 +36,8 @@ end
 local function make_config()
   local capabilities = vim.lsp.protocol.make_client_capabilities()
   capabilities.textDocument.completion.completionItem.snippetSupport = true
+  -- capabilities.textDocument.semanticTokens = true
+  -- capabilities.workspace.semanticTokens = true
   -- capabilities.textDocument.documentFormattingProvider
   capabilities = cmp_nvim_lsp.default_capabilities(capabilities)
   return {
@@ -180,9 +185,9 @@ end
           -- ['http://json.schemastore.org/github-workflow'] = '.github/workflows/*.{yml,yaml}',
           -- Kubernetes= "/*.yaml",
           -- "https://raw.githubusercontent.com/instrumenta/kubernetes-json-schema/master/v1.18.0-standalone-strict/all.json": [ "/*.k8s.yaml" ],
-          ["https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.22.0/deployment-apps-v1.json"] = "/*.yaml",
           ["http://json.schemastore.org/kustomization"] = "kustomization.yaml",
-          ["https://raw.githubusercontent.com/GoogleContainerTools/skaffold/master/docs/content/en/schemas/v4beta6.json"] = "skaffold.yaml"
+          ["https://raw.githubusercontent.com/GoogleContainerTools/skaffold/master/docs/content/en/schemas/v4beta6.json"] = "skaffold.yaml",
+          ["https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.22.0/deployment-apps-v1.json"] = "/*.yaml",
         },
         format = {
           enable = true

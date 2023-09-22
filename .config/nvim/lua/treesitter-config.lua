@@ -1,7 +1,7 @@
 -- Treesitter configuration
 -- Parsers must be installed manually via :TSInstall
 require('nvim-treesitter.configs').setup {
-  ensure_installed = { "query", "c_sharp", "lua", "go", "java", "python", "vimdoc" },
+  ensure_installed = { "query", "c_sharp", "lua", "go", "java", "python", "vimdoc", "terraform" },
   highlight = {
     enable = true, -- false will disable the whole extension
   },
@@ -18,10 +18,7 @@ require('nvim-treesitter.configs').setup {
       node_decremental = '<M-space>',
     },
   },
-  indent = {
-    enable = true,
-    disable = { 'python' }
-  },
+  indent = { enable = true, disable = { 'python' } },
   textobjects = {
     select = {
       enable = true,
@@ -34,6 +31,8 @@ require('nvim-treesitter.configs').setup {
         ['if'] = '@function.inner',
         ['ac'] = '@class.outer',
         ['ic'] = '@class.inner',
+        ['ab'] = '@block.outer',
+        ['ib'] = '@block.inner',
       },
     },
     move = {
