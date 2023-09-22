@@ -9,6 +9,11 @@ local lsp_signature = require('lsp_signature')
 local on_attach = function(client, bufnr)
   lsp_signature.on_attach({})
 
+  -- enable inlay hints if LSP server supports it
+  if client.supports_method("textDocument/inlayHint") then
+    vim.lsp.inlay_hint(bufnr, true)
+  end
+
   -- Set autocommands conditional on server_capabilities
   if client.supports_method("textDocument/documentHighlight") then
     vim.api.nvim_exec2([[

@@ -2,6 +2,11 @@
 set -e -o pipefail
 
 ###
+# enable podman socket inside toolbox
+###
+systemctl --user --now enable podman.socket
+
+###
 # setup additional repos
 ###
 sudo cp ./yum.repos.d/* /etc/yum.repos.d/
@@ -9,7 +14,7 @@ sudo cp ./yum.repos.d/* /etc/yum.repos.d/
 ###
 # update all installed packages to latest version
 ###
-sudo dnf update -y
+sudo dnf update -y --best --allowerasing
 
 ###
 # install neovim
@@ -29,7 +34,6 @@ sudo dnf install -y gcc libstdc++-static
 
 # install neovim nightly
 sudo dnf copr enable -y agriffis/neovim-nightly
-#sudo dnf update -y
 
 # telescope prerequisites
 sudo dnf install -y ripgrep jq fd-find
@@ -41,7 +45,6 @@ sudo dnf install -y neovim python3-neovim
 
 # update plugins
 nvim --headless -c '+Lazy! restore' +qa
-
 
 ###
 # install helix
@@ -84,8 +87,9 @@ set -e
 ###
 # java
 ###
-
-# sudo dnf install -y java-17-openjdk-devel
+sudo dnf install -y java-17-openjdk-devel
+# install spring boot cli
+#./../../install-scripts/springboot.sh
 # ./../../install-scripts/gradle.sh
 
 ###
@@ -102,6 +106,18 @@ set -e
 # fi
 
 ###
+# python pip (needed for azure cli extensions)
+###
+sudo dnf install -y python3-pip
+
+###
+# install python stuff
+###
+pip3 install --user pdm
+# enable bash completion for pdm
+pdm completion bash > /etc/bash_completion.d/pdm.bash-completion
+
+###
 # install kubectl
 ###
 if ! [ -x "$(command -v kubectl)" ]; then
@@ -109,12 +125,52 @@ if ! [ -x "$(command -v kubectl)" ]; then
     sudo dnf install -y kubectl
 fi
 
+if ! [ -x "$(command -v kubectl-krew)" ]; then
+    . ../../install-scripts/krew.sh
+
+    kubectl krew upgrade
+    # add additional indexes
+    kubectl krew index add kvaps https://github.com/kvaps/krew-index
+    kubectl krew install kubescape
+fi
+
+###
+# install krew plugins
+###
+echo "Install krew plugins"
+if [ -x "$(command -v kubectl-krew)" ]; then
+    kubectl krew install kvaps/node-shell
+fi
+
+if ! [ -x "$(command -v skaffold)" ]; then
+    echo "Install skaffold"
+    . ../../install-scripts/skaffold.sh -v "1.35.0"
+fi
+
+if ! [ -x "$(command -v terraform)" ]; then
+    echo "Install terraform"
+    . ../../install-scripts/terraform.sh
+fi
+
+# kafka tooling
+sudo dnf copr enable bvn13/kcat -y
+sudo dnf install -y kcat
+
 ###
 # misc tooling
 ###
 sudo dnf install -y \
     fzf \
-    gh
+    gh \
+    git \
+    git-lfs
+
+###
+# networks tooling
+###
+sudo dnf install -y \
+    bind-utils \
+    openssl
 
 ###
 # install fonts
@@ -131,11 +187,13 @@ unzip -od "$FONT_DIR/" "$TMP_DIR/DejaVuSansMono.zip"
 
 echo "Install Droid Sans Mono font"
 curl -fLo "$FONT_DIR/DroidSansMNerdFontMono-Regular.otf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/DroidSansMono/DroidSansMNerdFontMono-Regular.otf
+
 echo "Refresh font cache"
 fc-cache -vf "$FONT_DIR"
 
 echo "Install GNU info command"
 sudo dnf install -y info
 
-echo "Setup mandb to be able to use 'man -k X'"
+echo "Setup mandb"
+# setup mandb to be able to use "man -k X"
 sudo mandb -c
