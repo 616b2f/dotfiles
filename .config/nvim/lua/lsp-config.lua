@@ -182,12 +182,19 @@ end
         hover = true,
         validate = true,
         schemas = {
-          -- ['http://json.schemastore.org/github-workflow'] = '.github/workflows/*.{yml,yaml}',
-          -- Kubernetes= "/*.yaml",
-          -- "https://raw.githubusercontent.com/instrumenta/kubernetes-json-schema/master/v1.18.0-standalone-strict/all.json": [ "/*.k8s.yaml" ],
-          ["http://json.schemastore.org/kustomization"] = "kustomization.yaml",
-          ["https://raw.githubusercontent.com/GoogleContainerTools/skaffold/master/docs/content/en/schemas/v4beta6.json"] = "skaffold.yaml",
-          ["https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.22.0/deployment-apps-v1.json"] = "/*.yaml",
+          ['http://json.schemastore.org/github-workflow'] = {
+            '.github/workflows/*.{yml,yaml}',
+          },
+          ["http://json.schemastore.org/kustomization"] = {
+            "kustomization.yaml",
+          },
+          ["https://raw.githubusercontent.com/GoogleContainerTools/skaffold/master/docs/content/en/schemas/v4beta6.json"] = {
+            "skaffold.yaml",
+          },
+          kubernetes = "*.yaml",
+          -- ["https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.26.9-standalone-strict/all.json"] = {
+          --   "*.yaml",
+          -- },
         },
         format = {
           enable = true
