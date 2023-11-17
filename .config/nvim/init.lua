@@ -104,7 +104,7 @@ require('lazy').setup({
   -- lightline plugin for pretty statusline
   {
     'nvim-lualine/lualine.nvim', -- Fancier statusline
-    dependencies = { 'kyazdani42/nvim-web-devicons', lazy = true } -- for file icons
+    dependencies = { 'nvim-tree/nvim-web-devicons', lazy = true } -- for file icons
   },
   -- 'itchyny/lightline.vim',
 
@@ -140,9 +140,9 @@ require('lazy').setup({
 
   -- file explorer like NERDtree
   {
-    'kyazdani42/nvim-tree.lua',
+    'nvim-tree/nvim-tree.lua',
     dependencies = {
-      'kyazdani42/nvim-web-devicons', -- optional, for file icon
+      'nvim-tree/nvim-web-devicons', -- optional, for file icon
     }
   },
   {
