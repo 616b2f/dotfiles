@@ -115,7 +115,7 @@ sudo dnf install -y python3-pip
 ###
 pip3 install --user pdm
 # enable bash completion for pdm
-pdm completion bash > /etc/bash_completion.d/pdm.bash-completion
+pdm completion bash | sudo tee /etc/bash_completion.d/pdm.bash-completion
 
 ###
 # install kubectl
