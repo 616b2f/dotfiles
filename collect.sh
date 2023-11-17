@@ -1,21 +1,13 @@
 #!/bin/bash
 
-rsync -r ~/.config/git/config ./.config/git/config
+source ./shared-env.sh
 
-folders=".config/helix/
-.config/sway/
-.config/waybar/
-.config/alacritty/
-.config/nvim/
-.config/dive/
-.config/omnisharp/
-.config/xdg-desktop-portal-wlr/
-.bashrc.d/
-"
+rsync -r ~/.config/git/config ./.config/git/config
 
 for folder in $folders
 do
     if [ -d "$HOME/$folder" ]; then
-        rsync -r --mkpath "$HOME/$folder" "./$folder"
+        echo "sync: $folder"
+        rsync -rv --mkpath "$HOME/$folder/" "$folder"
     fi
 done
