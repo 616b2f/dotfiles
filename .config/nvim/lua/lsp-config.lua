@@ -2,20 +2,6 @@ local lspconfig = require('lspconfig')
 -- local lspconfig_util = require('lspconfig.util')
 require("mason-lspconfig").setup()
 
-vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
-  vim.lsp.handlers.hover, {
-    -- Use a sharp border with `FloatBorder` highlights
-    border = "single",
-  }
-)
-
-vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
-  vim.lsp.handlers.signature_help, {
-    -- Use a sharp border with `FloatBorder` highlights
-    border = "single"
-  }
-)
-
 -- local util = require('lspconfig/util')
 local cmp_nvim_lsp = require('cmp_nvim_lsp')
 local lsp_signature = require('lsp_signature')
@@ -40,10 +26,26 @@ local on_attach = function(client, bufnr)
     {output=true})
   end
 
-  -- enable semantic tokens highligting hints
-  if client.supports_method("textDocument/semanticTokens") then
-    client.server_capabilities.semanticTokensProvider = true
+  -- setup lsp_signature
+  require('lsp_signature').on_attach({floating_window_above_cur_line = true}, bufnr)
+
+  -- setup compiler config for omnisharp
+  if client.name == "omnisharp" then
+    local workspaces = vim.lsp.buf.list_workspace_folders()
+    if #workspaces == 1 then
+      -- print("Workspace: " .. workspaces[1])
+      vim.cmd[[compiler dotnet]]
+      vim.cmd {
+        cmd = 'setlocal',
+        args = { 'makeprg=dotnet\\ build\\ --no-cache\\ -nologo\\ -consoleloggerparameters:NoSummary\\ -consoleloggerparameters:ErrorsOnly\\ ' .. workspaces[1] }
+      }
+    end
   end
+
+  -- enable semantic tokens highligting hints
+  -- if client.supports_method("textDocument/semanticTokens") then
+  --   client.server_capabilities.semanticTokensProvider = true
+  -- end
 end
 
 -- config that activates keymaps and enables snippet support
@@ -53,6 +55,8 @@ local function make_config()
   -- capabilities.textDocument.semanticTokens = true
   -- capabilities.workspace.semanticTokens = true
   -- capabilities.textDocument.documentFormattingProvider
+  -- enable file watcher capabilities for lsp clients
+  capabilities.workspace.didChangeWatchedFiles.dynamicRegistration=true
   capabilities = cmp_nvim_lsp.default_capabilities(capabilities)
   return {
     -- enable snippet support
@@ -205,7 +209,7 @@ end
           ["https://raw.githubusercontent.com/GoogleContainerTools/skaffold/master/docs/content/en/schemas/v4beta6.json"] = {
             "skaffold.yaml",
           },
-          kubernetes = "*.yaml",
+          -- kubernetes = "*.yaml",
           -- ["https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.26.9-standalone-strict/all.json"] = {
           --   "*.yaml",
           -- },

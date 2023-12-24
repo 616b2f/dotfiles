@@ -1,4 +1,4 @@
--- use new loader
+-- enable experimental loader
 vim.loader.enable()
 
 -- Install LazyVim
@@ -53,6 +53,8 @@ require('lazy').setup({
     opts = {}, -- `opts = {}` is the same as calling `require('fidget').setup({})`
     tag = "legacy"
   }, -- Useful status updates for LSP
+  { "https://gitlab.com/schrieveslaach/sonarlint.nvim.git" },
+
 
   -- specific for csharp allows goto definition for decompiled binaries
   "Hoffs/omnisharp-extended-lsp.nvim",
@@ -153,6 +155,7 @@ require('lazy').setup({
         workspaces = {                        -- Default workspaces to search for 
           { "~/devel/ext", { ".git" } },      -- devel/ext is a workspace. patterns = { ".git" }
           { "~/devel", { ".git" } },          -- devel is a workspace. patterns = { ".git" }
+          { "~/devel/projects", { ".git" } },      -- devel/projects is a workspace. patterns = { ".git" }
         },
         store_hooks = {
           pre = function()
@@ -200,8 +203,8 @@ require('lazy').setup({
   },
 
   {
-    'phaazon/hop.nvim',
-    branch = 'v1', -- optional but strongly recommended
+    'smoka7/hop.nvim',
+    version = '*',
     config = function()
       -- you can configure Hop the way you like here; see :h hop-config
       require'hop'.setup()
@@ -221,7 +224,12 @@ require('lazy').setup({
   },
 
   -- plugin to show function signatures in a better way
-  'ray-x/lsp_signature.nvim',
+  {
+    'ray-x/lsp_signature.nvim',
+    event = "VeryLazy",
+    opts = {},
+    config = function(_, opts) require'lsp_signature'.setup(opts) end
+  },
 
   -- for easier resizing windows
   {"dimfred/resize-mode.nvim"},
@@ -253,7 +261,7 @@ vim.o.title = true
 vim.o.titlestring = "nvim: %t"
 
 -- dont fix end of line in files
-vim.g.fixendofline = false
+vim.o.fixendofline = false
 
 -- sync default registers with clipboard
 vim.o.clipboard="unnamedplus"
@@ -277,6 +285,14 @@ vim.o.scrolloff = 8
 vim.o.expandtab=true
 
 -- show special characters like tabs and trailing spaces
+vim.opt.listchars = {
+  tab = '> ',
+  eol = '⤶',
+  nbsp = '✚',
+  trail = '-',
+  extends = '◀',
+  precedes = '▶',
+}
 vim.o.list = true
 
 -- reproduce the indentation of the previous line:
@@ -348,6 +364,8 @@ require("nord").setup({
   diff = { mode = "fg" }, -- enables/disables colorful backgrounds when used in diff mode. values : [bg|fg]
 })
 vim.cmd[[colorscheme nord]]
+-- set bg color of floating windows to a different color than normal background
+vim.api.nvim_set_hl(0, 'NormalFloat', { fg='#d8dee9', bg='#3b4252'})
 
 vim.o.hidden=true
 
@@ -462,11 +480,6 @@ require('Comment').setup()
 -- vim.api.nvim_set_keymap('n', 'k', "v:count == 0 ? 'gk' : 'k'", { noremap = true, expr = true, silent = true })
 -- vim.api.nvim_set_keymap('n', 'j', "v:count == 0 ? 'gj' : 'j'", { noremap = true, expr = true, silent = true })
 
-
--- setup lsp_signature
--- this needs to be called before we configure lsp servers
-require('lsp_signature').setup({floating_window_above_cur_line = true})
-
 -- Highlight on yank
 vim.cmd [[
   augroup YankHighlight
@@ -562,6 +575,7 @@ require'mason-tool-installer'.setup {
     -- misc linter
     'shellcheck',
     'editorconfig-checker',
+    'sonarlint-language-server',
     -- you can pin a tool to a particular version
     -- { 'golangci-lint', version = '1.47.0' },
 
@@ -636,6 +650,28 @@ require('treesitter-config')
 require('luasnip-config')
 
 require('mini.surround').setup({})
+
+require('sonarlint').setup({
+   server = {
+      cmd = {
+         'sonarlint-language-server',
+         -- Ensure that sonarlint-language-server uses stdio channel
+         '-stdio',
+         '-analyzers',
+         -- paths to the analyzers you need, using those for python and java in this example
+         vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarpython.jar"),
+         vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarlintomnisharp.jar"),
+         vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarjava.jar"),
+      }
+   },
+   filetypes = {
+      -- Tested and working
+      'python',
+      'cpp',
+      -- Requires nvim-jdtls, otherwise an error message will be printed
+      'java',
+   }
+})
 
 -- require('nvim-test').setup {
 --   run = true,                 -- run tests (using for debug)
@@ -716,7 +752,7 @@ vim.keymap.set("n", "<space>df", require('neogen').generate)
 -- telescope keybindins
 vim.keymap.set('n', '<leader>ff', function() require('telescope.builtin').find_files({hidden=true,no_ignore=false,no_ignore_parent=false}) end)
 vim.keymap.set('n', '<leader>fw', function() require('telescope.builtin').grep_string({search=vim.fn.expand('<cword>')}) end)
-vim.keymap.set('n', '<leader>fb', require('telescope.builtin').buffers)
+vim.keymap.set('n', '<leader>fb', function() require('telescope.builtin').buffers({show_all_buffers=true}) end)
 vim.keymap.set('n', '<leader>fh', require('telescope.builtin').help_tags)
 vim.keymap.set('n', '<leader>fgg', require('telescope.builtin').live_grep)
 vim.keymap.set('n', '<leader>fgb', require('telescope.builtin').git_branches)
@@ -777,7 +813,9 @@ my.helper.find_root_dir = function(source, indicator_pattern)
 end
 -- Find git directory for current file
 my.helper.get_git_dir = function ()
-  my.helper.find_root_dir(vim.fn.expand('%:p:h'), ".git")
+  local git_path = my.helper.find_root_dir(vim.fn.expand('%:p:h'), ".git")
+  print("git_path: " .. git_path)
+  return git_path
 end
 
 -- -- Diagnostic keymaps
