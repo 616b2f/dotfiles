@@ -34,4 +34,5 @@ xdg-desktop-portal-wlr \
 waybar \
 wl-clipboard \
 brightnessctl \
+network-manager-applet \
 "
