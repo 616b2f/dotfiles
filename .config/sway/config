@@ -5,6 +5,7 @@
 
 # start notification daemon
 exec mako
+exec nm-applet
 #
 # /usr/bin/gnome-keyring-daemon --daemonize --login
 # /usr/bin/gnome-keyring-daemon --start --foreground --components=secrets
