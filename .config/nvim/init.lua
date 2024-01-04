@@ -1,4 +1,4 @@
--- enable experimental loader
+-- use new loader
 vim.loader.enable()
 
 -- Install LazyVim
@@ -50,11 +50,13 @@ require('lazy').setup({
   "WhoIsSethDaniel/mason-tool-installer.nvim", -- for easier installing tools
   {
     'j-hui/fidget.nvim',
-    opts = {}, -- `opts = {}` is the same as calling `require('fidget').setup({})`
-    tag = "legacy"
+    opts = {
+      notification = {
+        override_vim_notify = true
+      }
+    }, -- `opts = {}` is the same as calling `require('fidget').setup({})`
+    branch = "main"
   }, -- Useful status updates for LSP
-  { "https://gitlab.com/schrieveslaach/sonarlint.nvim.git" },
-
 
   -- specific for csharp allows goto definition for decompiled binaries
   "Hoffs/omnisharp-extended-lsp.nvim",
@@ -84,8 +86,6 @@ require('lazy').setup({
   'mhartington/formatter.nvim',
 
   -- color schemes
-  'tomasiser/vim-code-dark',
-  'rakr/vim-one',
   'gbprod/nord.nvim',
 
   -- colorscheme helper
@@ -224,12 +224,7 @@ require('lazy').setup({
   },
 
   -- plugin to show function signatures in a better way
-  {
-    'ray-x/lsp_signature.nvim',
-    event = "VeryLazy",
-    opts = {},
-    config = function(_, opts) require'lsp_signature'.setup(opts) end
-  },
+  'ray-x/lsp_signature.nvim',
 
   -- for easier resizing windows
   {"dimfred/resize-mode.nvim"},
@@ -238,7 +233,9 @@ require('lazy').setup({
   {
     'stevearc/overseer.nvim',
     opts = {},
-  }
+  },
+
+  { dir = "~/devel/bsp.nvim" },
 })
 
 -- When we are bootstrapping a configuration, it doesn't
@@ -363,10 +360,9 @@ vim.o.termguicolors = true
 require("nord").setup({
   diff = { mode = "fg" }, -- enables/disables colorful backgrounds when used in diff mode. values : [bg|fg]
 })
-vim.cmd[[colorscheme nord]]
+-- vim.cmd[[colorscheme nord]]
 -- set bg color of floating windows to a different color than normal background
-vim.api.nvim_set_hl(0, 'NormalFloat', { fg='#d8dee9', bg='#3b4252'})
-
+-- vim.api.nvim_set_hl(0, 'NormalFloat', { fg='#d8dee9', bg='#3b4252'})
 vim.o.hidden=true
 
 -- Some servers have issues with backup files, see #649.
@@ -480,6 +476,11 @@ require('Comment').setup()
 -- vim.api.nvim_set_keymap('n', 'k', "v:count == 0 ? 'gk' : 'k'", { noremap = true, expr = true, silent = true })
 -- vim.api.nvim_set_keymap('n', 'j', "v:count == 0 ? 'gj' : 'j'", { noremap = true, expr = true, silent = true })
 
+
+-- setup lsp_signature
+-- this needs to be called before we configure lsp servers
+require('lsp_signature').setup({floating_window_above_cur_line = true})
+
 -- Highlight on yank
 vim.cmd [[
   augroup YankHighlight
@@ -575,7 +576,6 @@ require'mason-tool-installer'.setup {
     -- misc linter
     'shellcheck',
     'editorconfig-checker',
-    'sonarlint-language-server',
     -- you can pin a tool to a particular version
     -- { 'golangci-lint', version = '1.47.0' },
 
@@ -628,7 +628,6 @@ require("neotest").setup({
   }
 })
 
-
   -- hi LspReferenceRead link Visual cterm=bold ctermbg=red guibg=LightYellow
   -- hi LspReferenceText cterm=bold ctermbg=red guibg=LightYellow
   -- hi LspReferenceWrite cterm=bold ctermbg=red guibg=LightYellow
@@ -650,28 +649,6 @@ require('treesitter-config')
 require('luasnip-config')
 
 require('mini.surround').setup({})
-
-require('sonarlint').setup({
-   server = {
-      cmd = {
-         'sonarlint-language-server',
-         -- Ensure that sonarlint-language-server uses stdio channel
-         '-stdio',
-         '-analyzers',
-         -- paths to the analyzers you need, using those for python and java in this example
-         vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarpython.jar"),
-         vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarlintomnisharp.jar"),
-         vim.fn.expand("$MASON/share/sonarlint-analyzers/sonarjava.jar"),
-      }
-   },
-   filetypes = {
-      -- Tested and working
-      'python',
-      'cpp',
-      -- Requires nvim-jdtls, otherwise an error message will be printed
-      'java',
-   }
-})
 
 -- require('nvim-test').setup {
 --   run = true,                 -- run tests (using for debug)
@@ -813,9 +790,7 @@ my.helper.find_root_dir = function(source, indicator_pattern)
 end
 -- Find git directory for current file
 my.helper.get_git_dir = function ()
-  local git_path = my.helper.find_root_dir(vim.fn.expand('%:p:h'), ".git")
-  print("git_path: " .. git_path)
-  return git_path
+  return my.helper.find_root_dir(vim.fn.expand('%:p:h'), ".git")
 end
 
 -- -- Diagnostic keymaps
@@ -889,5 +864,96 @@ vim.api.nvim_create_autocmd('LspAttach', {
 
   end,
 })
+
+-- configure global logging 
+local log = require("bp.log")
+log.set_level(vim.log.levels.DEBUG)
+
+local bsp = require("bsp")
+bsp.setup()
+
+local register_bsp_progress_handle = function ()
+  local progress = require("fidget.progress")
+
+  local handles = {}
+
+  vim.api.nvim_create_autocmd("User",
+    {
+      group = 'bsp',
+      pattern = 'BspProgress:start',
+      callback = function(ev)
+        local data = ev.data
+        local client = bsp.get_client_by_id(data.client_id)
+        if client then
+          ---@type bsp.TaskStartParams
+          local result = ev.data.result
+          local title = "BSP-Task"
+          if result.dataKind then
+            title = result.dataKind
+          end
+          local message = "started: " .. tostring(result.taskId.id)
+
+          handles[result.taskId.id] = progress.handle.create({
+            token = result.taskId.id,
+            title = title,
+            message = (result.message or message),
+            lsp_client = { name = client.name }
+          })
+        end
+      end
+    })
+
+  vim.api.nvim_create_autocmd("User",
+    {
+      group = 'bsp',
+      pattern = 'BspProgress:progress',
+      callback = function(ev)
+        local data = ev.data
+        local percentage = 0
+        ---@type bsp.TaskStartParams
+        local result = ev.data.result
+        if data.result and data.result.message then
+          local message =
+            data.result.message
+            and (data.result.originId and ( data.result.originId .. ': ') .. data.result.message)
+            or data.result.title
+          if data.result.total and data.result.progress then
+            percentage = math.max(percentage or 0, (data.result.progress / data.result.total * 100))
+          end
+          local handle = handles[result.taskId.id]
+          if handle then
+              local progressMessage = {
+                token = result.taskId.id,
+                message = message,
+                percentage = percentage
+              }
+              -- print(vim.inspect(progressMessage))
+              -- print(vim.inspect(result))
+              handle:report(progressMessage)
+          end
+        end
+      end
+    })
+
+  vim.api.nvim_create_autocmd("User",
+    {
+      group = 'bsp',
+      pattern = 'BspProgress:finish',
+      callback = function(ev)
+        local data = ev.data
+        ---@type bsp.TaskStartParams
+        local result = ev.data.result
+        local handle = handles[result.taskId.id]
+        -- You can also cancel the task (errors if not cancellable)
+        -- handle:cancel()
+        -- Or mark it as complete (updates percentage to 100 automatically)
+        if handle then
+          handle:finish()
+        end
+      end
+    })
+end
+
+register_bsp_progress_handle()
 
 -- vim: ts=2 sts=2 sw=2 et
