@@ -1,0 +1,10 @@
+[window]
+decorations = "none"
+dynamic_title = true
+startup_mode = "Maximized"
+dynamic_padding = true
+
+[font]
+normal = { family = "DroidSansM Nerd Font Mono", style = "Book" }
+italic = { style = "Italic"}
+
