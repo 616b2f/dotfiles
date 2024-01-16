@@ -125,14 +125,14 @@ if ! [ -x "$(command -v kubectl)" ]; then
     sudo dnf install -y kubectl
 fi
 
-if ! [ -x "$(command -v kubectl-krew)" ]; then
-    . ../../install-scripts/krew.sh
-
-    kubectl krew upgrade
-    # add additional indexes
-    kubectl krew index add kvaps https://github.com/kvaps/krew-index
-    kubectl krew install kubescape
-fi
+# if ! [ -x "$(command -v kubectl-krew)" ]; then
+#     . ../../install-scripts/krew.sh
+#
+#     kubectl krew upgrade
+#     # add additional indexes
+#     kubectl krew index add kvaps https://github.com/kvaps/krew-index
+#     kubectl krew install kubescape
+# fi
 
 ###
 # install krew plugins
@@ -144,17 +144,17 @@ fi
 
 if ! [ -x "$(command -v skaffold)" ]; then
     echo "Install skaffold"
-    . ../../install-scripts/skaffold.sh -v "1.35.0"
+    . ../../install-scripts/skaffold.sh -v "2.10.0"
 fi
 
-if ! [ -x "$(command -v terraform)" ]; then
-    echo "Install terraform"
-    . ../../install-scripts/terraform.sh
+if ! [ -x "$(command -v tofu)" ]; then
+    echo "Install OpenTofu"
+    sudo dnf install -y tofu
 fi
 
 # kafka tooling
-sudo dnf copr enable bvn13/kcat -y
-sudo dnf install -y kcat
+# sudo dnf copr enable bvn13/kcat -y
+# sudo dnf install -y kcat
 
 ###
 # misc tooling
