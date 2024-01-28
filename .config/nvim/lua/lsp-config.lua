@@ -39,17 +39,6 @@ local on_attach = function(client, bufnr)
     ]],
     {output=true})
   end
-  -- setup compiler config for omnisharp
-  if client.name == "omnisharp" then
-    local workspaces = vim.lsp.buf.list_workspace_folders()
-    if #workspaces == 1 then
-      vim.cmd[[compiler dotnet]]
-      vim.cmd {
-        cmd = 'setlocal',
-        args = { 'makeprg=dotnet\\ build\\ --no-cache\\ -nologo\\ -consoleloggerparameters:NoSummary\\ -consoleloggerparameters:ErrorsOnly\\ ' .. workspaces[1] }
-      }
-    end
-  end
 
   -- enable semantic tokens highligting hints
   if client.supports_method("textDocument/semanticTokens") then

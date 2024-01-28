@@ -862,6 +862,18 @@ vim.api.nvim_create_autocmd('LspAttach', {
       vim.lsp.buf.format({ async = true})
     end, opts)
 
+    local client = vim.lsp.get_client_by_id(ev.data.client_id)
+    -- setup compiler config for omnisharp
+    if client and client.name == "omnisharp" then
+      local workspaces = vim.lsp.buf.list_workspace_folders()
+      if #workspaces == 1 then
+        vim.cmd[[compiler dotnet]]
+        vim.cmd {
+          cmd = 'setlocal',
+          args = { 'makeprg=dotnet\\ build\\ --no-cache\\ -nologo\\ -consoleloggerparameters:NoSummary\\ -consoleloggerparameters:ErrorsOnly\\ ' .. workspaces[1] }
+        }
+      end
+    end
   end,
 })
 
@@ -872,11 +884,22 @@ log.set_level(vim.log.levels.DEBUG)
 local bsp = require("bsp")
 bsp.setup()
 
+vim.api.nvim_create_autocmd("User",
+{
+  group = 'bsp',
+  pattern = 'BspAttach',
+  callback = function()
+    local opts = {}
+    vim.keymap.set('n', '<leader>bb', bsp.compile_build_target, opts)
+    vim.keymap.set('n', '<leader>bt', require('bsp').test_build_target, opts)
+    vim.keymap.set('n', '<leader>bc', require('bsp').cleancache_build_target, opts)
+  end
+})
+
 local register_bsp_progress_handle = function ()
   local progress = require("fidget.progress")
 
   local handles = {}
-
   vim.api.nvim_create_autocmd("User",
     {
       group = 'bsp',
