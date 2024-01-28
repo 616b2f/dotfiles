@@ -105,6 +105,9 @@ sudo dnf install -y java-17-openjdk-devel
 #     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
 # fi
 
+echo "Install yq"
+../../install-scripts/yq.sh
+
 ###
 # python pip (needed for azure cli extensions)
 ###
