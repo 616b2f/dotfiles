@@ -44,7 +44,18 @@ require('lazy').setup({
   'nvim-treesitter/nvim-treesitter-textobjects', -- Additional textobjects for treesitter
 
   -- nvim lsp support
-  "williamboman/mason.nvim",
+  {
+    "williamboman/mason.nvim",
+    opts = {
+      registries = {
+        -- "github:mason-org/mason-registry",
+        "file:~/devel/mason-registry"
+      },
+      providers = {
+        "mason.providers.client",
+      },
+    }
+  },
   "williamboman/mason-lspconfig.nvim", -- for better integration with lspconfig
   "neovim/nvim-lspconfig", -- Collection of configurations for built-in LSP client
   "WhoIsSethDaniel/mason-tool-installer.nvim", -- for easier installing tools
@@ -52,7 +63,7 @@ require('lazy').setup({
     'j-hui/fidget.nvim',
     opts = {
       notification = {
-        override_vim_notify = true
+        override_vim_notify = false
       }
     }, -- `opts = {}` is the same as calling `require('fidget').setup({})`
     branch = "main"
@@ -557,41 +568,41 @@ require('neogit').setup {
 }
 
 -- mason setup
-require("mason").setup()
-require'mason-tool-installer'.setup {
-
-  -- a list of all tools you want to ensure are installed upon
-  -- start; they should be the names Mason uses for each tool
-  ensure_installed = {
-
-    -- you can turn off/on auto_update per tool
-    { 'bash-language-server', auto_update = true },
-    'lua-language-server',
-    'yaml-language-server',
-    'vim-language-server',
-    'gopls',
-    'rust-analyzer',
-    'terraform-ls',
-
-    -- misc linter
-    'shellcheck',
-    'editorconfig-checker',
-    -- you can pin a tool to a particular version
-    -- { 'golangci-lint', version = '1.47.0' },
-
-    -- csharp
-    'omnisharp', -- LSP
-    'netcoredbg', -- DAP
-
-    -- java
-    'jdtls',
-    'java-debug-adapter',
-    'java-test',
-
-    -- python
-    'python-lsp-server'
-  }
-}
+-- require("mason").setup()
+-- require'mason-tool-installer'.setup {
+--
+--   -- a list of all tools you want to ensure are installed upon
+--   -- start; they should be the names Mason uses for each tool
+--   ensure_installed = {
+--
+--     -- you can turn off/on auto_update per tool
+--     { 'bash-language-server', auto_update = true },
+--     'lua-language-server',
+--     'yaml-language-server',
+--     'vim-language-server',
+--     'gopls',
+--     'rust-analyzer',
+--     'terraform-ls',
+--
+--     -- misc linter
+--     'shellcheck',
+--     'editorconfig-checker',
+--     -- you can pin a tool to a particular version
+--     -- { 'golangci-lint', version = '1.47.0' },
+--
+--     -- csharp
+--     'omnisharp', -- LSP
+--     'netcoredbg', -- DAP
+--
+--     -- java
+--     'jdtls',
+--     'java-debug-adapter',
+--     'java-test',
+--
+--     -- python
+--     'python-lsp-server'
+--   }
+-- }
 
 -- Setup neovim specific lua support
 require('neodev').setup({

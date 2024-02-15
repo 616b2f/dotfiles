@@ -25,7 +25,7 @@ local on_attach = function(client, bufnr)
 
   -- enable inlay hints if LSP server supports it
   if client.supports_method("textDocument/inlayHint") then
-    vim.lsp.inlay_hint(bufnr, true)
+    vim.lsp.inlay_hint.enable(bufnr, true)
   end
 
   -- Set autocommands conditional on server_capabilities
