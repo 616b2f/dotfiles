@@ -7,18 +7,17 @@
     "modules-left": ["sway/workspaces", "sway/mode"],
     "modules-center": ["sway/window"],
     "modules-right": [
-	    "tray",
-	    "idle_inhibitor",
-	    "network",
-	    "pulseaudio",
-	    "cpu",
-	    "memory",
-	    "temperature",
-	    "backlight",
-	    "sway/language",
-	    "battery",
-	    "battery#bat2",
-        "clock"
+      "tray",
+      "idle_inhibitor",
+      // "network",
+      "pulseaudio",
+      "cpu",
+      "memory",
+      "temperature",
+      "backlight",
+      "battery",
+      "battery#bat2",
+      "clock"
     ],
     // Modules configuration
     // "sway/workspaces": {
