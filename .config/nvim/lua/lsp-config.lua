@@ -18,10 +18,10 @@ vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
 
 -- local util = require('lspconfig/util')
 local cmp_nvim_lsp = require('cmp_nvim_lsp')
-local lsp_signature = require('lsp_signature')
 
 local on_attach = function(client, bufnr)
-  lsp_signature.on_attach({})
+  -- setup lsp_signature
+  require('lsp_signature').on_attach({floating_window_above_cur_line = true}, bufnr)
 
   -- enable inlay hints if LSP server supports it
   if client.supports_method("textDocument/inlayHint") then
@@ -204,7 +204,7 @@ end
           ["http://json.schemastore.org/kustomization"] = {
             "kustomization.yaml",
           },
-          ["https://raw.githubusercontent.com/GoogleContainerTools/skaffold/master/docs/content/en/schemas/v4beta6.json"] = {
+          ["https://raw.githubusercontent.com/GoogleContainerTools/skaffold/main/docs-v2/content/en/schemas/v4beta9.json"] = {
             "skaffold.yaml",
           },
           kubernetes = "*.yaml",

@@ -1,4 +1,4 @@
--- use new loader
+-- enable experimental loader
 vim.loader.enable()
 
 -- Install LazyVim
@@ -88,16 +88,12 @@ require('lazy').setup({
   'saadparwaiz1/cmp_luasnip',
   'L3MON4D3/LuaSnip', -- Snippets plugin
   'rafamadriz/friendly-snippets', -- basic snippets
-  {
-    "danymat/neogen", -- documentation generation
-    dependencies = "nvim-treesitter/nvim-treesitter",
-  },
 
   -- custom formatters
   'mhartington/formatter.nvim',
 
   -- color schemes
-  'gbprod/nord.nvim',
+  -- 'gbprod/nord.nvim',
 
   -- colorscheme helper
   'tjdevries/colorbuddy.nvim',
@@ -235,10 +231,12 @@ require('lazy').setup({
   },
 
   -- plugin to show function signatures in a better way
-  'ray-x/lsp_signature.nvim',
-
-  -- for easier resizing windows
-  {"dimfred/resize-mode.nvim"},
+  {
+    'ray-x/lsp_signature.nvim',
+    event = "VeryLazy",
+    opts = {},
+    config = function(_, opts) require'lsp_signature'.setup(opts) end
+  },
 
   -- vscode like task runner
   {
@@ -247,6 +245,16 @@ require('lazy').setup({
   },
 
   { dir = "~/devel/bsp.nvim" },
+  -- Useful status updates for LSP
+  {
+    'j-hui/fidget.nvim',
+    branch = "main",
+    opts = {
+      notification = {
+        override_vim_notify = true
+      }
+    }, -- `opts = {}` is the same as calling `require('fidget').setup({})` branch = "main"
+  },
 })
 
 -- When we are bootstrapping a configuration, it doesn't
@@ -337,6 +345,7 @@ vim.cmd [[
 
     " set intendation for *.csproj files
     autocmd BufNewFile,BufRead *.csproj setlocal ts=2 sts=2 sw=2 expandtab
+    autocmd BufNewFile,BufRead *.props set syntax=xml ft=xml
 ]]
 
 -- Set highlight on search
@@ -374,6 +383,7 @@ require("nord").setup({
 -- vim.cmd[[colorscheme nord]]
 -- set bg color of floating windows to a different color than normal background
 -- vim.api.nvim_set_hl(0, 'NormalFloat', { fg='#d8dee9', bg='#3b4252'})
+
 vim.o.hidden=true
 
 -- Some servers have issues with backup files, see #649.
@@ -460,18 +470,6 @@ require('lualine').setup {
   }
 }
 
-require('neogen').setup
-{
-  snippet_engine = 'luasnip',
-  languages = {
-    cs = {
-      template = {
-        annotation_convention = 'xmldoc' -- for a full list of annotation_conventions, see supported-languages below,
-      }
-    },
-  }
-}
-
 -- use global statusline
 -- vim.o.laststatus=3
 
@@ -486,11 +484,6 @@ require('Comment').setup()
 -- Remap for dealing with word wrap
 -- vim.api.nvim_set_keymap('n', 'k', "v:count == 0 ? 'gk' : 'k'", { noremap = true, expr = true, silent = true })
 -- vim.api.nvim_set_keymap('n', 'j', "v:count == 0 ? 'gj' : 'j'", { noremap = true, expr = true, silent = true })
-
-
--- setup lsp_signature
--- this needs to be called before we configure lsp servers
-require('lsp_signature').setup({floating_window_above_cur_line = true})
 
 -- Highlight on yank
 vim.cmd [[
@@ -568,41 +561,42 @@ require('neogit').setup {
 }
 
 -- mason setup
--- require("mason").setup()
--- require'mason-tool-installer'.setup {
---
---   -- a list of all tools you want to ensure are installed upon
---   -- start; they should be the names Mason uses for each tool
---   ensure_installed = {
---
---     -- you can turn off/on auto_update per tool
---     { 'bash-language-server', auto_update = true },
---     'lua-language-server',
---     'yaml-language-server',
---     'vim-language-server',
---     'gopls',
---     'rust-analyzer',
---     'terraform-ls',
---
---     -- misc linter
---     'shellcheck',
---     'editorconfig-checker',
---     -- you can pin a tool to a particular version
---     -- { 'golangci-lint', version = '1.47.0' },
---
---     -- csharp
---     'omnisharp', -- LSP
---     'netcoredbg', -- DAP
---
---     -- java
---     'jdtls',
---     'java-debug-adapter',
---     'java-test',
---
---     -- python
---     'python-lsp-server'
---   }
--- }
+require("mason").setup()
+require'mason-tool-installer'.setup {
+
+  -- a list of all tools you want to ensure are installed upon
+  -- start; they should be the names Mason uses for each tool
+  ensure_installed = {
+
+    -- you can turn off/on auto_update per tool
+    { 'bash-language-server', auto_update = true },
+    'lua-language-server',
+    'yaml-language-server',
+    'vim-language-server',
+    'gopls',
+    'rust-analyzer',
+    'terraform-ls',
+    'lemminx', -- xml lsp
+
+    -- misc linter
+    'shellcheck',
+    'editorconfig-checker',
+    -- you can pin a tool to a particular version
+    -- { 'golangci-lint', version = '1.47.0' },
+
+    -- csharp
+    'omnisharp', -- LSP
+    'netcoredbg', -- DAP
+
+    -- java
+    'jdtls',
+    'java-debug-adapter',
+    'java-test',
+
+    -- python
+    'python-lsp-server',
+  }
+}
 
 -- Setup neovim specific lua support
 require('neodev').setup({
@@ -639,6 +633,7 @@ require("neotest").setup({
   }
 })
 
+
   -- hi LspReferenceRead link Visual cterm=bold ctermbg=red guibg=LightYellow
   -- hi LspReferenceText cterm=bold ctermbg=red guibg=LightYellow
   -- hi LspReferenceWrite cterm=bold ctermbg=red guibg=LightYellow
@@ -653,6 +648,7 @@ vim.api.nvim_exec2([[
 
 -- custom config
 require('completion-config')
+-- vim.lsp.set_log_level("debug")
 require('lsp-config')
 require('dap-config')
 require('formatter-config')
@@ -683,23 +679,6 @@ require('mini.surround').setup({})
 --   }
 -- }
 
-require("resize-mode").setup {
-  horizontal_amount = 9,
-  vertical_amount = 5,
-  quit_key = "<CR>",
-  enable_mapping = true,
-  resize_keys = {
-    "h", -- increase to the left
-    "j", -- increase to the bottom
-    "k", -- increase to the top
-    "l", -- increase to the right
-    "H", -- decrease to the left
-    "J", -- decrease to the bottom
-    "K", -- decrease to the top
-    "L"  -- decrease to the right
-  }
-}
-
 -- custom commands
 -- -- open new terminal in the current files path
 -- command Dterm new %:p:h | lcd % | terminal
@@ -708,8 +687,16 @@ require("resize-mode").setup {
 -- -- insert new uuid in current cursor location
 -- -- format whole json file 
 -- command FormatJson %!jq .
-vim.api.nvim_create_user_command('GenUuid', "r !uuidgen | tr -d '\n'", {desc="my: generate a new UUID and paste it on your cursors position."})
+
+local ak = require('ak')
+vim.api.nvim_create_user_command('GenUuid', function() ak.ui.insert_text(ak.uuid.new()) end, {desc="my: generate a new UUID and paste it on your cursors position."})
 vim.api.nvim_create_user_command('EditConfig', "e ~/.config/nvim/init.lua", {desc="my: open init.lua file for editing "})
+vim.api.nvim_create_user_command('UrlEncode', ak.ui.url.encode, {desc="my: convert a JWT token into plain JSON representation"})
+vim.api.nvim_create_user_command('Base64Encode', ak.ui.base64.encode, {desc="my: convert a JWT token into plain JSON representation"})
+vim.api.nvim_create_user_command('Base64Decode', ak.ui.base64.decode, {desc="my: convert a JWT token into plain JSON representation"})
+vim.api.nvim_create_user_command('Base64UrlEncode', ak.ui.base64url.encode, {desc="my: convert a JWT token into plain JSON representation"})
+vim.api.nvim_create_user_command('Base64UrlDecode', ak.ui.base64url.decode, {desc="my: convert a JWT token into plain JSON representation"})
+vim.api.nvim_create_user_command('JwtDecode', ak.ui.jwt.decode, {desc="my: convert a JWT token into plain JSON representation"})
 
 -- setup extra surround mappings
 vim.keymap.set('x', 'S', function() require('mini.surround').add('visual') end, { noremap = true })
@@ -730,9 +717,6 @@ vim.keymap.set('n', '<leader>nf', function() require("nvim-tree.api").tree.open(
 -- hop mappings
 vim.keymap.set('n', '<space>f', function() require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.AFTER_CURSOR, current_line_only = false }) end)
 vim.keymap.set('n', '<space>F', function() require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.BEFORE_CURSOR, current_line_only = false }) end)
-
--- neogen mappings
-vim.keymap.set("n", "<space>df", require('neogen').generate)
 
 -- Enable telescope fzf native
 -- require('telescope').load_extension 'fzf'
@@ -838,16 +822,17 @@ vim.keymap.set('n', '<leader>tf', function() require('neotest').run.run({vim.fn.
 vim.keymap.set('n', '<leader>ts', function() require('neotest').run.run({suite=true}) end, {desc="my: run test for the whole suite"})
 vim.keymap.set('n', '<leader>td', function() require('neotest').run.run({strategy='dap'}) end, {desc="my: run nearest test in debug mode"})
 
-vim.keymap.set('n', '<leader>wr', require("resize-mode").start, { noremap = true, silent = true })
-
 -- Global mappings.
 -- See `:help vim.diagnostic.*` for documentation on any of the below functions
-vim.keymap.set('n', '<space>e', vim.diagnostic.open_float)
+vim.keymap.set('n', '<space>d', vim.diagnostic.open_float)
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev)
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
 vim.keymap.set('n', '<space>q', vim.diagnostic.setqflist)
 vim.keymap.set('n', '<space>qe', function() vim.diagnostic.setqflist({severity=vim.diagnostic.severity.ERROR}) end)
 vim.keymap.set('n', '<space>ql', vim.diagnostic.setloclist)
+-- quickfix list mappings
+vim.keymap.set('n', '[q', ":cprev<CR>", {desc="my: go to previous item in the quickfix list"})
+vim.keymap.set('n', ']q', ":cnext<CR>", {desc="my: go to next item in the quickfix list"})
 
 -- Use LspAttach autocommand to only map the following keys
 -- after the language server attaches to the current buffer
