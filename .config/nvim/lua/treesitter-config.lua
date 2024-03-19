@@ -4,6 +4,15 @@ require('nvim-treesitter.configs').setup {
   ensure_installed = { "query", "c_sharp", "lua", "go", "java", "python", "vimdoc", "terraform", "markdown", "hurl", "json" },
   highlight = {
     enable = true, -- false will disable the whole extension
+    disable = function (_, buf)
+      local max_filesize = 100 * 1024 -- 100 KB
+      local filename = vim.api.nvim_buf_get_name(buf)
+      local ok, stats = pcall(vim.uv.fs_stat, filename)
+      if ok and stats and stats.size > max_filesize then
+        return true
+      end
+    end,
+    additional_vim_regex_highlighting = false
   },
   incremental_selection = {
     enable = true,

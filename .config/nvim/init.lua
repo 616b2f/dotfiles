@@ -3,7 +3,7 @@ vim.loader.enable()
 
 -- Install LazyVim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
+if not vim.uv.fs_stat(lazypath) then
   vim.fn.system({
     "git",
     "clone",
@@ -48,7 +48,7 @@ require('lazy').setup({
     "williamboman/mason.nvim",
     opts = {
       registries = {
-        -- "github:mason-org/mason-registry",
+        "github:mason-org/mason-registry",
         "file:~/devel/mason-registry"
       },
       providers = {
@@ -61,12 +61,12 @@ require('lazy').setup({
   "WhoIsSethDaniel/mason-tool-installer.nvim", -- for easier installing tools
   {
     'j-hui/fidget.nvim',
+    branch = "main",
     opts = {
       notification = {
         override_vim_notify = false
       }
-    }, -- `opts = {}` is the same as calling `require('fidget').setup({})`
-    branch = "main"
+    } -- `opts = {}` is the same as calling `require('fidget').setup({})`
   }, -- Useful status updates for LSP
 
   -- specific for csharp allows goto definition for decompiled binaries
@@ -123,16 +123,13 @@ require('lazy').setup({
 
   -- debugger adapter protocoll support
   'mfussenegger/nvim-dap',
-  { 'Pocco81/dap-buddy.nvim', branch = "dev" },
   'rcarriga/nvim-dap-ui',
-  -- 'nvim-telescope/telescope-dap.nvim',
 
   -- unit test plugins
-  -- 'klen/nvim-test',
-  -- "616b2f/nvim-test",
   {
     "nvim-neotest/neotest",
     dependencies = {
+      "nvim-neotest/nvim-nio",
       "nvim-lua/plenary.nvim",
       "nvim-treesitter/nvim-treesitter",
       "antoinemadec/FixCursorHold.nvim"
@@ -377,9 +374,9 @@ vim.wo.signcolumn = 'yes'
 
 -- Set colorscheme
 vim.o.termguicolors = true
-require("nord").setup({
-  diff = { mode = "fg" }, -- enables/disables colorful backgrounds when used in diff mode. values : [bg|fg]
-})
+--require("nord").setup({
+--  diff = { mode = "fg" }, -- enables/disables colorful backgrounds when used in diff mode. values : [bg|fg]
+--})
 -- vim.cmd[[colorscheme nord]]
 -- set bg color of floating windows to a different color than normal background
 -- vim.api.nvim_set_hl(0, 'NormalFloat', { fg='#d8dee9', bg='#3b4252'})
@@ -562,7 +559,7 @@ require('neogit').setup {
 
 -- mason setup
 require("mason").setup()
-require'mason-tool-installer'.setup {
+require('mason-tool-installer').setup {
 
   -- a list of all tools you want to ensure are installed upon
   -- start; they should be the names Mason uses for each tool
@@ -574,7 +571,6 @@ require'mason-tool-installer'.setup {
     'yaml-language-server',
     'vim-language-server',
     'gopls',
-    'rust-analyzer',
     'terraform-ls',
     'lemminx', -- xml lsp
 
@@ -584,14 +580,20 @@ require'mason-tool-installer'.setup {
     -- you can pin a tool to a particular version
     -- { 'golangci-lint', version = '1.47.0' },
 
+    -- rust
+    'rust-analyzer',
+    'cargo-bsp',
+
     -- csharp
     'omnisharp', -- LSP
     'netcoredbg', -- DAP
+    'dotnet-bsp', -- BSP
 
     -- java
     'jdtls',
     'java-debug-adapter',
     'java-test',
+    'gradle-bsp', -- BSP
 
     -- python
     'python-lsp-server',
