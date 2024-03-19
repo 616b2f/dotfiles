@@ -27,7 +27,8 @@ sudo dnf install -y wl-clipboard
 sudo dnf install -y luarocks compat-lua-devel gcc-c++
 
 # install vusted (for unitests of nvim lua plugins)
-luarocks --lua-version=5.1 install vusted
+# luarocks --lua-version=5.1 install vusted
+luarocks --lua-version=5.1 install busted
 
 # treesitter prerequisites
 sudo dnf install -y gcc libstdc++-static
@@ -44,7 +45,8 @@ sudo dnf install -y nodejs
 sudo dnf install -y neovim python3-neovim
 
 # update plugins
-nvim --headless -c '+Lazy! restore' +qa
+nvim --headless "+Lazy! restore" +qa
+
 
 ###
 # install helix
@@ -68,21 +70,19 @@ sudo dnf install -y golang
 # dotnet
 ###
 # install dotnet sdk
-sudo dnf install -y dotnet-sdk-6.0
+sudo dnf install -y dotnet-sdk-8.0
 # Create Dotnet Developer Certificate
 dotnet dev-certs https
 
-set +e
 # disable fail on error return types
 # because dotnet tool returns 1 if the tool is already installed
 # Install Dotnet EF-CLI 
-dotnet tool install --global dotnet-ef
+dotnet tool update -g dotnet-ef
 # Install outdated tool
-dotnet tool install --global dotnet-outdated-tool
+dotnet tool update -g dotnet-outdated-tool
 # Install decompilation tool ilspy
-#dotnet tool install --global ilspycmd
-dotnet tool install -g dotnet-reportgenerator-globaltool
-set -e
+#dotnet tool update -g ilspycmd
+dotnet tool update -g dotnet-reportgenerator-globaltool
 
 ###
 # java
@@ -116,7 +116,7 @@ sudo dnf install -y python3-pip
 ###
 # install python stuff
 ###
-pip3 install --user pdm
+pip3 install --upgrade --user pdm
 # enable bash completion for pdm
 pdm completion bash | sudo tee /etc/bash_completion.d/pdm.bash-completion
 
