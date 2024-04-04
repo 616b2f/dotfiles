@@ -30,9 +30,10 @@ sudo systemctl daemon-reload
 # iptable_nat
 # EOF
 
-for config in $configs
+for folder in $folders
 do
-    if [ -d "./$config" ]; then
-        rsync -r --mkpath "./$config/" "$HOME/$config"
+    if [ -d "./$folder" ]; then
+        echo "copy: $folder"
+        rsync -r --mkpath "./$folder/" "$HOME/$folder"
     fi
 done
