@@ -31,6 +31,7 @@ require('lazy').setup({
   -- git plugin
   {
     'NeogitOrg/neogit',
+    branch = "nightly",
     dependencies = {
       'nvim-lua/plenary.nvim',
       'sindrets/diffview.nvim'
@@ -49,7 +50,8 @@ require('lazy').setup({
     opts = {
       registries = {
         "github:mason-org/mason-registry",
-        "file:~/devel/mason-registry"
+        "github:616b2f/mason-registry"
+        -- "file:~/devel/mason-registry"
       },
       providers = {
         "mason.providers.client",
@@ -241,7 +243,11 @@ require('lazy').setup({
     opts = {},
   },
 
-  { dir = "~/devel/bsp.nvim" },
+  {
+    '616b2f/bsp.nvim'
+    -- dir = "~/devel/bsp.nvim"
+  },
+
   -- Useful status updates for LSP
   {
     'j-hui/fidget.nvim',
