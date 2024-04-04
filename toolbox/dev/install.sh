@@ -47,13 +47,6 @@ sudo dnf install -y neovim python3-neovim
 # update plugins
 nvim --headless "+Lazy! restore" +qa
 
-
-###
-# install helix
-###
-sudo dnf copr enable -y varlad/helix
-sudo dnf install -y helix
-
 ###
 # install wally-cli (for Moonlander firmware update)
 ###
@@ -104,6 +97,11 @@ sudo dnf install -y java-17-openjdk-devel
 #     echo "Install rustup"
 #     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
 # fi
+
+###
+# setup user owned bin folder
+###
+mkdir -p ~/.local/bin
 
 echo "Install yq"
 ../../install-scripts/yq.sh
