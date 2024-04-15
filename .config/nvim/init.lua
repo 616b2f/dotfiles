@@ -50,12 +50,10 @@ require('lazy').setup({
     opts = {
       registries = {
         "github:mason-org/mason-registry",
-        "github:616b2f/mason-registry"
+        "file:~/devel/mason-registry"
+        -- "github:616b2f/mason-registry@main"
         -- "file:~/devel/mason-registry"
-      },
-      providers = {
-        "mason.providers.client",
-      },
+      }
     }
   },
   "williamboman/mason-lspconfig.nvim", -- for better integration with lspconfig
@@ -244,8 +242,8 @@ require('lazy').setup({
   },
 
   {
-    '616b2f/bsp.nvim'
-    -- dir = "~/devel/bsp.nvim"
+    -- '616b2f/bsp.nvim'
+    dir = "~/devel/bsp.nvim"
   },
 
   -- Useful status updates for LSP
@@ -588,12 +586,12 @@ require('mason-tool-installer').setup {
 
     -- rust
     'rust-analyzer',
-    'cargo-bsp',
+    -- 'cargo-bsp',
 
     -- csharp
     'omnisharp', -- LSP
     'netcoredbg', -- DAP
-    'dotnet-bsp', -- BSP
+    -- 'dotnet-bsp', -- BSP
 
     -- java
     'jdtls',
@@ -882,8 +880,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
 })
 
 -- configure global logging 
-local log = require("bp.log")
-log.set_level(vim.log.levels.DEBUG)
+-- require("bp.log").set_level(vim.log.levels.DEBUG)
 
 local bsp = require("bsp")
 bsp.setup()
@@ -893,94 +890,87 @@ vim.api.nvim_create_autocmd("User",
   group = 'bsp',
   pattern = 'BspAttach',
   callback = function()
-    local opts = {}
-    vim.keymap.set('n', '<leader>bb', bsp.compile_build_target, opts)
-    vim.keymap.set('n', '<leader>bt', require('bsp').test_build_target, opts)
-    vim.keymap.set('n', '<leader>bc', require('bsp').cleancache_build_target, opts)
+    vim.keymap.set('n', '<leader>bb', require('bsp').compile_build_target, { desc = 'my: compile build target with build server' })
+    vim.keymap.set('n', '<leader>br', require('bsp').run_build_target, { desc = 'my: run build target with build server' })
+    vim.keymap.set('n', '<leader>bt', require('bsp').test_build_target, { desc = 'my: test build target with build server' })
+    vim.keymap.set('n', '<leader>bc', require('bsp').cleancache_build_target, { desc = 'my: clean cache build target with build server' })
   end
 })
 
-local register_bsp_progress_handle = function ()
-  local progress = require("fidget.progress")
-
-  local handles = {}
-  vim.api.nvim_create_autocmd("User",
-    {
-      group = 'bsp',
-      pattern = 'BspProgress:start',
-      callback = function(ev)
-        local data = ev.data
-        local client = bsp.get_client_by_id(data.client_id)
-        if client then
-          ---@type bsp.TaskStartParams
-          local result = ev.data.result
-          local title = "BSP-Task"
-          if result.dataKind then
-            title = result.dataKind
-          end
-          local message = "started: " .. tostring(result.taskId.id)
-
-          handles[result.taskId.id] = progress.handle.create({
-            token = result.taskId.id,
-            title = title,
-            message = (result.message or message),
-            lsp_client = { name = client.name }
-          })
-        end
-      end
-    })
-
-  vim.api.nvim_create_autocmd("User",
-    {
-      group = 'bsp',
-      pattern = 'BspProgress:progress',
-      callback = function(ev)
-        local data = ev.data
-        local percentage = 0
+local progress = require("fidget.progress")
+local handles = {}
+vim.api.nvim_create_autocmd("User",
+  {
+    group = 'bsp',
+    pattern = 'BspProgress:start',
+    callback = function(ev)
+      local data = ev.data
+      local client = bsp.get_client_by_id(data.client_id)
+      if client then
         ---@type bsp.TaskStartParams
         local result = ev.data.result
-        if data.result and data.result.message then
-          local message =
-            data.result.message
-            and (data.result.originId and ( data.result.originId .. ': ') .. data.result.message)
-            or data.result.title
-          if data.result.total and data.result.progress then
-            percentage = math.max(percentage or 0, (data.result.progress / data.result.total * 100))
-          end
-          local handle = handles[result.taskId.id]
-          if handle then
-              local progressMessage = {
-                token = result.taskId.id,
-                message = message,
-                percentage = percentage
-              }
-              -- print(vim.inspect(progressMessage))
-              -- print(vim.inspect(result))
-              handle:report(progressMessage)
-          end
+        local title = "BSP-Task"
+        if result.dataKind then
+          title = result.dataKind
         end
-      end
-    })
+        local message = "started: " .. tostring(result.taskId.id)
 
-  vim.api.nvim_create_autocmd("User",
-    {
-      group = 'bsp',
-      pattern = 'BspProgress:finish',
-      callback = function(ev)
-        local data = ev.data
-        ---@type bsp.TaskStartParams
-        local result = ev.data.result
+        handles[result.taskId.id] = progress.handle.create({
+          token = result.taskId.id,
+          title = title,
+          message = (result.message or message),
+          lsp_client = { name = client.name }
+        })
+      end
+    end
+  })
+
+vim.api.nvim_create_autocmd("User",
+  {
+    group = 'bsp',
+    pattern = 'BspProgress:progress',
+    callback = function(ev)
+      local data = ev.data
+      local percentage = 0
+      ---@type bsp.TaskStartParams
+      local result = ev.data.result
+      if data.result and data.result.message then
+        local message =
+          data.result.message
+          and (data.result.originId and ( data.result.originId .. ': ') .. data.result.message)
+          or data.result.title
+        if data.result.total and data.result.progress then
+          percentage = math.max(percentage or 0, (data.result.progress / data.result.total * 100))
+        end
         local handle = handles[result.taskId.id]
-        -- You can also cancel the task (errors if not cancellable)
-        -- handle:cancel()
-        -- Or mark it as complete (updates percentage to 100 automatically)
         if handle then
-          handle:finish()
+            local progressMessage = {
+              token = result.taskId.id,
+              message = message,
+              percentage = percentage
+            }
+            handle:report(progressMessage)
         end
       end
-    })
-end
+    end
+  })
 
-register_bsp_progress_handle()
+vim.api.nvim_create_autocmd("User",
+  {
+    group = 'bsp',
+    pattern = 'BspProgress:finish',
+    callback = function(ev)
+      local data = ev.data
+      ---@type bsp.TaskStartParams
+      local result = ev.data.result
+      local handle = handles[result.taskId.id]
+      -- You can also cancel the task (errors if not cancellable)
+      -- handle:cancel()
+      -- Or mark it as complete (updates percentage to 100 automatically)
+      if handle then
+        handle:finish()
+      end
+    end
+  })
 
 -- vim: ts=2 sts=2 sw=2 et
