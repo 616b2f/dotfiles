@@ -89,14 +89,14 @@ sudo dnf install -y java-17-openjdk-devel
 # rust
 ###
 
-# echo "Install rust"
-# if ! [ -x "$(command -v rustup)" ]; then
-#     echo "Install rust dependency: gcc"
-#     sudo dnf install -y gcc
-#     # install rust
-#     echo "Install rustup"
-#     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
-# fi
+echo "Install rust"
+if ! [ -x "$(command -v rustup)" ]; then
+    echo "Install rust dependency: gcc"
+    sudo dnf install -y gcc
+    # install rust
+    echo "Install rustup"
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+fi
 
 ###
 # setup user owned bin folder
