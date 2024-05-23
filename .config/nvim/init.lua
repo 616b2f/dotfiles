@@ -102,7 +102,10 @@ require('lazy').setup({
   'norcalli/nvim-colorizer.lua',
 
   -- comment plugins
-  'numToStr/Comment.nvim', -- "gc" to comment visual regions/lines
+  -- {
+  --   'numtostr/comment.nvim', -- "gc" to comment visual regions/lines
+  --   opt = {}
+  -- },
   --'tomtom/tcomment_vim',
   --'preservim/nerdcommenter',
 
@@ -228,12 +231,12 @@ require('lazy').setup({
   },
 
   -- plugin to show function signatures in a better way
-  {
-    'ray-x/lsp_signature.nvim',
-    event = "VeryLazy",
-    opts = {},
-    config = function(_, opts) require'lsp_signature'.setup(opts) end
-  },
+  -- {
+  --   'ray-x/lsp_signature.nvim',
+  --   event = "VeryLazy",
+  --   opts = {},
+  --   config = function(_, opts) require'lsp_signature'.setup(opts) end
+  -- },
 
   -- vscode like task runner
   {
@@ -345,6 +348,7 @@ vim.cmd [[
     autocmd BufNewFile,BufRead *.tf,*.tfvars set filetype=terraform
 
     " set intendation for *.csproj files
+    autocmd FileType cs setlocal commentstring=//\ %s
     autocmd BufNewFile,BufRead *.csproj setlocal ts=2 sts=2 sw=2 expandtab
     autocmd BufNewFile,BufRead *.props set syntax=xml ft=xml
 ]]
@@ -474,9 +478,6 @@ require('lualine').setup {
 -- use global statusline
 -- vim.o.laststatus=3
 
--- Enable Comment.nvim
-require('Comment').setup()
-
 -- Remap space as leader key
 -- vim.api.nvim_set_keymap('', '<Space>', '<Nop>', { noremap = true, silent = true })
 -- vim.g.mapleader = ' '
@@ -518,6 +519,11 @@ require('diffview').setup({
 -- Telescope
 require('telescope').setup {
   defaults = {
+    path_display = {
+      filename_first = {
+        reverse_directories = true
+      }
+    },
     vimgrep_arguments = {
       "rg",
       "--color=never",
@@ -833,7 +839,7 @@ vim.keymap.set('n', '<leader>td', function() require('neotest').run.run({strateg
 vim.keymap.set('n', '<space>d', vim.diagnostic.open_float)
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev)
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
-vim.keymap.set('n', '<space>q', vim.diagnostic.setqflist)
+vim.keymap.set('n', '<space>qq', vim.diagnostic.setqflist)
 vim.keymap.set('n', '<space>qe', function() vim.diagnostic.setqflist({severity=vim.diagnostic.severity.ERROR}) end)
 vim.keymap.set('n', '<space>ql', vim.diagnostic.setloclist)
 -- quickfix list mappings
@@ -880,7 +886,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
 })
 
 -- configure global logging 
--- require("bp.log").set_level(vim.log.levels.DEBUG)
+require("bp.log").set_level(vim.log.levels.DEBUG)
 
 local bsp = require("bsp")
 bsp.setup()
@@ -909,16 +915,14 @@ vim.api.nvim_create_autocmd("User",
       if client then
         ---@type bsp.TaskStartParams
         local result = ev.data.result
-        local title = "BSP-Task"
-        if result.dataKind then
-          title = result.dataKind
-        end
-        local message = "started: " .. tostring(result.taskId.id)
+        local title = result.dataKind or "BSP-Task"
+        local fallback_message = "started: " .. tostring(result.taskId.id)
 
-        handles[result.taskId.id] = progress.handle.create({
-          token = result.taskId.id,
+        local tokenId = data.client_id .. ":" .. result.taskId.id
+        handles[tokenId] = progress.handle.create({
+          token = tokenId,
           title = title,
-          message = (result.message or message),
+          message = result.message or fallback_message,
           lsp_client = { name = client.name }
         })
       end
@@ -931,21 +935,22 @@ vim.api.nvim_create_autocmd("User",
     pattern = 'BspProgress:progress',
     callback = function(ev)
       local data = ev.data
-      local percentage = 0
-      ---@type bsp.TaskStartParams
+      local percentage = nil
+      ---@type bsp.TaskProgressParams
       local result = ev.data.result
       if data.result and data.result.message then
         local message =
-          data.result.message
-          and (data.result.originId and ( data.result.originId .. ': ') .. data.result.message)
-          or data.result.title
+          (data.result.originId and ( data.result.originId .. ': ') .. data.result.message)
+          or data.result.message
         if data.result.total and data.result.progress then
           percentage = math.max(percentage or 0, (data.result.progress / data.result.total * 100))
         end
-        local handle = handles[result.taskId.id]
+
+        local tokenId = data.client_id .. ":" .. result.taskId.id
+        local handle = handles[tokenId]
         if handle then
             local progressMessage = {
-              token = result.taskId.id,
+              token = tokenId,
               message = message,
               percentage = percentage
             }
@@ -961,12 +966,10 @@ vim.api.nvim_create_autocmd("User",
     pattern = 'BspProgress:finish',
     callback = function(ev)
       local data = ev.data
-      ---@type bsp.TaskStartParams
+      ---@type bsp.TaskFinishParams
       local result = ev.data.result
-      local handle = handles[result.taskId.id]
-      -- You can also cancel the task (errors if not cancellable)
-      -- handle:cancel()
-      -- Or mark it as complete (updates percentage to 100 automatically)
+      local tokenId = data.client_id .. ":" .. result.taskId.id
+      local handle = handles[tokenId]
       if handle then
         handle:finish()
       end

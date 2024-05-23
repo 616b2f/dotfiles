@@ -21,11 +21,11 @@ local cmp_nvim_lsp = require('cmp_nvim_lsp')
 
 local on_attach = function(client, bufnr)
   -- setup lsp_signature
-  require('lsp_signature').on_attach({floating_window_above_cur_line = true}, bufnr)
+  -- require('lsp_signature').on_attach({floating_window_above_cur_line = true}, bufnr)
 
   -- enable inlay hints if LSP server supports it
   if client.supports_method("textDocument/inlayHint") then
-    vim.lsp.inlay_hint.enable(bufnr, true)
+    vim.lsp.inlay_hint.enable(true, { bufnr=bufnr })
   end
 
   -- Set autocommands conditional on server_capabilities

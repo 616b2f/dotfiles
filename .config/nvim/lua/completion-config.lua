@@ -1,6 +1,6 @@
 -- copied from https://github.com/tjdevries/config_manager
 -- many thank to TJ
-vim.opt.completeopt = { "menu", "menuone", "noselect" }
+vim.opt.completeopt = { "menu", "menuone", "noselect", "popup" }
 
 -- Don't show the dumb matching stuff.
 vim.opt.shortmess:append "c"
