@@ -35,4 +35,5 @@ waybar \
 wl-clipboard \
 brightnessctl \
 network-manager-applet \
+blueman \
 "
