@@ -23,13 +23,6 @@ Delegate=yes
 EOF
 sudo systemctl daemon-reload
 
-# cat <<EOF > /etc/modules-load.d/iptables.conf
-# ip6_tables
-# ip6table_nat
-# ip_tables
-# iptable_nat
-# EOF
-
 for folder in $folders
 do
     if [ -d "./$folder" ]; then
