@@ -24,6 +24,7 @@ vifm \
 sway \
 alacritty \
 wlroots \
+fzf \
 grim \
 slurp \
 mako \

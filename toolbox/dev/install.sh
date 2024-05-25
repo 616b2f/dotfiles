@@ -24,11 +24,11 @@ sudo dnf install -y wl-clipboard
 
 # install luarocks (package manager for lua)
 # and stuff needed for nvim lua plugin development
-sudo dnf install -y luarocks compat-lua-devel gcc-c++
+sudo dnf install -y luarocks compat-lua compat-lua-devel gcc-c++
 
 # install vusted (for unitests of nvim lua plugins)
 # luarocks --lua-version=5.1 install vusted
-luarocks --lua-version=5.1 install busted
+luarocks --lua-version=5.1 --local install busted
 
 # treesitter prerequisites
 sudo dnf install -y gcc libstdc++-static
