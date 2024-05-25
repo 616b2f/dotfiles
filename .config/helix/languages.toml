@@ -1,3 +1,0 @@
-[[language]]
-name = "json"
-file-types = [{suffix = ".config/waybar/config"}]
