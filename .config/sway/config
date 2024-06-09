@@ -6,6 +6,7 @@
 # start notification daemon
 exec mako
 exec nm-applet
+exec blueman-applet
 #
 # /usr/bin/gnome-keyring-daemon --daemonize --login
 # /usr/bin/gnome-keyring-daemon --start --foreground --components=secrets
@@ -41,10 +42,15 @@ output * bg /usr/share/backgrounds/gnome/adwaita-d.jxl fill
 
 # set fractional scaling
 output eDP-1 scale 1.5
-output "LG Electronics LG ULTRAWIDE 0x00004A21" resolution 1920x1080@60Hz
-# output "LG Electronics LG ULTRAWIDE 0x00004A21" resolution 1600x900
-output "LG Electronics LG ULTRAWIDE 0x00004A21" pos 1706 0
-output "LG Electronics LG ULTRAWIDE 0x00004A21" scale 1
+# output "LG Electronics LG ULTRAWIDE 0x00004A21" resolution 1920x1080@60Hz
+# # output "LG Electronics LG ULTRAWIDE 0x00004A21" resolution 1600x900
+# output "LG Electronics LG ULTRAWIDE 0x00004A21" pos 1706 0
+# output "LG Electronics LG ULTRAWIDE 0x00004A21" scale 1
+
+# output "Elgato Systems LLC Elgato 4K X 0x00000001" resolution 720x576@24Hz
+output "Elgato Systems LLC Elgato 4K X 0x00000001" resolution 1920x1080@60Hz
+output "Elgato Systems LLC Elgato 4K X 0x00000001" pos 1706 0
+output "Elgato Systems LLC Elgato 4K X 0x00000001" scale 1
 #
 # Example configuration:
 #
