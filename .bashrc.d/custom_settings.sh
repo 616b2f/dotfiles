@@ -53,6 +53,13 @@ if [ -x "$(command -v fzf)"  ]; then
         cd "$dir"
     }
 
+    fpn() {
+        local dir
+        dir=$(fd -c never -t d -d 1 . ~/devel/ 2> /dev/null | fzf +m) &&
+        cd "$dir" &&
+        nvim
+    }
+
     # CTRL-M - Paste the selected file path into the command line
     # bind -m emacs-standard -x '"\C-m": custom-fzf-projects'
     # bind -m vi-command -x '"\C-m": custom-fzf-projects'
