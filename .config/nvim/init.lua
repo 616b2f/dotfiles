@@ -64,8 +64,14 @@ require('lazy').setup({
     branch = "main",
     opts = {
       notification = {
-        override_vim_notify = false
-      }
+        override_vim_notify = false,
+        view = {
+          stack_upwards = false
+        },
+        window = {
+          align = "top"
+        }
+      },
     } -- `opts = {}` is the same as calling `require('fidget').setup({})`
   }, -- Useful status updates for LSP
 
@@ -917,12 +923,13 @@ vim.api.nvim_create_autocmd("User",
         local result = ev.data.result
         local title = result.dataKind or "BSP-Task"
         local fallback_message = "started: " .. tostring(result.taskId.id)
+        local message = result.message or fallback_message;
 
         local tokenId = data.client_id .. ":" .. result.taskId.id
         handles[tokenId] = progress.handle.create({
           token = tokenId,
           title = title,
-          message = result.message or fallback_message,
+          message = message,
           lsp_client = { name = client.name }
         })
       end
