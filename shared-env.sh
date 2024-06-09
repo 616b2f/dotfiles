@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # my config
-folders=".config/helix
-.config/sway
+folders=".config/sway
 .config/waybar
 .config/alacritty
 .config/nvim
