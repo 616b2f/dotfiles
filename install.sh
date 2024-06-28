@@ -14,6 +14,7 @@ timedatectl set-ntp yes
 
 flatpak install com.google.Chrome
 flatpak install org.flameshot.Flameshot
+flatpak install org.pulseaudio.pavucontrol
 
 # needed for kind rootless (see https://kind.sigs.k8s.io/docs/user/rootless/)
 sudo mkdir -p /etc/systemd/system/user@.service.d
