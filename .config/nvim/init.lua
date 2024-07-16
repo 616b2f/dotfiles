@@ -80,11 +80,25 @@ require('lazy').setup({
 
   "mfussenegger/nvim-jdtls", -- specific for java, add some special config
 
-  -- Additional lua configuration, makes nvim stuff amazing
-  'folke/neodev.nvim',
+  -- lua lsp
+  {
+    'folke/lazydev.nvim',
+    ft = "lua", -- only load on lua files
+    opts = {
+      library = {
+        -- See the configuration section for more details
+        -- Load luvit types when the `vim.uv` word is found
+        { path = "luvit-meta/library", words = { "vim%.uv" } },
+      },
+    },
+  },
 
   -- complete support
-  'hrsh7th/nvim-cmp', -- Autocompletion plugin
+  {
+    'hrsh7th/nvim-cmp',
+    -- opts = function(_, opts)
+    -- end,
+  }, -- Autocompletion plugin
   'hrsh7th/cmp-nvim-lsp',
   'hrsh7th/cmp-buffer',
   'hrsh7th/cmp-path',
@@ -589,6 +603,7 @@ require('mason-tool-installer').setup {
     'gopls',
     'terraform-ls',
     'lemminx', -- xml lsp
+    'json-lsp',
 
     -- misc linter
     'shellcheck',
@@ -615,11 +630,6 @@ require('mason-tool-installer').setup {
     'python-lsp-server',
   }
 }
-
--- Setup neovim specific lua support
-require('neodev').setup({
-  library = { plugins = { "neotest" }, types = true },
-})
 
 require("neotest").setup({
   adapters = {
@@ -895,7 +905,21 @@ vim.api.nvim_create_autocmd('LspAttach', {
 require("bp.log").set_level(vim.log.levels.DEBUG)
 
 local bsp = require("bsp")
-bsp.setup()
+bsp.setup({
+  handlers = {
+    ['dotnet-bsp'] = function (server_name, workspace_dir, connection_details)
+      -- *.csproj or *.sln in the current workspace (non recursive)
+      for name, type in vim.fs.dir(workspace_dir) do
+          if (type == "file") and
+             (name:match('.*.sln$') or name:match('.*.csproj$')) then
+            return true
+          end
+      end
+
+      return false
+    end
+  }
+})
 
 vim.api.nvim_create_autocmd("User",
 {

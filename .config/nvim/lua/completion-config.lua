@@ -56,7 +56,11 @@ cmp.setup {
 
     -- Youtube: Could enable this only for lua, but nvim_lua handles that already.
     { name = "nvim_lua" },
-    { name = "zsh" },
+    {
+      name = "lazydev",
+      group_index = 0,   -- set group index to 0 to skip loading LuaLS completions
+    },
+    -- { name = "zsh" },
 
     { name = "nvim_lsp" },
     { name = "path" },
