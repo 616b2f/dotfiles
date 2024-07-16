@@ -33,6 +33,9 @@ luarocks --lua-version=5.1 --local install busted
 # treesitter prerequisites
 sudo dnf install -y gcc libstdc++-static
 
+# needed for file-watcher implementation in neovim
+sudo dnf install -y inotify-tools
+
 # install neovim nightly
 sudo dnf copr enable -y agriffis/neovim-nightly
 
