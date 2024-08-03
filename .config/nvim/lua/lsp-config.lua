@@ -49,13 +49,14 @@ end
 -- config that activates keymaps and enables snippet support
 local function make_config()
   local capabilities = vim.lsp.protocol.make_client_capabilities()
-  capabilities.textDocument.completion.completionItem.snippetSupport = true
   -- capabilities.textDocument.semanticTokens = true
   -- capabilities.workspace.semanticTokens = true
   -- capabilities.textDocument.documentFormattingProvider
   -- enable file watcher capabilities for lsp clients
-  capabilities.workspace.didChangeWatchedFiles.dynamicRegistration=true
-  capabilities = cmp_nvim_lsp.default_capabilities(capabilities)
+  -- capabilities.textDocument.completion.completionItem.snippetSupport = true
+  capabilities.textDocument = cmp_nvim_lsp.default_capabilities(capabilities).textDocument
+  capabilities.workspace.didChangeWatchedFiles.relativePatternSupport = true
+  capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = true
   return {
     -- enable snippet support
     capabilities = capabilities,

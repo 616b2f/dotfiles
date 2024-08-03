@@ -1,7 +1,21 @@
 -- Treesitter configuration
 -- Parsers must be installed manually via :TSInstall
-require('nvim-treesitter.configs').setup {
-  ensure_installed = { "query", "c_sharp", "lua", "go", "java", "python", "vimdoc", "terraform", "markdown", "hurl", "json" },
+require('nvim-treesitter.configs').setup({
+  ensure_installed = {
+    "query",
+    "c_sharp",
+    "lua",
+    "go",
+    "java",
+    "python",
+    "vimdoc",
+    "terraform",
+    "markdown",
+    "markdown_inline",
+    "zig",
+    "hurl",
+    "json"
+  },
   highlight = {
     enable = true, -- false will disable the whole extension
     disable = function (_, buf)
@@ -65,5 +79,5 @@ require('nvim-treesitter.configs').setup {
       },
     },
   },
-}
+})
 

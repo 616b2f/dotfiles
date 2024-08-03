@@ -24,6 +24,18 @@ require('lazy').setup({
     end
   },
 
+  -- markdown helpers
+  {
+    'MeanderingProgrammer/markdown.nvim',
+    dependencies = {
+      'nvim-treesitter/nvim-treesitter',
+      'nvim-tree/nvim-web-devicons'
+    },
+    config = function ()
+      require('render-markdown').setup()
+    end,
+  },
+
   -- Add indentation guides even on blank lines
   'lukas-reineke/indent-blankline.nvim',
   -- Add git related info in the signs columns and popups
@@ -103,6 +115,7 @@ require('lazy').setup({
   'hrsh7th/cmp-buffer',
   'hrsh7th/cmp-path',
   'hrsh7th/cmp-nvim-lua',
+  'hrsh7th/cmp-nvim-lsp-signature-help',
   'onsails/lspkind-nvim',
   'tjdevries/complextras.nvim',
   'saadparwaiz1/cmp_luasnip',
@@ -113,7 +126,7 @@ require('lazy').setup({
   'mhartington/formatter.nvim',
 
   -- color schemes
-  -- 'gbprod/nord.nvim',
+  'gbprod/nord.nvim',
 
   -- colorscheme helper
   'tjdevries/colorbuddy.nvim',
@@ -268,17 +281,6 @@ require('lazy').setup({
     -- '616b2f/bsp.nvim'
     dir = "~/devel/bsp.nvim"
   },
-
-  -- Useful status updates for LSP
-  {
-    'j-hui/fidget.nvim',
-    branch = "main",
-    opts = {
-      notification = {
-        override_vim_notify = true
-      }
-    }, -- `opts = {}` is the same as calling `require('fidget').setup({})` branch = "main"
-  },
 })
 
 -- When we are bootstrapping a configuration, it doesn't
@@ -405,7 +407,7 @@ vim.o.termguicolors = true
 --require("nord").setup({
 --  diff = { mode = "fg" }, -- enables/disables colorful backgrounds when used in diff mode. values : [bg|fg]
 --})
--- vim.cmd[[colorscheme nord]]
+vim.cmd[[colorscheme nord]]
 -- set bg color of floating windows to a different color than normal background
 -- vim.api.nvim_set_hl(0, 'NormalFloat', { fg='#d8dee9', bg='#3b4252'})
 
@@ -428,7 +430,7 @@ require'nvim-tree'.setup {
     update_cwd = false
   },
   view = {
-    width = 70
+    width = 25
   },
   renderer = {
     highlight_git = true, -- 0 by default, will enable file highlight for git attributes (can be used without the icons).
@@ -508,12 +510,13 @@ require('lualine').setup {
 -- vim.api.nvim_set_keymap('n', 'j', "v:count == 0 ? 'gj' : 'j'", { noremap = true, expr = true, silent = true })
 
 -- Highlight on yank
-vim.cmd [[
-  augroup YankHighlight
-    autocmd!
-    autocmd TextYankPost * silent! lua vim.highlight.on_yank()
-  augroup end
-]]
+-- warning! this runs sometimes unintentionally when you are in insert mode and stop typing
+-- vim.cmd [[
+--   augroup YankHighlight
+--     autocmd!
+--     autocmd TextYankPost * silent! lua vim.highlight.on_yank()
+--   augroup end
+-- ]]
 
 -- Map blankline
 vim.g.indent_blankline_char = '┊'
@@ -853,8 +856,8 @@ vim.keymap.set('n', '<leader>td', function() require('neotest').run.run({strateg
 -- Global mappings.
 -- See `:help vim.diagnostic.*` for documentation on any of the below functions
 vim.keymap.set('n', '<space>d', vim.diagnostic.open_float)
-vim.keymap.set('n', '[d', vim.diagnostic.goto_prev)
-vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
+vim.keymap.set('n', ']d', function() vim.diagnostic.jump({count=1,float=true}) end)
+vim.keymap.set('n', '[d', function() vim.diagnostic.jump({count=-1,float=true}) end)
 vim.keymap.set('n', '<space>qq', vim.diagnostic.setqflist)
 vim.keymap.set('n', '<space>qe', function() vim.diagnostic.setqflist({severity=vim.diagnostic.severity.ERROR}) end)
 vim.keymap.set('n', '<space>ql', vim.diagnostic.setloclist)

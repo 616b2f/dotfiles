@@ -53,9 +53,6 @@ cmp.setup {
   --        (more?)
   sources = {
     { name = "gh_issues" },
-
-    -- Youtube: Could enable this only for lua, but nvim_lua handles that already.
-    { name = "nvim_lua" },
     {
       name = "lazydev",
       group_index = 0,   -- set group index to 0 to skip loading LuaLS completions
@@ -63,6 +60,7 @@ cmp.setup {
     -- { name = "zsh" },
 
     { name = "nvim_lsp" },
+    { name = 'nvim_lsp_signature_help' },
     { name = "path" },
     { name = "luasnip" },
     { name = "buffer", keyword_length = 5 },
@@ -109,7 +107,7 @@ cmp.setup {
       with_text = true,
       menu = {
         buffer = "[buf]",
-        nvim_lsp = "[LSP]",
+        nvim_lsp = "[lsp]",
         nvim_lua = "[api]",
         path = "[path]",
         luasnip = "[snip]",
