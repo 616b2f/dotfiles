@@ -102,6 +102,12 @@ if ! [ -x "$(command -v rustup)" ]; then
 fi
 
 ###
+# zig
+###
+
+sudo dnf install -y zig
+
+###
 # setup user owned bin folder
 ###
 mkdir -p ~/.local/bin
