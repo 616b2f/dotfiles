@@ -61,6 +61,11 @@ nvim --headless "+Lazy! restore" +qa
 ###
 # install golang tooling
 sudo dnf install -y golang
+# install bazelisk
+go install github.com/bazelbuild/bazelisk@latest
+# install coursier(cs)
+../../install-scripts/cs.sh
+cs install bloop --only-prebuilt=true
 
 ###
 # dotnet

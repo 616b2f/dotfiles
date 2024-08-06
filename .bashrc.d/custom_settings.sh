@@ -16,6 +16,12 @@ export HISTFILESIZE=20000
 export DOTNET_CLI_TELEMETRY_OPTOUT=1
 export PATH=$PATH:~/.dotnet/tools
 
+# use go bin folder
+PATH="$HOME/go/bin:$PATH"
+
+# use coursier
+PATH="$HOME/.local/share/coursier/bin:$PATH"
+
 # enable new buildkit for docker (faster builds etc.)
 #export DOCKER_BUILDKIT=1
 # enable buildkit also for docker-compose
