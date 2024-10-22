@@ -11,6 +11,12 @@ systemctl --user --now enable podman.socket
 ###
 sudo cp ./yum.repos.d/* /etc/yum.repos.d/
 
+# exclude dotnet related packages from official fedora repo
+# they collide often with packages providet by microsoft
+sudo dnf config-manager --save \
+    --setopt="fedora.excludepkgs=dotnet*,aspnet*,netstandard*" \
+    --setopt="updates.excludepkgs=dotnet*,aspnet*,netstandard*" 
+
 ###
 # update all installed packages to latest version
 ###
