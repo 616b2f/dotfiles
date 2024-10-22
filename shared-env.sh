@@ -38,3 +38,19 @@ network-manager-applet \
 blueman \
 cosmic-comp \
 "
+
+flatpak_packages="com.google.Chrome
+org.flameshot.Flameshot
+org.pulseaudio.pavucontrol
+com.github.tchx84.Flatseal
+io.bassi.Amberol
+io.github.zen_browser.zen
+com.feaneron.Boatswain
+com.obsproject.Studio
+com.obsproject.Studio.Plugin.WebSocket
+org.gnome.seahorse.Application
+org.gnome.World.Secrets
+org.kde.kdenlive
+org.kde.krita
+org.godotengine.Godot
+"
