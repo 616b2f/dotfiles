@@ -23,6 +23,7 @@ vifm \
 sway \
 alacritty \
 wlroots \
+fish \
 fzf \
 grim \
 slurp \
