@@ -36,4 +36,5 @@ wl-clipboard \
 brightnessctl \
 network-manager-applet \
 blueman \
+cosmic-comp \
 "
