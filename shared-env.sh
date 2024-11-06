@@ -49,6 +49,7 @@ io.github.zen_browser.zen
 com.feaneron.Boatswain
 com.obsproject.Studio
 com.obsproject.Studio.Plugin.WebSocket
+com.obsproject.Studio.Plugin.AitumMultistream
 org.gnome.seahorse.Application
 org.gnome.World.Secrets
 org.kde.kdenlive
