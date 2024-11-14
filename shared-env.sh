@@ -14,7 +14,6 @@ folders=".config/sway
 # fedora silverblue packages
 packages="\
 git-lfs \
-polkit-gnome \
 fd-find \
 ripgrep \
 neovim \
@@ -37,7 +36,6 @@ wl-clipboard \
 brightnessctl \
 network-manager-applet \
 blueman \
-cosmic-comp \
 "
 
 flatpak_packages="com.google.Chrome

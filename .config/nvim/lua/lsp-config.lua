@@ -59,14 +59,10 @@ end
 local function make_config()
   local capabilities = vim.lsp.protocol.make_client_capabilities()
   capabilities = require('blink.cmp').get_lsp_capabilities(capabilities)
-  -- capabilities.textDocument.semanticTokens = true
-  -- capabilities.workspace.semanticTokens = true
-  -- capabilities.textDocument.documentFormattingProvider
   -- enable file watcher capabilities for lsp clients
-  -- capabilities.textDocument.completion.completionItem.snippetSupport = true
-  -- capabilities.textDocument = cmp_nvim_lsp.default_capabilities(capabilities).textDocument
   capabilities.workspace.didChangeWatchedFiles.relativePatternSupport = true
   capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = true
+  capabilities = cmp_nvim_lsp.default_capabilities(capabilities)
   return {
     -- enable snippet support
     capabilities = capabilities,
@@ -76,7 +72,7 @@ local function make_config()
 end
 
 -- Register a handler that will be called for all installed servers.
- require("mason-lspconfig").setup_handlers {
+require("mason-lspconfig").setup_handlers {
   -- The first entry (without a key) will be the default handler
   -- and will be called for each installed server that doesn't have
   -- a dedicated handler.
@@ -239,3 +235,5 @@ end
   end
 }
 
+local config = make_config()
+lspconfig.gdscript.setup(config)

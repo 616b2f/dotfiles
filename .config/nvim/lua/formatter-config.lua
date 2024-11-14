@@ -51,7 +51,16 @@ require('formatter').setup({
             cwd = vim.fn.expand('%:p:h')  -- Run clang-format in cwd of the file.
           }
         end
-    }
+    },
+    gdscript = {
+      function()
+        return {
+          exe = "gdformat",
+          args = {vim.api.nvim_buf_get_name(0)},
+          stdin = false
+        }
+      end
+    },
   }
 })
 

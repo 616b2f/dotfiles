@@ -7,7 +7,11 @@ sudo cp ./yum.repos.d/* /etc/yum.repos.d/
 
 rpm-ostree update
 
-rpm-ostree install --allow-inactive --idempotent $packages
+rpm-ostree install \
+    --allow-inactive \
+    --idempotent \
+    -y \
+    $packages
 
 # enable ntp sync for date and time
 timedatectl set-ntp yes

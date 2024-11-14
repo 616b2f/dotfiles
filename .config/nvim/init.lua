@@ -24,18 +24,6 @@ require('lazy').setup({
     end
   },
 
-  -- markdown helpers
-  {
-    'MeanderingProgrammer/markdown.nvim',
-    dependencies = {
-      'nvim-treesitter/nvim-treesitter',
-      'nvim-tree/nvim-web-devicons'
-    },
-    config = function ()
-      require('render-markdown').setup()
-    end,
-  },
-
   -- Add indentation guides even on blank lines
   'lukas-reineke/indent-blankline.nvim',
   -- Add git related info in the signs columns and popups
@@ -92,15 +80,16 @@ require('lazy').setup({
 
   "mfussenegger/nvim-jdtls", -- specific for java, add some special config
 
-  -- lua lsp
+  -- Additional lua configuration, makes nvim stuff amazing
   {
-    'folke/lazydev.nvim',
+    "folke/lazydev.nvim",
     ft = "lua", -- only load on lua files
     opts = {
       library = {
-        -- See the configuration section for more details
+        'bsp.nvim',
+        'neotest',
         -- Load luvit types when the `vim.uv` word is found
-        { path = "luvit-meta/library", words = { "vim%.uv" } },
+        -- { path = "luvit-meta/library", words = { "vim%.uv" } },
       },
     },
   },
@@ -191,7 +180,7 @@ require('lazy').setup({
   'mhartington/formatter.nvim',
 
   -- color schemes
-  'gbprod/nord.nvim',
+  -- 'gbprod/nord.nvim',
 
   -- colorscheme helper
   'tjdevries/colorbuddy.nvim',
@@ -346,6 +335,27 @@ require('lazy').setup({
     -- '616b2f/bsp.nvim'
     dir = "~/devel/bsp.nvim"
   },
+
+  -- Useful status updates for LSP
+  {
+    'j-hui/fidget.nvim',
+    branch = "main",
+    opts = {
+      notification = {
+        override_vim_notify = true
+      }
+    }, -- `opts = {}` is the same as calling `require('fidget').setup({})` branch = "main"
+  },
+
+  -- show markdown in a nicer way
+  {
+      'MeanderingProgrammer/render-markdown.nvim',
+      opts = {},
+      dependencies = {
+        'nvim-treesitter/nvim-treesitter',
+        'nvim-tree/nvim-web-devicons'
+      },
+  }
 })
 
 -- When we are bootstrapping a configuration, it doesn't
@@ -472,7 +482,7 @@ vim.o.termguicolors = true
 --require("nord").setup({
 --  diff = { mode = "fg" }, -- enables/disables colorful backgrounds when used in diff mode. values : [bg|fg]
 --})
-vim.cmd[[colorscheme nord]]
+-- vim.cmd[[colorscheme nord]]
 -- set bg color of floating windows to a different color than normal background
 -- vim.api.nvim_set_hl(0, 'NormalFloat', { fg='#d8dee9', bg='#3b4252'})
 
@@ -495,7 +505,7 @@ require'nvim-tree'.setup {
     update_cwd = false
   },
   view = {
-    width = 25
+    width = 70
   },
   renderer = {
     highlight_git = true, -- 0 by default, will enable file highlight for git attributes (can be used without the icons).
