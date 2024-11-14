@@ -2,22 +2,31 @@ local lspconfig = require('lspconfig')
 -- local lspconfig_util = require('lspconfig.util')
 require("mason-lspconfig").setup()
 
-vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
-  vim.lsp.handlers.hover, {
-    -- Use a sharp border with `FloatBorder` highlights
-    border = "single",
-  }
-)
+vim.lsp.buf.hover({
+  -- Use a sharp border with `FloatBorder` highlights
+  border = "single",
+})
 
-vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
-  vim.lsp.handlers.signature_help, {
-    -- Use a sharp border with `FloatBorder` highlights
-    border = "single"
-  }
-)
+vim.lsp.buf.signature_help({
+  -- Use a sharp border with `FloatBorder` highlights
+  border = "single",
+})
+-- vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
+--   vim.lsp.handlers.hover, {
+--     -- Use a sharp border with `FloatBorder` highlights
+--     border = "single",
+--   }
+-- )
+--
+-- vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
+--   vim.lsp.handlers.signature_help, {
+--     -- Use a sharp border with `FloatBorder` highlights
+--     border = "single"
+--   }
+-- )
 
 -- local util = require('lspconfig/util')
-local cmp_nvim_lsp = require('cmp_nvim_lsp')
+-- local cmp_nvim_lsp = require('cmp_nvim_lsp')
 
 local on_attach = function(client, bufnr)
   -- setup lsp_signature
@@ -49,12 +58,13 @@ end
 -- config that activates keymaps and enables snippet support
 local function make_config()
   local capabilities = vim.lsp.protocol.make_client_capabilities()
+  capabilities = require('blink.cmp').get_lsp_capabilities(capabilities)
   -- capabilities.textDocument.semanticTokens = true
   -- capabilities.workspace.semanticTokens = true
   -- capabilities.textDocument.documentFormattingProvider
   -- enable file watcher capabilities for lsp clients
   -- capabilities.textDocument.completion.completionItem.snippetSupport = true
-  capabilities.textDocument = cmp_nvim_lsp.default_capabilities(capabilities).textDocument
+  -- capabilities.textDocument = cmp_nvim_lsp.default_capabilities(capabilities).textDocument
   capabilities.workspace.didChangeWatchedFiles.relativePatternSupport = true
   capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = true
   return {

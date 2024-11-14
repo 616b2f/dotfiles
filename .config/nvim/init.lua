@@ -107,20 +107,85 @@ require('lazy').setup({
 
   -- complete support
   {
-    'hrsh7th/nvim-cmp',
-    -- opts = function(_, opts)
-    -- end,
-  }, -- Autocompletion plugin
-  'hrsh7th/cmp-nvim-lsp',
-  'hrsh7th/cmp-buffer',
-  'hrsh7th/cmp-path',
-  'hrsh7th/cmp-nvim-lua',
-  'hrsh7th/cmp-nvim-lsp-signature-help',
+    'saghen/blink.cmp',
+    lazy = false, -- lazy loading handled internally
+    -- optional: provides snippets for the snippet source
+    dependencies = 'rafamadriz/friendly-snippets',
+
+    -- use a release tag to download pre-built binaries
+    version = 'v0.*',
+    -- OR build from source, requires nightly: https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust
+    -- build = 'cargo build --release',
+    -- If you use nix, you can build from source using latest nightly rust with:
+    -- build = 'nix run .#build-plugin',
+
+    ---@module 'blink.cmp'
+    ---@type blink.cmp.Config
+    opts = {
+      -- 'default' for mappings similar to built-in completion
+      -- 'super-tab' for mappings similar to vscode (tab to accept, arrow keys to navigate)
+      -- 'enter' for mappings similar to 'super-tab' but with 'enter' to accept
+      -- see the "default configuration" section below for full documentation on how to define
+      -- your own keymap.
+      keymap = { preset = 'default' },
+
+      highlight = {
+        -- sets the fallback highlight groups to nvim-cmp's highlight groups
+        -- useful for when your theme doesn't support blink.cmp
+        -- will be removed in a future release, assuming themes add support
+        use_nvim_cmp_as_default = true,
+      },
+      -- set to 'mono' for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
+      -- adjusts spacing to ensure icons are aligned
+      nerd_font_variant = 'mono',
+
+      -- experimental auto-brackets support
+      accept = { auto_brackets = { enabled = true } },
+
+      -- experimental signature help support
+      trigger = { signature_help = { enabled = true } },
+      kind_icons = {
+        Text = '',
+        Method = '',
+        Function = '',
+        Constructor = '',
+
+        Field = '',
+        Variable = '',
+        Property = '',
+
+        Class = '',
+        Interface = '',
+        Struct = '',
+        Module = '󰅩',
+
+        Unit = '',
+        Value = '',
+        Enum = '',
+        EnumMember = '',
+
+        Keyword = '',
+        Constant = '',
+
+        Snippet = '',
+        Color = '',
+        File = '',
+        Reference = '',
+        Folder = '',
+        Event = '',
+        Operator = '',
+        TypeParameter = '',
+      },
+    },
+    -- allows extending the enabled_providers array elsewhere in your config
+    -- without having to redefining it
+    opts_extend = { "sources.completion.enabled_providers" }
+  },
   'onsails/lspkind-nvim',
   'tjdevries/complextras.nvim',
-  'saadparwaiz1/cmp_luasnip',
-  'L3MON4D3/LuaSnip', -- Snippets plugin
-  'rafamadriz/friendly-snippets', -- basic snippets
+  -- 'saadparwaiz1/cmp_luasnip',
+  -- 'L3MON4D3/LuaSnip', -- Snippets plugin
+  -- 'rafamadriz/friendly-snippets', -- basic snippets
 
   -- custom formatters
   'mhartington/formatter.nvim',
@@ -471,7 +536,7 @@ local project_name_display = function ()
             -- local project_workspace_patterns = info.project.workspace.patterns
             -- local project_workspace_path = tostring(info.project.workspace)
             local project_name = info.project.name
-            return '󱂵 ' .. project_name
+            return ' ' .. project_name
         end
     end
     local cwd = vim.loop.cwd()
@@ -678,13 +743,13 @@ vim.api.nvim_exec2([[
 })
 
 -- custom config
-require('completion-config')
+-- require('completion-config')
 -- vim.lsp.set_log_level("debug")
 require('lsp-config')
 require('dap-config')
 require('formatter-config')
 require('treesitter-config')
-require('luasnip-config')
+-- require('luasnip-config')
 
 require('mini.surround').setup({})
 
@@ -910,11 +975,49 @@ require("bp.log").set_level(vim.log.levels.DEBUG)
 local bsp = require("bsp")
 bsp.setup({
   handlers = {
-    ['dotnet-bsp'] = function (server_name, workspace_dir, connection_details)
+
+    ['cargo-bsp'] = function (workspace_dir, connection_details)
+      -- cargo.toml in the current workspace (non recursive)
+      for name, type in vim.fs.dir(workspace_dir) do
+          if (type == "file") and
+             name:match('^cargo.toml$') then
+            return true
+          end
+      end
+
+      return false
+    end,
+
+    ['gradle-bsp'] = function (workspace_dir, connection_details)
+      -- gradle or gradlew.bat in the current workspace (non recursive)
+      for name, type in vim.fs.dir(workspace_dir) do
+          if (type == "file") and
+             (name:match('^gradlew$') or name:match('^gradlew.bat$')) then
+            return true
+          end
+      end
+
+      return false
+    end,
+
+    ['dotnet-bsp'] = function (workspace_dir, connection_details)
       -- *.csproj or *.sln in the current workspace (non recursive)
       for name, type in vim.fs.dir(workspace_dir) do
           if (type == "file") and
              (name:match('.*.sln$') or name:match('.*.csproj$')) then
+            return true
+          end
+      end
+
+      return false
+    end,
+
+    ['*'] = function (workspace_dir, connection_details)
+      -- .bsp/*.json
+      for name, type in vim.fs.dir(workspace_dir .. "/.bsp/") do
+          if (type == "file") and
+             name:match('^.*%.json$') then
+            print(" * fallback handler is used");
             return true
           end
       end
