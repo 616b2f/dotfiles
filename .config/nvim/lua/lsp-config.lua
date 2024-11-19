@@ -62,7 +62,6 @@ local function make_config()
   -- enable file watcher capabilities for lsp clients
   capabilities.workspace.didChangeWatchedFiles.relativePatternSupport = true
   capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = true
-  capabilities = cmp_nvim_lsp.default_capabilities(capabilities)
   return {
     -- enable snippet support
     capabilities = capabilities,
@@ -191,8 +190,20 @@ require("mason-lspconfig").setup_handlers {
 
   ["omnisharp"] = function ()
     local config = make_config()
-    config.handlers = {
-      ["textDocument/definition"] = require('omnisharp_extended').handler,
+    config.settings = {
+      RoslynExtensionsOptions = {
+        enableDecompilationSupport = true,
+        enableImportCompletion = true,
+        enableAnalyzersSupport = true
+      },
+      FormattingOptions = {
+        enableEditorConfigSupport = true
+      },
+      RenameOptions = {
+        RenameInComments = true,
+        RenameOverloads = true,
+        RenameInStrings = true
+      }
     }
     lspconfig.omnisharp.setup(config)
   end,

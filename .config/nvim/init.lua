@@ -100,7 +100,6 @@ require('lazy').setup({
     lazy = false, -- lazy loading handled internally
     -- optional: provides snippets for the snippet source
     dependencies = 'rafamadriz/friendly-snippets',
-
     -- use a release tag to download pre-built binaries
     version = 'v0.*',
     -- OR build from source, requires nightly: https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust
@@ -116,7 +115,11 @@ require('lazy').setup({
       -- 'enter' for mappings similar to 'super-tab' but with 'enter' to accept
       -- see the "default configuration" section below for full documentation on how to define
       -- your own keymap.
-      keymap = { preset = 'default' },
+      keymap = {
+        preset = 'default',
+        ['<c-k>'] = { 'snippet_forward', 'fallback' },
+        ['<c-j>'] = { 'snippet_backward', 'fallback' },
+      },
 
       highlight = {
         -- sets the fallback highlight groups to nvim-cmp's highlight groups
@@ -127,6 +130,12 @@ require('lazy').setup({
       -- set to 'mono' for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
       -- adjusts spacing to ensure icons are aligned
       nerd_font_variant = 'mono',
+
+      windows = {
+        documentation = {
+          auto_show = true
+        }
+      },
 
       -- experimental auto-brackets support
       accept = { auto_brackets = { enabled = true } },
@@ -170,6 +179,7 @@ require('lazy').setup({
     -- without having to redefining it
     opts_extend = { "sources.completion.enabled_providers" }
   },
+
   'onsails/lspkind-nvim',
   'tjdevries/complextras.nvim',
   -- 'saadparwaiz1/cmp_luasnip',
@@ -584,15 +594,6 @@ require('lualine').setup {
 -- vim.api.nvim_set_keymap('n', 'k', "v:count == 0 ? 'gk' : 'k'", { noremap = true, expr = true, silent = true })
 -- vim.api.nvim_set_keymap('n', 'j', "v:count == 0 ? 'gj' : 'j'", { noremap = true, expr = true, silent = true })
 
--- Highlight on yank
--- warning! this runs sometimes unintentionally when you are in insert mode and stop typing
--- vim.cmd [[
---   augroup YankHighlight
---     autocmd!
---     autocmd TextYankPost * silent! lua vim.highlight.on_yank()
---   augroup end
--- ]]
-
 -- Map blankline
 vim.g.indent_blankline_char = '┊'
 vim.g.indent_blankline_filetype_exclude = { 'help', 'packer' }
@@ -681,7 +682,6 @@ require('mason-tool-installer').setup {
     'gopls',
     'terraform-ls',
     'lemminx', -- xml lsp
-    'json-lsp',
 
     -- misc linter
     'shellcheck',
@@ -696,7 +696,7 @@ require('mason-tool-installer').setup {
     -- csharp
     'omnisharp', -- LSP
     'netcoredbg', -- DAP
-    -- 'dotnet-bsp', -- BSP
+    'dotnet-bsp', -- BSP
 
     -- java
     'jdtls',
@@ -704,14 +704,19 @@ require('mason-tool-installer').setup {
     'java-test',
     'gradle-bsp', -- BSP
 
+    -- json
+    'json-lsp',
+
     -- python
     'python-lsp-server',
   }
 }
 
 require("neotest").setup({
+  log_level = vim.log.levels.DEBUG,
   adapters = {
-    require("neotest-dotnet")
+    -- require("neotest-dotnet")
+    require("neotest-bsp")({client_id=1})
   },
   -- consumers = {
   --   overseer = require("neotest.consumers.overseer"),
@@ -967,6 +972,12 @@ vim.api.nvim_create_autocmd('LspAttach', {
     local client = vim.lsp.get_client_by_id(ev.data.client_id)
     -- setup compiler config for omnisharp
     if client and client.name == "omnisharp" then
+
+      vim.keymap.set('n', 'gd', require('omnisharp_extended').lsp_definition, opts)
+      vim.keymap.set('n', 'gi', require('omnisharp_extended').lsp_implementation, opts)
+      vim.keymap.set('n', 'gr', require('omnisharp_extended').lsp_references, opts)
+      vim.keymap.set('n', '<space>D', require('omnisharp_extended').lsp_type_definition, opts)
+
       local workspaces = vim.lsp.buf.list_workspace_folders()
       if #workspaces == 1 then
         vim.cmd[[compiler dotnet]]
