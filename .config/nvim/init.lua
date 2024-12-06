@@ -47,11 +47,12 @@ require('lazy').setup({
   -- nvim lsp support
   {
     "williamboman/mason.nvim",
+    -- dir = "~/devel/mason.nvim",
+    -- dev = true,
     opts = {
       registries = {
         "github:mason-org/mason-registry",
-        "file:~/devel/mason-registry"
-        -- "github:616b2f/mason-registry@main"
+        "github:616b2f/mason-registry-bsp"
         -- "file:~/devel/mason-registry"
       }
     }
@@ -121,58 +122,48 @@ require('lazy').setup({
         ['<c-j>'] = { 'snippet_backward', 'fallback' },
       },
 
-      highlight = {
-        -- sets the fallback highlight groups to nvim-cmp's highlight groups
-        -- useful for when your theme doesn't support blink.cmp
-        -- will be removed in a future release, assuming themes add support
+      appearance = {
         use_nvim_cmp_as_default = true,
+        nerd_font_variant = 'mono',
+        kind_icons = {
+          Text = '',
+          Method = '',
+          Function = '',
+          Constructor = '',
+
+          Field = '',
+          Variable = '',
+          Property = '',
+
+          Class = '',
+          Interface = '',
+          Struct = '',
+          Module = '󰅩',
+
+          Unit = '',
+          Value = '',
+          Enum = '',
+          EnumMember = '',
+
+          Keyword = '',
+          Constant = '',
+
+          Snippet = '',
+          Color = '',
+          File = '',
+          Reference = '',
+          Folder = '',
+          Event = '',
+          Operator = '',
+          TypeParameter = '',
+        },
       },
-      -- set to 'mono' for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
-      -- adjusts spacing to ensure icons are aligned
-      nerd_font_variant = 'mono',
 
-      windows = {
-        documentation = {
-          auto_show = true
-        }
-      },
-
-      -- experimental auto-brackets support
-      accept = { auto_brackets = { enabled = true } },
-
-      -- experimental signature help support
-      trigger = { signature_help = { enabled = true } },
-      kind_icons = {
-        Text = '',
-        Method = '',
-        Function = '',
-        Constructor = '',
-
-        Field = '',
-        Variable = '',
-        Property = '',
-
-        Class = '',
-        Interface = '',
-        Struct = '',
-        Module = '󰅩',
-
-        Unit = '',
-        Value = '',
-        Enum = '',
-        EnumMember = '',
-
-        Keyword = '',
-        Constant = '',
-
-        Snippet = '',
-        Color = '',
-        File = '',
-        Reference = '',
-        Folder = '',
-        Event = '',
-        Operator = '',
-        TypeParameter = '',
+      completion = {
+        -- experimental auto-brackets support
+        accept = { auto_brackets = { enabled = true } },
+        signature = { enabled = false },
+        documentation = { auto_show = true }
       },
     },
     -- allows extending the enabled_providers array elsewhere in your config
@@ -181,7 +172,7 @@ require('lazy').setup({
   },
 
   'onsails/lspkind-nvim',
-  'tjdevries/complextras.nvim',
+  -- 'tjdevries/complextras.nvim',
   -- 'saadparwaiz1/cmp_luasnip',
   -- 'L3MON4D3/LuaSnip', -- Snippets plugin
   -- 'rafamadriz/friendly-snippets', -- basic snippets
@@ -228,12 +219,17 @@ require('lazy').setup({
   -- unit test plugins
   {
     "nvim-neotest/neotest",
+    dir = "~/devel/neotest",
+    dev = true,
     dependencies = {
       "nvim-neotest/nvim-nio",
       "nvim-lua/plenary.nvim",
       "nvim-treesitter/nvim-treesitter",
       "antoinemadec/FixCursorHold.nvim"
     }
+  },
+  {
+    dir = "~/devel/neotest-bsp"
   },
   {
     "Issafalcon/neotest-dotnet",
@@ -342,8 +338,9 @@ require('lazy').setup({
   },
 
   {
-    -- '616b2f/bsp.nvim'
-    dir = "~/devel/bsp.nvim"
+    '616b2f/bsp.nvim',
+    dir = "~/devel/bsp.nvim",
+    dev = true
   },
 
   -- Useful status updates for LSP
@@ -367,19 +364,6 @@ require('lazy').setup({
       },
   }
 })
-
--- When we are bootstrapping a configuration, it doesn't
--- make sense to execute the rest of the init.lua.
---
--- You'll need to restart nvim, and then it will work.
--- if is_bootstrap then
---   print '=================================='
---   print '    Plugins are being installed'
---   print '    Wait until Packer completes,'
---   print '       then restart nvim'
---   print '=================================='
---   return
--- end
 
 -- enable filetype.lua and disable filetype.vim
 vim.g.do_filetype_lua = 1
@@ -722,18 +706,6 @@ require("neotest").setup({
   --   overseer = require("neotest.consumers.overseer"),
   -- },
   icons = {
-    -- Ascii:
-    -- { "/", "|", "\\", "-", "/", "|", "\\", "-"},
-    -- Unicode:
-    -- { "", "🞅", "🞈", "🞉", "", "", "🞉", "🞈", "🞅", "", },
-    -- {"◴" ,"◷" ,"◶", "◵"},
-    -- {"◢", "◣", "◤", "◥"},
-    -- {"◐", "◓", "◑", "◒"},
-    -- {"◰", "◳", "◲", "◱"},
-    -- {"⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"},
-    -- {"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"},
-    -- {"⠋", "⠙", "⠚", "⠞", "⠖", "⠦", "⠴", "⠲", "⠳", "⠓"},
-    -- {"⠄", "⠆", "⠇", "⠋", "⠙", "⠸", "⠰", "⠠", "⠰", "⠸", "⠙", "⠋", "⠇", "⠆"},
     -- { "⠋", "⠙", "⠚", "⠒", "⠂", "⠂", "⠒", "⠲", "⠴", "⠦", "⠖", "⠒", "⠐", "⠐", "⠒", "⠓", "⠋" },
     running_animated = { "/", "|", "\\", "-", "/", "|", "\\", "-" },
     passed = "✔",
@@ -768,28 +740,6 @@ require('treesitter-config')
 
 require('mini.surround').setup({})
 
--- require('nvim-test').setup {
---   run = true,                 -- run tests (using for debug)
---   commands_create = true,     -- create commands (TestFile, TestLast, ...)
---   filename_modifier = ":.",   -- modify filenames before tests run(:h filename-modifiers)
---   silent = false,             -- less notifications
---   term = "terminal",          -- a terminal to run ("terminal"|"toggleterm")
---   termOpts = {
---     direction = "vertical",   -- terminal's direction ("horizontal"|"vertical"|"float")
---     width = 96,               -- terminal's width (for vertical|float)
---     height = 24,              -- terminal's height (for horizontal|float)
---     go_back = false,          -- return focus to original window after executing
---     stopinsert = "auto",      -- exit from insert mode (true|false|"auto")
---     keep_one = true,          -- keep only one terminal for testing
---   },
---   runners = {               -- setup tests runners
---     cs = "nvim-test.runners.dotnet",
---     go = "nvim-test.runners.go-test",
---     rust = "nvim-test.runners.cargo-test",
---     javascript = "nvim-test.runners.mocha"
---   }
--- }
-
 -- custom commands
 -- -- open new terminal in the current files path
 -- command Dterm new %:p:h | lcd % | terminal
@@ -818,12 +768,6 @@ vim.keymap.set('x', 'S', function() require('mini.surround').add('visual') end, 
 vim.keymap.set('n', '<leader>nr', require("nvim-tree.api").tree.reload, { desc="my: reload nvim-tree" })
 vim.keymap.set('n', '<leader>nn', require("nvim-tree.api").tree.toggle, { desc="my: toggle nvim-tree" })
 vim.keymap.set('n', '<leader>nf', function() require("nvim-tree.api").tree.open({find_file=true}) end, { desc="my: jump to current file in nvim-treee" })
-
--- remappings for easier switching between windows
--- vim.api.nvim_set_keymap('n', '<C-H>', '<C-W>h')
--- vim.api.nvim_set_keymap('n', '<C-J>', '<C-W>j')
--- vim.api.nvim_set_keymap('n', '<C-K>', '<C-W>k')
--- vim.api.nvim_set_keymap('n', '<C-L>', '<C-W>l')
 
 -- hop mappings
 vim.keymap.set('n', '<space>f', function() require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.AFTER_CURSOR, current_line_only = false }) end)
@@ -991,60 +935,13 @@ vim.api.nvim_create_autocmd('LspAttach', {
 })
 
 -- configure global logging 
-require("bp.log").set_level(vim.log.levels.DEBUG)
-
 local bsp = require("bsp")
 bsp.setup({
-  handlers = {
-
-    ['cargo-bsp'] = function (workspace_dir, connection_details)
-      -- cargo.toml in the current workspace (non recursive)
-      for name, type in vim.fs.dir(workspace_dir) do
-          if (type == "file") and
-             name:match('^cargo.toml$') then
-            return true
-          end
-      end
-
-      return false
-    end,
-
-    ['gradle-bsp'] = function (workspace_dir, connection_details)
-      -- gradle or gradlew.bat in the current workspace (non recursive)
-      for name, type in vim.fs.dir(workspace_dir) do
-          if (type == "file") and
-             (name:match('^gradlew$') or name:match('^gradlew.bat$')) then
-            return true
-          end
-      end
-
-      return false
-    end,
-
-    ['dotnet-bsp'] = function (workspace_dir, connection_details)
-      -- *.csproj or *.sln in the current workspace (non recursive)
-      for name, type in vim.fs.dir(workspace_dir) do
-          if (type == "file") and
-             (name:match('.*.sln$') or name:match('.*.csproj$')) then
-            return true
-          end
-      end
-
-      return false
-    end,
-
-    ['*'] = function (workspace_dir, connection_details)
-      -- .bsp/*.json
-      for name, type in vim.fs.dir(workspace_dir .. "/.bsp/") do
-          if (type == "file") and
-             name:match('^.*%.json$') then
-            print(" * fallback handler is used");
-            return true
-          end
-      end
-
-      return false
-    end
+  log = {
+    level = vim.log.levels.DEBUG
+  },
+  ui = {
+    enable = true
   }
 })
 
