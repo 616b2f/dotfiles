@@ -31,8 +31,8 @@ end
 --- get buffer and location of current selection
 ---@return ak.Selection
 M.ui.get_selection = function()
-  local vstart = vim.fn.getpos("'<")
-  local vend = vim.fn.getpos("'>")
+  local vstart = vim.fn.getcharpos("'<")
+  local vend = vim.fn.getcharpos("'>")
 
   -- return actual line numbers not indices
   return {
@@ -148,7 +148,10 @@ M.ui.jwt = {}
 --TODO: https://www.rfc-editor.org/rfc/rfc7515
 --TODO: https://www.rfc-editor.org/rfc/rfc7515#appendix-C
 --TODO: https://www.rfc-editor.org/rfc/rfc7515#section-3.2
-M.ui.jwt.decode = function()
+--- Decodes an JWT token and replaces it inplace
+---@param command_args vim.api.keyset.create_user_command.command_args
+M.ui.jwt.decode = function(command_args)
+  -- local lines = vim.api.nvim_buf_get_text(0, command_args.line1, command_args.range, command_args.line2, 0, {})
   local lines = M.ui.get_selected_text()
   local jwt = table.concat(lines)
   local parts = vim.split(jwt, '.', {plain=true})
