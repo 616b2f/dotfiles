@@ -1,0 +1,4 @@
+Nice nvim command to put output of any lua function into current buffer
+```
+:put = execute('lua print(vim.inspect(package.loaded))')
+```
