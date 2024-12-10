@@ -11,12 +11,6 @@ systemctl --user --now enable podman.socket
 ###
 sudo cp ./yum.repos.d/* /etc/yum.repos.d/
 
-# exclude dotnet related packages from official fedora repo
-# they collide often with packages providet by microsoft
-sudo dnf config-manager setopt \
-	"fedora.excludepkgs=dotnet*,aspnet*,netstandard*" \
-	"updates.excludepkgs=dotnet*,aspnet*,netstandard*" 
-
 ###
 # update all installed packages to latest version
 ###
@@ -77,7 +71,9 @@ cs install bloop --only-prebuilt=true
 # dotnet
 ###
 # install dotnet sdk
-sudo dnf install -y dotnet-sdk-8.0
+sudo dnf install -y \
+    dotnet-sdk-8.0 \
+    dotnet-sdk-9.0
 # Create Dotnet Developer Certificate
 dotnet dev-certs https
 
