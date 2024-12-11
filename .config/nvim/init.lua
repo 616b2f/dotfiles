@@ -219,8 +219,8 @@ require('lazy').setup({
   -- unit test plugins
   {
     "nvim-neotest/neotest",
-    dir = "~/devel/neotest",
-    dev = true,
+    -- dir = "~/devel/neotest",
+    -- dev = true,
     dependencies = {
       "nvim-neotest/nvim-nio",
       "nvim-lua/plenary.nvim",
@@ -228,9 +228,9 @@ require('lazy').setup({
       "antoinemadec/FixCursorHold.nvim"
     }
   },
-  {
-    dir = "~/devel/neotest-bsp"
-  },
+  -- {
+  --   dir = "~/devel/neotest-bsp"
+  -- },
   {
     "Issafalcon/neotest-dotnet",
     dependencies = {
@@ -569,15 +569,6 @@ require('lualine').setup {
 -- use global statusline
 -- vim.o.laststatus=3
 
--- Remap space as leader key
--- vim.api.nvim_set_keymap('', '<Space>', '<Nop>', { noremap = true, silent = true })
--- vim.g.mapleader = ' '
--- vim.g.maplocalleader = ' '
-
--- Remap for dealing with word wrap
--- vim.api.nvim_set_keymap('n', 'k', "v:count == 0 ? 'gk' : 'k'", { noremap = true, expr = true, silent = true })
--- vim.api.nvim_set_keymap('n', 'j', "v:count == 0 ? 'gj' : 'j'", { noremap = true, expr = true, silent = true })
-
 -- Map blankline
 vim.g.indent_blankline_char = '┊'
 vim.g.indent_blankline_filetype_exclude = { 'help', 'packer' }
@@ -677,6 +668,9 @@ require('mason-tool-installer').setup {
     'rust-analyzer',
     -- 'cargo-bsp',
 
+    -- zig
+    'zls',
+
     -- csharp
     'omnisharp', -- LSP
     'netcoredbg', -- DAP
@@ -699,14 +693,13 @@ require('mason-tool-installer').setup {
 require("neotest").setup({
   log_level = vim.log.levels.DEBUG,
   adapters = {
-    -- require("neotest-dotnet")
-    require("neotest-bsp")({client_id=1})
+    require("neotest-dotnet")
+    -- require("neotest-bsp")({client_id=1})
   },
   -- consumers = {
   --   overseer = require("neotest.consumers.overseer"),
   -- },
   icons = {
-    -- { "⠋", "⠙", "⠚", "⠒", "⠂", "⠂", "⠒", "⠲", "⠴", "⠦", "⠖", "⠒", "⠐", "⠐", "⠒", "⠓", "⠋" },
     running_animated = { "/", "|", "\\", "-", "/", "|", "\\", "-" },
     passed = "✔",
     running = "🗘",
@@ -716,10 +709,6 @@ require("neotest").setup({
   }
 })
 
-
-  -- hi LspReferenceRead link Visual cterm=bold ctermbg=red guibg=LightYellow
-  -- hi LspReferenceText cterm=bold ctermbg=red guibg=LightYellow
-  -- hi LspReferenceWrite cterm=bold ctermbg=red guibg=LightYellow
 vim.api.nvim_exec2([[
   hi link LspReferenceRead Visual
   hi link LspReferenceText Visual
@@ -798,17 +787,26 @@ vim.keymap.set("n", "<leader>fp", function() vim.cmd("Telescope projections") en
 -- vim.keymap.set('n', '<leader>sd', require('telescope.builtin').grep_string)
 -- vim.keymap.set('n', '<leader>so', require('telescope.builtin').tags{ only_current_buffer = true })
 -- vim.keymap.set('n', '<leader>?', require('telescope.builtin').oldfiles)
+
+-- setup extra surround mappings
+vim.keymap.set('x', 'S', function() require('mini.surround').add('visual') end, { noremap=true, desc="my: add surround chars to current visual selection" })
+
+-- disable some preset key mappings
+vim.keymap.set('n', 'Q', "<nop>")
+
 vim.keymap.set('n', '<space>/', function()
   -- You can pass additional configuration to telescope to change theme, layout, etc.
   require('telescope.builtin').current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
     winblend = 10,
     previewer = false,
   })
-end, { desc = '[/] Fuzzily search in current buffer' })
+end, { desc = 'my: fuzzily search in current buffer' })
 
-vim.keymap.set('n', 'Q', "<nop>")
-vim.keymap.set('n', '<leader>gb', ":b#<CR>",{desc="my: switch between two last active buffers"})
-vim.keymap.set('n', '<space>rw', ":s/\\<<C-r><C-w>\\>/<C-r><C-w>/g<Left><Left>")
+vim.keymap.set('n', '<space>rw', ":s/\\<<C-r><C-w>\\>/<C-r><C-w>/g<Left><Left>", {desc="my: replace current word under cursor with substitute"})
+-- hop mappings
+vim.keymap.set('n', '<space>f', function() require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.AFTER_CURSOR, current_line_only = false }) end)
+vim.keymap.set('n', '<space>F', function() require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.BEFORE_CURSOR, current_line_only = false }) end)
+vim.keymap.set('n', '<space>gb', ":b#<CR>",{desc="my: switch between two last active buffers"})
 
 vim.cmd [[
   " configure terminal
@@ -866,7 +864,9 @@ vim.keymap.set('n', '<leader>dsi', require('dap').step_into)
 vim.keymap.set('n', '<leader>dso', require('dap').step_out)
 vim.keymap.set('n', '<leader>do', require('dap').repl.open)
 vim.keymap.set('n', '<leader>drl', require('dap').run_last)
-vim.keymap.set('n', '<leader>dt', function() require('neotest').run.run({vim.fn.expand('%'),strategy='dap'}) end, {desc="my: run test for current file in debug mode"})
+vim.keymap.set('n', '<leader>dtt', function() require('neotest').run.run({suite=true,strategy="dap"}) end, {desc="my: run test for the whole suite"})
+vim.keymap.set('n', '<leader>dtf', function() require('neotest').run.run({vim.fn.expand('%'),suite=false,strategy='dap'}) end, {desc="my: run test for current file in debug mode"})
+vim.keymap.set('n', '<leader>dtn', function() require('neotest').run.run({strategy='dap'}) end, {desc="my: run nearest test in debug mode"})
 
 -- keybinding for neotest
 vim.keymap.set('n', '<leader>tt', require("neotest").summary.toggle, { desc="my: toggle test summary window"})
@@ -875,19 +875,17 @@ vim.keymap.set('n', '<leader>ts', require("neotest").run.stop)
 vim.keymap.set('n', '<leader>ta', require("neotest").run.attach)
 vim.keymap.set('n', '<leader>tf', function() require('neotest').run.run({vim.fn.expand('%')}) end, {desc="my: run test in current file"})
 vim.keymap.set('n', '<leader>ts', function() require('neotest').run.run({suite=true}) end, {desc="my: run test for the whole suite"})
-vim.keymap.set('n', '<leader>td', function() require('neotest').run.run({strategy='dap'}) end, {desc="my: run nearest test in debug mode"})
 
--- Global mappings.
--- See `:help vim.diagnostic.*` for documentation on any of the below functions
-vim.keymap.set('n', '<space>d', vim.diagnostic.open_float)
-vim.keymap.set('n', ']d', function() vim.diagnostic.jump({count=1,float=true}) end)
-vim.keymap.set('n', '[d', function() vim.diagnostic.jump({count=-1,float=true}) end)
-vim.keymap.set('n', '<space>qq', vim.diagnostic.setqflist)
-vim.keymap.set('n', '<space>qe', function() vim.diagnostic.setqflist({severity=vim.diagnostic.severity.ERROR}) end)
-vim.keymap.set('n', '<space>ql', vim.diagnostic.setloclist)
--- quickfix list mappings
-vim.keymap.set('n', '[q', ":cprev<CR>", {desc="my: go to previous item in the quickfix list"})
-vim.keymap.set('n', ']q', ":cnext<CR>", {desc="my: go to next item in the quickfix list"})
+-- diagnostic
+vim.keymap.set('n', '<leader>ee', vim.diagnostic.open_float)
+vim.keymap.set('n', '<leader>eq', vim.diagnostic.setqflist)
+vim.keymap.set('n', '<leader>er', function() vim.diagnostic.setqflist({severity=vim.diagnostic.severity.ERROR}) end)
+vim.keymap.set('n', '<leader>el', vim.diagnostic.setloclist)
+vim.keymap.set('n', ']d', function() vim.diagnostic.jump({count=1,float=true}) end, {desc="my: go to previous diagnostic"})
+vim.keymap.set('n', '[d', function() vim.diagnostic.jump({count=-1,float=true}) end, {desc="my: go to next diagnostic"})
+vim.keymap.set('n', '<leader>qq', vim.cmd.copen, {desc="my: open quickfix list"})
+vim.keymap.set('n', '[q', vim.cmd.cprevious, {desc="my: go to previous item in the quickfix list"})
+vim.keymap.set('n', ']q', vim.cmd.cnext, {desc="my: go to next item in the quickfix list"})
 
 -- Use LspAttach autocommand to only map the following keys
 -- after the language server attaches to the current buffer
