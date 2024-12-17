@@ -58,6 +58,8 @@ end
 -- config that activates keymaps and enables snippet support
 local function make_config()
   local capabilities = vim.lsp.protocol.make_client_capabilities()
+  -- capabilities = vim.tbl_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
+
   capabilities = require('blink.cmp').get_lsp_capabilities(capabilities)
   -- enable file watcher capabilities for lsp clients
   capabilities.workspace.didChangeWatchedFiles.relativePatternSupport = true
@@ -189,23 +191,23 @@ require("mason-lspconfig").setup_handlers {
   end,
 
   ["omnisharp"] = function ()
-    local config = make_config()
-    config.settings = {
-      RoslynExtensionsOptions = {
-        enableDecompilationSupport = true,
-        enableImportCompletion = true,
-        enableAnalyzersSupport = true
-      },
-      FormattingOptions = {
-        enableEditorConfigSupport = true
-      },
-      RenameOptions = {
-        RenameInComments = true,
-        RenameOverloads = true,
-        RenameInStrings = true
-      }
-    }
-    lspconfig.omnisharp.setup(config)
+    -- local config = make_config()
+    -- config.settings = {
+    --   RoslynExtensionsOptions = {
+    --     enableDecompilationSupport = true,
+    --     enableImportCompletion = true,
+    --     enableAnalyzersSupport = true
+    --   },
+    --   FormattingOptions = {
+    --     enableEditorConfigSupport = true
+    --   },
+    --   RenameOptions = {
+    --     RenameInComments = true,
+    --     RenameOverloads = true,
+    --     RenameInStrings = true
+    --   }
+    -- }
+    -- lspconfig.omnisharp.setup(config)
   end,
 
   ["yamlls"] = function ()
@@ -246,5 +248,7 @@ require("mason-lspconfig").setup_handlers {
   end
 }
 
-local config = make_config()
-lspconfig.gdscript.setup(config)
+-- local config = make_config()
+--
+-- lspconfig.gdscript.setup(config)
+

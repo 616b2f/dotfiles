@@ -37,8 +37,6 @@ require('lazy').setup({
       'sindrets/diffview.nvim'
     }
   },
-  --'tpope/vim-fugitive', -- Git commands in nvim
-  --'tpope/vim-rhubarb', -- Fugitive-companion to interact with github
 
   -- Highlight, edit, and navigate code using a fast incremental parsing library
   'nvim-treesitter/nvim-treesitter',
@@ -90,19 +88,32 @@ require('lazy').setup({
         'bsp.nvim',
         'neotest',
         -- Load luvit types when the `vim.uv` word is found
-        -- { path = "luvit-meta/library", words = { "vim%.uv" } },
+        { path = "${3rd}/luv/library", words = { "vim%.uv" } },
       },
     },
   },
 
+  -- 'L3MON4D3/LuaSnip', -- Snippets plugin
+  -- {
+  --   'hrsh7th/nvim-cmp',
+  --   dependencies = {
+  --     'hrsh7th/cmp-nvim-lsp',
+  --     'saadparwaiz1/cmp_luasnip',
+  --     'onsails/lspkind-nvim',
+  --   }
+  -- },
+
   -- complete support
   {
     'saghen/blink.cmp',
+    -- dev = true,
+    -- dir = "~/devel/blink.cmp/",
     lazy = false, -- lazy loading handled internally
     -- optional: provides snippets for the snippet source
     dependencies = 'rafamadriz/friendly-snippets',
     -- use a release tag to download pre-built binaries
-    version = 'v0.*',
+    version = '*',
+    -- version = 'v0.*',
     -- OR build from source, requires nightly: https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust
     -- build = 'cargo build --release',
     -- If you use nix, you can build from source using latest nightly rust with:
@@ -111,6 +122,9 @@ require('lazy').setup({
     ---@module 'blink.cmp'
     ---@type blink.cmp.Config
     opts = {
+      enabled = function ()
+        return true
+      end,
       -- 'default' for mappings similar to built-in completion
       -- 'super-tab' for mappings similar to vscode (tab to accept, arrow keys to navigate)
       -- 'enter' for mappings similar to 'super-tab' but with 'enter' to accept
@@ -121,6 +135,37 @@ require('lazy').setup({
         ['<c-k>'] = { 'snippet_forward', 'fallback' },
         ['<c-j>'] = { 'snippet_backward', 'fallback' },
       },
+
+      signature = {
+        enabled = true,
+      },
+
+      completion = {
+        -- experimental auto-brackets support
+        accept = { auto_brackets = { enabled = true } },
+        documentation = { auto_show = true }
+      },
+
+      -- fuzzy = {
+      --   prebuilt_binaries = {
+      --     -- Whether or not to automatically download a prebuilt binary from github. If this is set to `false`
+      --     -- you will need to manually build the fuzzy binary dependencies by running `cargo build --release`
+      --     download = true,
+      --     -- When downloading a prebuilt binary, force the downloader to resolve this version. If this is unset
+      --     -- then the downloader will attempt to infer the version from the checked out git tag (if any).
+      --     --
+      --     -- Beware that if the FFI ABI changes while tracking main then this may result in blink breaking.
+      --     force_version = "v0.7.6",
+      --     -- When downloading a prebuilt binary, force the downloader to use this system triple. If this is unset
+      --     -- then the downloader will attempt to infer the system triple from `jit.os` and `jit.arch`.
+      --     -- Check the latest release for all available system triples
+      --     --
+      --     -- Beware that if the FFI ABI changes while tracking main then this may result in blink breaking.
+      --     force_system_triple = nil,
+      --     -- Extra arguments that will be passed to curl like { 'curl', ..extra_curl_args, ..built_in_args }
+      --     extra_curl_args = {}
+      --   },
+      -- },
 
       appearance = {
         use_nvim_cmp_as_default = true,
@@ -156,25 +201,15 @@ require('lazy').setup({
           Event = '',
           Operator = '',
           TypeParameter = '',
-        },
-      },
-
-      completion = {
-        -- experimental auto-brackets support
-        accept = { auto_brackets = { enabled = true } },
-        signature = { enabled = false },
-        documentation = { auto_show = true }
-      },
+        }
+      }
     },
     -- allows extending the enabled_providers array elsewhere in your config
     -- without having to redefining it
-    opts_extend = { "sources.completion.enabled_providers" }
+    opts_extend = { "sources.default" }
   },
 
-  'onsails/lspkind-nvim',
   -- 'tjdevries/complextras.nvim',
-  -- 'saadparwaiz1/cmp_luasnip',
-  -- 'L3MON4D3/LuaSnip', -- Snippets plugin
   -- 'rafamadriz/friendly-snippets', -- basic snippets
 
   -- custom formatters
@@ -719,8 +754,8 @@ vim.api.nvim_exec2([[
 })
 
 -- custom config
+vim.lsp.set_log_level("debug")
 -- require('completion-config')
--- vim.lsp.set_log_level("debug")
 require('lsp-config')
 require('dap-config')
 require('formatter-config')
@@ -957,5 +992,7 @@ vim.api.nvim_create_autocmd("User",
     vim.keymap.set('n', '<leader>bc', require('bsp').cleancache_build_target, { desc = 'my: clean cache build target with build server' })
   end
 })
+
+vim.lsp.enable('roslyn-ls')
 
 -- vim: ts=2 sts=2 sw=2 et
