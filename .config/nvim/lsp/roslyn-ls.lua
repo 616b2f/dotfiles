@@ -1,3 +1,62 @@
+--- borrowed some source from: https://github.com/seblj/roslyn.nvim
+-- config that activates keymaps and enables snippet support
+local function create_capabilities()
+  local capabilities = vim.lsp.protocol.make_client_capabilities()
+  -- capabilities = vim.tbl_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
+  capabilities = require('blink.cmp').get_lsp_capabilities(capabilities)
+  -- enable file watcher capabilities for lsp clients
+  capabilities.workspace.didChangeWatchedFiles.relativePatternSupport = true
+  capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = true
+
+  -- HACK: Enable filewatching to later just not watch any files
+  -- This is to not make the server watch files and make everything super slow in certain situations
+  capabilities = vim.tbl_deep_extend("force", capabilities, {
+      workspace = {
+          didChangeWatchedFiles = {
+              dynamicRegistration = true,
+          },
+      },
+  })
+
+  -- HACK: Doesn't show any diagnostics if we do not set this to true
+  capabilities = vim.tbl_deep_extend("force", capabilities, {
+      textDocument = {
+          diagnostic = {
+              dynamicRegistration = true,
+          },
+      },
+  })
+
+  return capabilities
+end
+
+---comment
+---@param client vim.lsp.Client
+---@param target string
+local function on_init_sln(client, target)
+  vim.notify("Initializing: " .. target, vim.log.levels.INFO, { title = "roslyn-ls" })
+  ---@diagnostic disable-next-line: param-type-mismatch
+  client:request("solution/open", {
+      solution = vim.uri_from_fname(target),
+  },
+  function (err, result, context)
+  end)
+end
+
+---@param client vim.lsp.Client
+---@param project_files string[]
+local function on_init_project(client, project_files)
+  vim.notify("Initializing: projects", vim.log.levels.INFO, { title = "roslyn-ls" })
+  ---@diagnostic disable-next-line: param-type-mismatch
+  client:request("project/open", {
+      projects = vim.tbl_map(function(file)
+          return vim.uri_from_fname(file)
+      end, project_files),
+  },
+  function (err, result, context)
+  end)
+end
+
 local function on_attach(client, bufnr)
   -- enable inlay hints if LSP server supports it
   if client.supports_method("textDocument/inlayHint") then
@@ -20,38 +79,34 @@ local function on_attach(client, bufnr)
   if client.supports_method("textDocument/semanticTokens") then
     client.server_capabilities.semanticTokensProvider = true
   end
-end
 
--- config that activates keymaps and enables snippet support
-local function create_capabilities()
-  local capabilities = vim.lsp.protocol.make_client_capabilities()
-  -- capabilities = require('cmp_nvim_lsp').default_capabilities()
-  capabilities = require('blink.cmp').get_lsp_capabilities(capabilities)
-  -- enable file watcher capabilities for lsp clients
-  capabilities.workspace.didChangeWatchedFiles.relativePatternSupport = true
-  capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = true
 
-  --- HACKs source: https://github.com/seblj/roslyn.nvim
-  -- HACK: Enable filewatching to later just not watch any files
-  -- This is to not make the server watch files and make everything super slow in certain situations
-  -- capabilities = vim.tbl_deep_extend("force", capabilities, {
-  --     workspace = {
-  --         didChangeWatchedFiles = {
-  --             dynamicRegistration = true,
-  --         },
-  --     },
-  -- })
+  -- try find solutions root first
+  local root_dir = nil
+  root_dir = vim.fs.root(0, function (name, path)
+    local match = name:match("%.sln$") ~= nil
+    if match then
+      local sln_file = vim.fs.joinpath(path, name)
+      on_init_sln(client, sln_file)
+    end
+    return match
+  end)
 
-  -- -- HACK: Doesn't show any diagnostics if we do not set this to true
-  -- capabilities = vim.tbl_deep_extend("force", capabilities, {
-  --     textDocument = {
-  --         diagnostic = {
-  --             dynamicRegistration = true,
-  --         },
-  --     },
-  -- })
-  --
-  return capabilities
+  if not root_dir then
+    -- try find solutions root first
+    root_dir = vim.fs.root(0, function (name, path)
+      local match = name:match("%.csproj$") ~= nil
+      if match then
+        local csproj_file = vim.fs.joinpath(path, name)
+        on_init_project(client, {csproj_file})
+      end
+      return match
+    end)
+  end
+
+  assert(root_dir, "no solution and no csproj found")
+
+  client.root_dir = root_dir
 end
 
 
@@ -71,7 +126,65 @@ local function start_roslyn_server(pipe_name)
     vim.uv.sleep(1500)
 end
 
+local function roslyn_handlers()
+  return {
+        -- ["client/registerCapability"] = function(err, res, ctx)
+        --     if not roslyn_config.filewatching then
+        --         for _, reg in ipairs(res.registrations) do
+        --             if reg.method == "workspace/didChangeWatchedFiles" then
+        --                 reg.registerOptions.watchers = {}
+        --             end
+        --         end
+        --     end
+        --     return vim.lsp.handlers["client/registerCapability"](err, res, ctx)
+        -- end,
+        ["workspace/projectInitializationComplete"] = function(_, _, ctx)
+            vim.notify("Roslyn project initialization complete", vim.log.levels.INFO, { title = "roslyn.nvim" })
+
+            local buffers = vim.lsp.get_buffers_by_client_id(ctx.client_id)
+            for _, buf in ipairs(buffers) do
+                vim.lsp.util._refresh("textDocument/diagnostic", { bufnr = buf })
+            end
+
+            ---NOTE: This is used by rzls.nvim for init
+            vim.api.nvim_exec_autocmds("User", { pattern = "RoslynInitialized", modeline = false })
+        end,
+        ["workspace/_roslyn_projectHasUnresolvedDependencies"] = function()
+            vim.notify("Detected missing dependencies. Run dotnet restore command.", vim.log.levels.ERROR, {
+                title = "roslyn.nvim",
+            })
+            return vim.NIL
+        end,
+        ["workspace/_roslyn_projectNeedsRestore"] = function(_, result, ctx)
+            local client = assert(vim.lsp.get_client_by_id(ctx.client_id))
+
+            ---@diagnostic disable-next-line: param-type-mismatch
+            client:request("workspace/_roslyn_restore", result, function(err, response)
+                if err then
+                    vim.notify(err.message, vim.log.levels.ERROR, { title = "roslyn.nvim" })
+                end
+                if response then
+                    for _, v in ipairs(response) do
+                        vim.notify(v.message, vim.log.levels.INFO, { title = "roslyn.nvim" })
+                    end
+                end
+            end)
+
+            return vim.NIL
+        end,
+        ["razor/provideDynamicFileInfo"] = function(_, _, _)
+            vim.notify(
+                "Razor is not supported.\nPlease use https://github.com/tris203/rzls.nvim",
+                vim.log.levels.WARN,
+                { title = "roslyn.nvim" }
+            )
+            return vim.NIL
+        end,
+    }
+end
+
 local function roslyn_config()
+  local solution_file = vim.g.roslynls_selected_solution
   ---@type vim.lsp.ClientConfig
   local config = {
     name = "roslynlsp",
@@ -83,17 +196,36 @@ local function roslyn_config()
       return vim.lsp.rpc.connect(pipe_name)(dispatchers)
     end,
     filetypes = { "cs" },
-    -- get_language_id = function (_, filetype)
-    --   if filetype == "cs" then
-    --     return "csharp"
-    --   end
-    --   return ""
-    -- end,
-    root_dir = vim.fs.root(0, function (name, _)
-      return name:match("%.sln") ~= nil or name:match("%.csproj$") ~= nil
-    end),
     capabilities = create_capabilities(),
+    handlers = roslyn_handlers(),
     on_attach = on_attach,
+    on_init = function(client, initialize_result)
+
+      -- vim.fs.dir(client.root_dir, )
+      -- local root_dir = nil
+      -- root_dir = vim.fs.root(0, function (name, _)
+      --   local match = name:match("%.sln$") ~= nil
+      --   if match then
+      --     on_init_sln(client, name)
+      --   end
+      --   return match
+      -- end)
+      --
+      -- if not root_dir then
+      --   -- try find solutions root first
+      --   root_dir = vim.fs.root(0, function (name, _)
+      --     local match = name:match("%.csproj$") ~= nil
+      --     if match then
+      --       on_init_project(client, {name})
+      --     end
+      --     return match
+      --   end)
+      -- end
+
+      -- local lsp_commands = require("roslyn.lsp_commands")
+      -- lsp_commands.fix_all_code_action(client)
+      -- lsp_commands.nested_code_action(client)
+    end,
     settings = {
       ["csharp|background_analysis"] = {
         dotnet_analyzer_diagnostics_scope = "fullSolution",
