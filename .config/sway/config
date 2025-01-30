@@ -3,13 +3,14 @@
 # vscode, teams (electron based apps) do not support wayland natively
 #xwayland disabled
 
-# start notification daemon
-exec mako
-exec nm-applet
-exec blueman-applet
-#
 # /usr/bin/gnome-keyring-daemon --daemonize --login
 # /usr/bin/gnome-keyring-daemon --start --foreground --components=secrets
+
+# network manager applet in traybar
+exec nm-applet --indicator
+exec blueman-applet
+# mako notifier
+exec mako
 
 ### Colors
 #
@@ -37,9 +38,14 @@ set $term alacritty
 # Your preferred application launcher
 # Note: pass the final command to swaymsg so that the resulting window can be opened
 # on the original workspace that the command was run on.
-#set $menu dmenu_path | dmenu | xargs swaymsg exec --
-set $menu BEMENU_BACKEND=wayland bemenu-run -i -p '>' --tf $color_fg_normal --hf $color_fg_primary
-set $menu-desktop j4-dmenu-desktop --term="$term -e" --dmenu="BEMENU_BACKEND=wayland bemenu -i -p '>' --tf $color_fg_normal --hf $color_fg_primary"
+set $bemenu_vars \
+    BEMENU_BACKEND=wayland \
+    BEMENU_OPTS="-H 20 -i -p '>' \
+        --tf $color_fg_normal --tb $color_fg_primary \
+        --hf $color_fg_normal --hb $color_fg_primary"
+
+set $menu $bemenu_vars bemenu-run
+set $menu_desktop $bemenu_vars j4-dmenu-desktop --term="$term -e" --dmenu="bemenu"
 
 ### Output configuration
 #
@@ -64,6 +70,7 @@ output "Elgato Systems LLC Elgato 4K X 0x00000001" scale 1
 #   output HDMI-A-1 resolution 1920x1080 position 1920,0
 #
 # You can get the names of your outputs by running: swaymsg -t get_outputs
+set $laptopDP eDP-1
 
 ### Idle configuration
 exec swayidle -w \
@@ -87,6 +94,11 @@ set $locksoff	swayidle -w  \
 		timeout 1 "$lock" \
 		timeout 2 'swaymsg "output * dpms off"' \
 		resume 'swaymsg "output * dpms on"; pkill -nx swayidle'
+
+# disable the screen if lid is closed, enable again if it is open.
+bindswitch --reload --locked lid:on output $laptopDP disable
+bindswitch --reload --locked lid:off output $laptopDP enable
+
 
 set $Pause-break  System (l)lock, (k) locktoblack, (e) exit, (s) suspend, (r) reboot, (Return) shutdown
 mode "$Pause-break" {
@@ -137,7 +149,7 @@ input type:touchpad {
     bindsym $mod+Shift+q kill
 
     # Start your launcher
-    bindsym $mod+d exec $menu-desktop
+    bindsym $mod+d exec $menu_desktop
     bindsym $mod+Shift+d exec $menu
 
     # Drag floating windows by holding down $mod and left mouse button.
