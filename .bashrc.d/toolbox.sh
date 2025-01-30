@@ -12,6 +12,9 @@ if [ -f /run/.toolboxenv ]; then
     export PATH=$PATH:~/.luarocks/bin/
     # export rootless user socket as DOCKER_HOST
     export DOCKER_HOST=unix://$XDG_RUNTIME_DIR/podman/podman.sock
+    # disable ryuk it does not work with podman unfortunately
+    # see (https://github.com/testcontainers/moby-ryuk/issues/23)
+    export TESTCONTAINERS_RYUK_DISABLED=true
 
     #############################################
     # configure dotnet
