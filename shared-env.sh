@@ -53,4 +53,5 @@ org.gnome.World.Secrets
 org.kde.kdenlive
 org.kde.krita
 org.godotengine.Godot
+org.freecad.FreeCAD
 "
