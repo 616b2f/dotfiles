@@ -2,7 +2,6 @@ local dap = require('dap')
 local reg = require('mason-registry')
 
 -- setup icons
--- vim.fn.sign_define('DapBreakpoint', {text='', texthl='', linehl='', numhl=''})
 vim.api.nvim_set_hl(0, 'DapBreakpoint', { fg='#3d59a1' })
 vim.api.nvim_set_hl(0, 'DapLogPoint', { fg='#3d59a1' })
 vim.api.nvim_set_hl(0, 'DapStopped', { fg='#9ece6a' })
@@ -74,27 +73,18 @@ if (reg.is_installed('netcoredbg')) then
             env = {
               ASPNETCORE_ENVIRONMENT = function()
                   return "Development"
-              end,
+              end
             },
-        },
-        {
-            name = "debug unittests - netcoredbg",
-            type = "coreclr",
-            request = "attach",
-            processId  = require('dap.utils').pick_process,
-            justMyCode = true, -- set to `true` in debug configuration and `false` in release configuration
         },
         {
             name = "attach - netcoredbg",
             type = "coreclr",
             request = "attach",
-            processId  = function()
-                return vim.fn.input('Process ID: ')
-            end,
-            justMyCode = true, -- set to `true` in debug configuration and `false` in release configuration
             -- mode = "local",
             -- cwd = "${workspaceFolder}",
+            processId  = require('dap.utils').pick_process,
             args = {}
+            -- justMyCode = true, -- set to `true` in debug configuration and `false` in release configuration
         },
         {
             name = "Skaffold Debug",
