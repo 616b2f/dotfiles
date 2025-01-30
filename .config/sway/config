@@ -18,9 +18,16 @@ set $color_fg_normal '#ffffff'
 
 ### Variables
 #
-# Logo key. Use Mod1 for Alt.
+# Logo key. 
+# Use
+# Mod1=Alt
+# Mod4=Superkey
 set $mod Mod4
+# define moonlander keys
+set $meh Mod1+Shift+Ctrl
+set $hyper Mod1+Shift+Ctrl+Mod4
 # Home row direction keys, like vim
+#
 set $left h
 set $down j
 set $up k
@@ -64,17 +71,20 @@ exec swayidle -w \
          timeout 600 'swaymsg "output * dpms off"' \
          resume 'swaymsg "output * dpms on"' \
          before-sleep 'swaylock -f -c 000000' \
-         lock 'swaylock -f -c 000000' \
+         lock 'swaylock -f -c 000000'
 
 # This will lock your screen after 300 seconds of inactivity, then turn off
 # your displays after another 600 seconds, and turn your screens back on when
+# resumed. It will also lock your screen before your computer goes to sleep.
+# This will lock your screen after 300 seconds (5min) of inactivity, then turn off
+# your displays after another 300 seconds, and turn your screens back on when
 # resumed. It will also lock your screen before your computer goes to sleep.
 
 # add mode for poweroff, reboot, lock etc. 
 set $wmexit 	swaymsg exit
 set $lock 		swaylock -e -f -c 000000 -i ~/.config/wall.png -t
 set $locksoff	swayidle -w  \
-		timeout 1 'swaylock -e -f -c 000000 -i ~/.config/wall.png -t' \
+		timeout 1 "$lock" \
 		timeout 2 'swaymsg "output * dpms off"' \
 		resume 'swaymsg "output * dpms on"; pkill -nx swayidle'
 
@@ -244,6 +254,15 @@ input type:touchpad {
     # If there are multiple scratchpad windows, this command cycles through them.
     bindsym $mod+minus scratchpad show
 #
+# Screenshots
+#
+#set $flameshot flatpak run --env=XDG_CURRENT_DESKTOP=sway org.flameshot.Flameshot gui -r | wl-copy
+set $flameshot XDG_CURRENT_DESKTOP=sway flameshot gui -r | wl-copy
+# bindsym $mod+Shift+s exec grim -g "$(slurp)" - | wl-copy
+bindsym $mod+Shift+s exec $flameshot
+# mod1 is alt
+bindsym $meh+s exec $flameshot
+#
 # Resizing containers:
 #
 mode "resize" {
@@ -269,8 +288,9 @@ mode "resize" {
 bindsym $mod+r mode "resize"
 
 ## Application window config
-#
+# 
 for_window [app_id="nm-connection-editor"] floating enable
+for_window [title="Calculator"] floating enable
 
 #
 # Screenshots:
@@ -284,11 +304,11 @@ for_window [app_id="nm-connection-editor"] floating enable
 # bindsym $mod+Shift+p exec grimshot save area
 # bindsym $mod+Mod1+p  exec grimshot save output
 # bindsym $mod+Ctrl+p  exec grimshot save window
-bindsym $mod+Shift+s exec flatpak run --env=XDG_CURRENT_DESKTOP=sway org.flameshot.Flameshot gui -r | wl-copy
 
 # remove title bar for all applications
 # pixel means we want a small border around windows
-default_border pixel
+default_border pixel 3
+client.focused $color_fg_primary #285577 #ffffff #2e9ef4 #285577
 
 # Status Bar:
 #
@@ -311,6 +331,4 @@ bar {
 
 include /etc/sway/config.d/*
 
-# start polkit for GUIs that need root privileges
 exec /usr/libexec/polkit-gnome-authentication-agent-1
-
