@@ -145,19 +145,15 @@ input type:touchpad {
 #
 # Multimedia:
 #
-    # bindsym XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ +5%
-    # bindsym XF86AudioLowerVolume exec pactl set-sink-volume @DEFAULT_SINK@ -5%
-    # bindsym XF86AudioMute exec pactl set-sink-mute @DEFAULT_SINK@ toggle
-    bindsym XF86AudioRaiseVolume exec amixer set Master 5%+
-    bindsym XF86AudioLowerVolume exec amixer set Master 5%-
-    bindsym XF86AudioMute exec amixer set Master toggle
-
+    bindsym XF86AudioRaiseVolume exec wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+
+    bindsym XF86AudioLowerVolume exec wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
+    bindsym XF86AudioMute exec wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+    bindsym XF86AudioMicMute exec wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
 #
 # Brightness control
 #
-		bindsym XF86MonBrightnessUp exec brightnessctl s 1%+
-		bindsym XF86MonBrightnessDown exec brightnessctl s 1%-
-
+    bindsym XF86MonBrightnessUp exec brightnessctl s 1%+
+    bindsym XF86MonBrightnessDown exec brightnessctl s 1%-
 #
 # Moving around:
 #
@@ -234,6 +230,7 @@ input type:touchpad {
 
     # Move focus to the parent container
     bindsym $mod+a focus parent
+    bindsym $mod+c focus child
 #
 # Scratchpad:
 #
