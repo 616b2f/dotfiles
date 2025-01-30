@@ -1,6 +1,5 @@
 local dap = require('dap')
 local reg = require('mason-registry')
-local api = vim.api
 
 -- setup icons
 -- vim.fn.sign_define('DapBreakpoint', {text='', texthl='', linehl='', numhl=''})
@@ -68,6 +67,7 @@ if (reg.is_installed('netcoredbg')) then
             type = "coreclr",
             name = "launch - netcoredbg",
             request = "launch",
+            cwd = "${workspaceFolder}",
             program = function()
                 return vim.fn.input('Path to dll: ', vim.fn.getcwd() .. '/bin/Debug/', 'file')
             end,
@@ -92,6 +92,9 @@ if (reg.is_installed('netcoredbg')) then
                 return vim.fn.input('Process ID: ')
             end,
             justMyCode = true, -- set to `true` in debug configuration and `false` in release configuration
+            -- mode = "local",
+            -- cwd = "${workspaceFolder}",
+            args = {}
         },
         {
             name = "Skaffold Debug",
