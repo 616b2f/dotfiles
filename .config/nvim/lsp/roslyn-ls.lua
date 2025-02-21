@@ -80,33 +80,37 @@ local function on_attach(client, bufnr)
     client.server_capabilities.semanticTokensProvider = true
   end
 
-
-  -- try find solutions root first
-  local root_dir = nil
-  root_dir = vim.fs.root(0, function (name, path)
-    local match = name:match("%.sln$") ~= nil
-    if match then
-      local sln_file = vim.fs.joinpath(path, name)
-      on_init_sln(client, sln_file)
-    end
-    return match
-  end)
-
-  if not root_dir then
+  local bufname = vim.api.nvim_buf_get_name(bufnr)
+  -- don't try to find sln or csproj for files from libraries
+  -- outside of the project
+  if not bufname:match("^/tmp/MetadataAsSource/") then
     -- try find solutions root first
-    root_dir = vim.fs.root(0, function (name, path)
-      local match = name:match("%.csproj$") ~= nil
+    local root_dir = nil
+    root_dir = vim.fs.root(bufnr, function (name, path)
+      local match = name:match("%.sln$") ~= nil
       if match then
-        local csproj_file = vim.fs.joinpath(path, name)
-        on_init_project(client, {csproj_file})
+        local sln_file = vim.fs.joinpath(path, name)
+        on_init_sln(client, sln_file)
       end
       return match
     end)
+
+    if not root_dir then
+      -- try find solutions root first
+      root_dir = vim.fs.root(bufnr, function (name, path)
+        local match = name:match("%.csproj$") ~= nil
+        if match then
+          local csproj_file = vim.fs.joinpath(path, name)
+          on_init_project(client, {csproj_file})
+        end
+        return match
+      end)
+    end
+
+    assert(root_dir, "no solution and no csproj found")
+
+    client.root_dir = root_dir
   end
-
-  assert(root_dir, "no solution and no csproj found")
-
-  client.root_dir = root_dir
 end
 
 
@@ -261,5 +265,6 @@ local function roslyn_config()
   return config
 end
 
-vim.lsp.config("roslyn-ls", roslyn_config())
+-- vim.lsp.config("roslyn-ls", roslyn_config())
+return roslyn_config()
 

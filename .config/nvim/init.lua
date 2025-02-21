@@ -249,38 +249,143 @@ require('lazy').setup({
 
   -- debugger adapter protocoll support
   'mfussenegger/nvim-dap',
-  'rcarriga/nvim-dap-ui',
-
-  -- unit test plugins
   {
-    "nvim-neotest/neotest",
-    -- dir = "~/devel/neotest",
-    -- dev = true,
+    'rcarriga/nvim-dap-ui',
     dependencies = {
       "nvim-neotest/nvim-nio",
-      "nvim-lua/plenary.nvim",
-      "nvim-treesitter/nvim-treesitter",
-      "antoinemadec/FixCursorHold.nvim"
     }
   },
+
+
+  -- unit test plugins
+  -- {
+  --   "nvim-neotest/neotest",
+  --   -- dir = "~/devel/neotest",
+  --   -- dev = true,
+  --   dependencies = {
+  --     "nvim-neotest/nvim-nio",
+  --     "nvim-lua/plenary.nvim",
+  --     "nvim-treesitter/nvim-treesitter",
+  --     "antoinemadec/FixCursorHold.nvim"
+  --   }
+  -- },
   -- {
   --   dir = "~/devel/neotest-bsp"
   -- },
-  {
-    "Issafalcon/neotest-dotnet",
-    dependencies = {
-      {
-        "nvim-neotest/neotest",
-      },
-    }
-  },
+  -- {
+  --   "Issafalcon/neotest-dotnet",
+  --   dependencies = {
+  --     {
+  --       "nvim-neotest/neotest",
+  --     },
+  --   }
+  -- },
 
   -- file explorer like NERDtree
   {
     'nvim-tree/nvim-tree.lua',
     dependencies = {
       'nvim-tree/nvim-web-devicons', -- optional, for file icon
+      's1n7ax/nvim-window-picker'
+    },
+    config = function()
+      require("nvim-tree").setup({
+        update_cwd = false,
+        update_focused_file = {
+          update_cwd = false
+        },
+        view = {
+          width = 70
+        },
+        actions = {
+          open_file = {
+              window_picker = {
+                enable = true,
+                picker = require("window-picker").pick_window,
+            }
+          }
+        },
+        renderer = {
+          highlight_git = true, -- 0 by default, will enable file highlight for git attributes (can be used without the icons).
+          add_trailing = true,
+          icons = {
+            show = {
+              git = false,
+              folder = true,
+              file = true,
+              folder_arrow = true,
+            },
+            glyphs = { -- default shows no icon by default
+              git = {
+                unstaged = "✗",
+                staged = "✚",
+                unmerged = "═",
+                renamed = "➜",
+                untracked = "★"
+              },
+              folder = {
+                default = "",
+                open = "",
+                empty = "",
+                empty_open = ""
+              }
+            }
+          }
+        }
+      })
+    end
+  },
+
+  {
+    "s1n7ax/nvim-window-picker", -- for open_with_window_picker keymaps
+    version = "2.*",
+    opt = {
+      filter_rules = {
+        include_current_win = false,
+        autoselect_one = true,
+        -- filter using buffer options
+        bo = {
+          -- if the file type is one of following, the window will be ignored
+          filetype = { "neo-tree", "neo-tree-popup", "notify" },
+          -- if the buffer type is one of following, the window will be ignored
+          buftype = { "terminal", "quickfix" },
+        },
+      },
     }
+  },
+
+  {
+    '616b2f/neo-tree-tests',
+    dir = "~/devel/neo-tree-tests",
+    dev = true
+  },
+  {
+    "nvim-neo-tree/neo-tree.nvim",
+    branch = "v3.x",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-tree/nvim-web-devicons", -- not strictly required, but recommended
+      "MunifTanjim/nui.nvim",
+      "s1n7ax/nvim-window-picker",
+      "616b2f/neo-tree-tests"
+    },
+    config = function ()
+      require("neo-tree").setup({
+        sources = {
+            "filesystem",
+            "buffers",
+            "git_status",
+            "tests"
+        },
+        tests = {
+            -- The config for your source goes here. This is the same as any other source, plus whatever
+            -- special config options you add.
+            --window = {...}
+            --renderers = { ..}
+            --etc
+        }
+      })
+    end
   },
   {
     'gnikdroy/projections.nvim',
@@ -370,6 +475,12 @@ require('lazy').setup({
   {
     'stevearc/overseer.nvim',
     opts = {},
+  },
+
+  {
+    '616b2f/ak.nvim',
+    dir = "~/devel/ak.nvim",
+    dev = true
   },
 
   {
@@ -527,43 +638,6 @@ vim.o.cmdheight=2
 -- Having longer updatetime (default is 4000 ms = 4 s) leads to noticeable
 -- delays and poor user experience.
 vim.o.updatetime=300
-
-require'nvim-tree'.setup {
-  update_cwd = false,
-  update_focused_file = {
-    update_cwd = false
-  },
-  view = {
-    width = 70
-  },
-  renderer = {
-    highlight_git = true, -- 0 by default, will enable file highlight for git attributes (can be used without the icons).
-    add_trailing = true,
-    icons = {
-      show = {
-        git = false,
-        folder = true,
-        file = true,
-        folder_arrow = true,
-      },
-      glyphs = { -- default shows no icon by default
-        git = {
-          unstaged = "✗",
-          staged = "✚",
-          unmerged = "═",
-          renamed = "➜",
-          untracked = "★"
-        },
-        folder = {
-          default = "",
-          open = "",
-          empty = "",
-          empty_open = ""
-        }
-      }
-    }
-  }
-}
 
 -- Set statusbar
 local project_name_display = function ()
@@ -725,24 +799,20 @@ require('mason-tool-installer').setup {
   }
 }
 
-require("neotest").setup({
-  log_level = vim.log.levels.DEBUG,
-  adapters = {
-    require("neotest-dotnet")
-    -- require("neotest-bsp")({client_id=1})
-  },
-  -- consumers = {
-  --   overseer = require("neotest.consumers.overseer"),
-  -- },
-  icons = {
-    running_animated = { "/", "|", "\\", "-", "/", "|", "\\", "-" },
-    passed = "✔",
-    running = "🗘",
-    failed = "✖",
-    skipped = "ﰸ",
-    unknown = "?",
-  }
-})
+-- require("neotest").setup({
+--   log_level = vim.log.levels.DEBUG,
+--   adapters = {
+--     require("neotest-dotnet")
+--   },
+--   icons = {
+--     running_animated = { "/", "|", "\\", "-", "/", "|", "\\", "-" },
+--     passed = "✔",
+--     running = "🗘",
+--     failed = "✖",
+--     skipped = "ﰸ",
+--     unknown = "?",
+--   }
+-- })
 
 vim.api.nvim_exec2([[
   hi link LspReferenceRead Visual
@@ -756,6 +826,7 @@ vim.api.nvim_exec2([[
 -- custom config
 vim.lsp.set_log_level("debug")
 -- require('completion-config')
+vim.lsp.set_log_level("TRACE")
 require('lsp-config')
 require('dap-config')
 require('formatter-config')
@@ -899,17 +970,18 @@ vim.keymap.set('n', '<leader>dsi', require('dap').step_into)
 vim.keymap.set('n', '<leader>dso', require('dap').step_out)
 vim.keymap.set('n', '<leader>do', require('dap').repl.open)
 vim.keymap.set('n', '<leader>drl', require('dap').run_last)
-vim.keymap.set('n', '<leader>dtt', function() require('neotest').run.run({suite=true,strategy="dap"}) end, {desc="my: run test for the whole suite"})
-vim.keymap.set('n', '<leader>dtf', function() require('neotest').run.run({vim.fn.expand('%'),suite=false,strategy='dap'}) end, {desc="my: run test for current file in debug mode"})
-vim.keymap.set('n', '<leader>dtn', function() require('neotest').run.run({strategy='dap'}) end, {desc="my: run nearest test in debug mode"})
+-- vim.keymap.set('n', '<leader>dtt', function() require('neotest').run.run({suite=true,strategy="dap"}) end, {desc="my: run test for the whole suite"})
+-- vim.keymap.set('n', '<leader>dtf', function() require('neotest').run.run({vim.fn.expand('%'),suite=false,strategy='dap'}) end, {desc="my: run test for current file in debug mode"})
+-- vim.keymap.set('n', '<leader>dtn', function() require('neotest').run.run({strategy='dap'}) end, {desc="my: run nearest test in debug mode"})
 
 -- keybinding for neotest
-vim.keymap.set('n', '<leader>tt', require("neotest").summary.toggle, { desc="my: toggle test summary window"})
-vim.keymap.set('n', '<leader>tn', require("neotest").run.run, { desc = "my: run nearest test"})
-vim.keymap.set('n', '<leader>ts', require("neotest").run.stop)
-vim.keymap.set('n', '<leader>ta', require("neotest").run.attach)
-vim.keymap.set('n', '<leader>tf', function() require('neotest').run.run({vim.fn.expand('%')}) end, {desc="my: run test in current file"})
-vim.keymap.set('n', '<leader>ts', function() require('neotest').run.run({suite=true}) end, {desc="my: run test for the whole suite"})
+-- vim.keymap.set('n', '<leader>tt', require("neotest").summary.toggle, { desc="my: toggle test summary window"})
+vim.keymap.set('n', '<leader>tt', function() require("neo-tree.command").execute({source="tests", toggle=true, position="right"}) end, { desc="my: toggle test tree"})
+-- vim.keymap.set('n', '<leader>tn', require("neotest").run.run, { desc = "my: run nearest test"})
+-- vim.keymap.set('n', '<leader>ts', require("neotest").run.stop)
+-- vim.keymap.set('n', '<leader>ta', require("neotest").run.attach)
+-- vim.keymap.set('n', '<leader>tf', function() require('neotest').run.run({vim.fn.expand('%')}) end, {desc="my: run test in current file"})
+-- vim.keymap.set('n', '<leader>ts', function() require('neotest').run.run({suite=true}) end, {desc="my: run test for the whole suite"})
 
 -- diagnostic
 vim.keymap.set('n', '<leader>ee', vim.diagnostic.open_float)
@@ -974,7 +1046,7 @@ bsp.setup({
     level = vim.log.levels.DEBUG
   },
   ui = {
-    enable = true
+    enable = false
   },
   plugins = {
     fidget = true
@@ -988,7 +1060,9 @@ vim.api.nvim_create_autocmd("User",
   callback = function()
     vim.keymap.set('n', '<leader>bb', require('bsp').compile_build_target, { desc = 'my: compile build target with build server' })
     vim.keymap.set('n', '<leader>br', require('bsp').run_build_target, { desc = 'my: run build target with build server' })
-    vim.keymap.set('n', '<leader>bt', require('bsp').test_build_target, { desc = 'my: test build target with build server' })
+    vim.keymap.set('n', '<leader>btt', require('bsp').test_build_target, { desc = 'my: test build target with build server' })
+    vim.keymap.set('n', '<leader>btc', require('bsp').test_case_target, { desc = 'my: select specific test case to run with build server' })
+    vim.keymap.set('n', '<leader>btf', require('bsp').test_file_target, { desc = 'my: select specific file to run with build server' })
     vim.keymap.set('n', '<leader>bc', require('bsp').cleancache_build_target, { desc = 'my: clean cache build target with build server' })
   end
 })
