@@ -53,7 +53,7 @@ require('lazy').setup({
         "github:616b2f/mason-registry-bsp"
         -- "file:~/devel/mason-registry"
       }
-    }
+   }
   },
   "williamboman/mason-lspconfig.nvim", -- for better integration with lspconfig
   "neovim/nvim-lspconfig", -- Collection of configurations for built-in LSP client
@@ -63,7 +63,7 @@ require('lazy').setup({
     branch = "main",
     opts = {
       notification = {
-        override_vim_notify = false,
+        override_vim_notify = true,
         view = {
           stack_upwards = false
         },
@@ -71,8 +71,8 @@ require('lazy').setup({
           align = "top"
         }
       },
-    } -- `opts = {}` is the same as calling `require('fidget').setup({})`
-  }, -- Useful status updates for LSP
+    }
+  },
 
   -- specific for csharp allows goto definition for decompiled binaries
   "Hoffs/omnisharp-extended-lsp.nvim",
@@ -201,8 +201,16 @@ require('lazy').setup({
           Event = '',
           Operator = '',
           TypeParameter = '',
-        }
-      }
+        },
+      },
+
+      completion = {
+        -- experimental auto-brackets support
+        accept = { auto_brackets = { enabled = true } },
+        documentation = { auto_show = true }
+      },
+
+      signature = { enabled = false },
     },
     -- allows extending the enabled_providers array elsewhere in your config
     -- without having to redefining it
@@ -356,8 +364,8 @@ require('lazy').setup({
 
   {
     '616b2f/neo-tree-tests',
-    dir = "~/devel/neo-tree-tests",
-    dev = true
+    -- dir = "~/devel/neo-tree-tests",
+    -- dev = true
   },
   {
     "nvim-neo-tree/neo-tree.nvim",
@@ -369,23 +377,21 @@ require('lazy').setup({
       "s1n7ax/nvim-window-picker",
       "616b2f/neo-tree-tests"
     },
-    config = function ()
-      require("neo-tree").setup({
-        sources = {
-            "filesystem",
-            "buffers",
-            "git_status",
-            "tests"
-        },
-        tests = {
-            -- The config for your source goes here. This is the same as any other source, plus whatever
-            -- special config options you add.
-            --window = {...}
-            --renderers = { ..}
-            --etc
-        }
-      })
-    end
+    opts = {
+      sources = {
+          "filesystem",
+          "buffers",
+          "git_status",
+          "tests"
+      },
+      tests = {
+          -- The config for your source goes here. This is the same as any other source, plus whatever
+          -- special config options you add.
+          --window = {...}
+          --renderers = { ..}
+          --etc
+      }
+    }
   },
   {
     'gnikdroy/projections.nvim',
@@ -479,25 +485,44 @@ require('lazy').setup({
 
   {
     '616b2f/ak.nvim',
-    dir = "~/devel/ak.nvim",
-    dev = true
+    -- dir = "~/devel/ak.nvim",
+    -- dev = true
   },
 
   {
     '616b2f/bsp.nvim',
-    dir = "~/devel/bsp.nvim",
-    dev = true
-  },
-
-  -- Useful status updates for LSP
-  {
-    'j-hui/fidget.nvim',
-    branch = "main",
+    -- dir = "~/devel/bsp.nvim",
+    -- dev = true
+    ---@type bsp.BspSetupConfig
     opts = {
-      notification = {
-        override_vim_notify = true
+      log = {
+        level = vim.log.levels.DEBUG
+      },
+      ui = {
+        enable = false
+      },
+      plugins = {
+        fidget = true
       }
-    }, -- `opts = {}` is the same as calling `require('fidget').setup({})` branch = "main"
+    },
+    config = function(_, opts)
+      vim.api.nvim_create_autocmd("User",
+      {
+        group = vim.api.nvim_create_augroup('UserBspConfig', {clear=true}),
+        -- group = 'bsp',
+        pattern = 'BspAttach',
+        callback = function()
+          vim.keymap.set('n', '<leader>bb', require('bsp').compile_build_target, { desc = 'my: compile build target with build server' })
+          vim.keymap.set('n', '<leader>br', require('bsp').run_build_target, { desc = 'my: run build target with build server' })
+          vim.keymap.set('n', '<leader>btt', require('bsp').test_build_target, { desc = 'my: test build target with build server' })
+          vim.keymap.set('n', '<leader>btc', require('bsp').test_case_target, { desc = 'my: select specific test case to run with build server' })
+          vim.keymap.set('n', '<leader>btf', require('bsp').test_file_target, { desc = 'my: select specific file to run with build server' })
+          vim.keymap.set('n', '<leader>bc', require('bsp').cleancache_build_target, { desc = 'my: clean cache build target with build server' })
+        end
+      })
+
+      require("bsp").setup(opts)
+    end
   },
 
   -- show markdown in a nicer way
@@ -1037,34 +1062,6 @@ vim.api.nvim_create_autocmd('LspAttach', {
       end
     end
   end,
-})
-
--- configure global logging 
-local bsp = require("bsp")
-bsp.setup({
-  log = {
-    level = vim.log.levels.DEBUG
-  },
-  ui = {
-    enable = false
-  },
-  plugins = {
-    fidget = true
-  }
-})
-
-vim.api.nvim_create_autocmd("User",
-{
-  group = 'bsp',
-  pattern = 'BspAttach',
-  callback = function()
-    vim.keymap.set('n', '<leader>bb', require('bsp').compile_build_target, { desc = 'my: compile build target with build server' })
-    vim.keymap.set('n', '<leader>br', require('bsp').run_build_target, { desc = 'my: run build target with build server' })
-    vim.keymap.set('n', '<leader>btt', require('bsp').test_build_target, { desc = 'my: test build target with build server' })
-    vim.keymap.set('n', '<leader>btc', require('bsp').test_case_target, { desc = 'my: select specific test case to run with build server' })
-    vim.keymap.set('n', '<leader>btf', require('bsp').test_file_target, { desc = 'my: select specific file to run with build server' })
-    vim.keymap.set('n', '<leader>bc', require('bsp').cleancache_build_target, { desc = 'my: clean cache build target with build server' })
-  end
 })
 
 vim.lsp.enable('roslyn-ls')

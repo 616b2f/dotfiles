@@ -36,6 +36,9 @@ sudo dnf install -y gcc libstdc++-static
 # needed for file-watcher implementation in neovim
 sudo dnf install -y inotify-tools
 
+# deps for build neovim from source
+sudo dnf install -y gettext-devel
+
 # install neovim nightly
 sudo dnf copr enable -y agriffis/neovim-nightly
 
