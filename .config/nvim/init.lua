@@ -112,7 +112,7 @@ require('lazy').setup({
     -- optional: provides snippets for the snippet source
     dependencies = 'rafamadriz/friendly-snippets',
     -- use a release tag to download pre-built binaries
-    version = '*',
+    version = 'v1.1.*',
     -- version = 'v0.*',
     -- OR build from source, requires nightly: https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust
     -- build = 'cargo build --release',
@@ -122,9 +122,9 @@ require('lazy').setup({
     ---@module 'blink.cmp'
     ---@type blink.cmp.Config
     opts = {
-      enabled = function ()
-        return true
-      end,
+      -- enabled = function ()
+      --   return true
+      -- end,
       -- 'default' for mappings similar to built-in completion
       -- 'super-tab' for mappings similar to vscode (tab to accept, arrow keys to navigate)
       -- 'enter' for mappings similar to 'super-tab' but with 'enter' to accept
@@ -136,36 +136,13 @@ require('lazy').setup({
         ['<c-j>'] = { 'snippet_backward', 'fallback' },
       },
 
-      signature = {
-        enabled = true,
-      },
-
       completion = {
         -- experimental auto-brackets support
         accept = { auto_brackets = { enabled = true } },
         documentation = { auto_show = true }
       },
 
-      -- fuzzy = {
-      --   prebuilt_binaries = {
-      --     -- Whether or not to automatically download a prebuilt binary from github. If this is set to `false`
-      --     -- you will need to manually build the fuzzy binary dependencies by running `cargo build --release`
-      --     download = true,
-      --     -- When downloading a prebuilt binary, force the downloader to resolve this version. If this is unset
-      --     -- then the downloader will attempt to infer the version from the checked out git tag (if any).
-      --     --
-      --     -- Beware that if the FFI ABI changes while tracking main then this may result in blink breaking.
-      --     force_version = "v0.7.6",
-      --     -- When downloading a prebuilt binary, force the downloader to use this system triple. If this is unset
-      --     -- then the downloader will attempt to infer the system triple from `jit.os` and `jit.arch`.
-      --     -- Check the latest release for all available system triples
-      --     --
-      --     -- Beware that if the FFI ABI changes while tracking main then this may result in blink breaking.
-      --     force_system_triple = nil,
-      --     -- Extra arguments that will be passed to curl like { 'curl', ..extra_curl_args, ..built_in_args }
-      --     extra_curl_args = {}
-      --   },
-      -- },
+      signature = { enabled = false },
 
       appearance = {
         use_nvim_cmp_as_default = true,
@@ -201,16 +178,8 @@ require('lazy').setup({
           Event = '',
           Operator = '',
           TypeParameter = '',
-        },
-      },
-
-      completion = {
-        -- experimental auto-brackets support
-        accept = { auto_brackets = { enabled = true } },
-        documentation = { auto_show = true }
-      },
-
-      signature = { enabled = false },
+        }
+      }
     },
     -- allows extending the enabled_providers array elsewhere in your config
     -- without having to redefining it
@@ -391,7 +360,10 @@ require('lazy').setup({
           --renderers = { ..}
           --etc
       }
-    }
+    },
+    config = function(_, opts)
+      require("neo-tree").setup(opts)
+    end
   },
   {
     'gnikdroy/projections.nvim',
@@ -897,6 +869,7 @@ vim.keymap.set('n', '<space>F', function() require'hop'.hint_char1({ direction =
 -- require('telescope').load_extension 'fzf'
 
 -- telescope keybindins
+vim.keymap.set('n', '<leader>ec', function() require('telescope.builtin').find_files({cwd=vim.fn.stdpath('config')}) end)
 vim.keymap.set('n', '<leader>ff', function() require('telescope.builtin').find_files({hidden=true,no_ignore=false,no_ignore_parent=false}) end)
 vim.keymap.set('n', '<leader>fw', function() require('telescope.builtin').grep_string({search=vim.fn.expand('<cword>')}) end)
 vim.keymap.set('n', '<leader>fb', function() require('telescope.builtin').buffers({show_all_buffers=true}) end)
