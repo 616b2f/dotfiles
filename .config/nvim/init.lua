@@ -45,18 +45,22 @@ require('lazy').setup({
   -- nvim lsp support
   {
     "williamboman/mason.nvim",
-    -- dir = "~/devel/mason.nvim",
-    -- dev = true,
+    dir = "~/devel/mason.nvim",
+    dev = true,
     opts = {
       registries = {
         "github:mason-org/mason-registry",
+        "file:~/devel/mason-registry",
         "github:616b2f/mason-registry-bsp"
-        -- "file:~/devel/mason-registry"
       }
-   }
+    }
   },
   "williamboman/mason-lspconfig.nvim", -- for better integration with lspconfig
-  "neovim/nvim-lspconfig", -- Collection of configurations for built-in LSP client
+  {
+    "neovim/nvim-lspconfig", -- Collection of configurations for built-in LSP client
+    dir = "~/devel/nvim-lspconfig/",
+    dev = true,
+  },
   "WhoIsSethDaniel/mason-tool-installer.nvim", -- for easier installing tools
   {
     'j-hui/fidget.nvim',
@@ -71,8 +75,8 @@ require('lazy').setup({
           align = "top"
         }
       },
-    }
-  },
+    } -- `opts = {}` is the same as calling `require('fidget').setup({})`
+  }, -- Useful status updates for LSP
 
   -- specific for csharp allows goto definition for decompiled binaries
   "Hoffs/omnisharp-extended-lsp.nvim",
@@ -112,28 +116,18 @@ require('lazy').setup({
     -- optional: provides snippets for the snippet source
     dependencies = 'rafamadriz/friendly-snippets',
     -- use a release tag to download pre-built binaries
-    version = 'v1.1.*',
-    -- version = 'v0.*',
-    -- OR build from source, requires nightly: https://rust-lang.github.io/rustup/concepts/channels.html#working-with-nightly-rust
-    -- build = 'cargo build --release',
-    -- If you use nix, you can build from source using latest nightly rust with:
-    -- build = 'nix run .#build-plugin',
-
+    version = '*',
     ---@module 'blink.cmp'
     ---@type blink.cmp.Config
     opts = {
-      -- enabled = function ()
-      --   return true
-      -- end,
-      -- 'default' for mappings similar to built-in completion
-      -- 'super-tab' for mappings similar to vscode (tab to accept, arrow keys to navigate)
-      -- 'enter' for mappings similar to 'super-tab' but with 'enter' to accept
-      -- see the "default configuration" section below for full documentation on how to define
-      -- your own keymap.
       keymap = {
         preset = 'default',
         ['<c-k>'] = { 'snippet_forward', 'fallback' },
         ['<c-j>'] = { 'snippet_backward', 'fallback' },
+      },
+
+      signature = {
+        enabled = true,
       },
 
       completion = {
@@ -141,8 +135,6 @@ require('lazy').setup({
         accept = { auto_brackets = { enabled = true } },
         documentation = { auto_show = true }
       },
-
-      signature = { enabled = false },
 
       appearance = {
         use_nvim_cmp_as_default = true,
@@ -333,8 +325,8 @@ require('lazy').setup({
 
   {
     '616b2f/neo-tree-tests',
-    -- dir = "~/devel/neo-tree-tests",
-    -- dev = true
+    dir = "~/devel/neo-tree-tests",
+    dev = true
   },
   {
     "nvim-neo-tree/neo-tree.nvim",
@@ -457,31 +449,33 @@ require('lazy').setup({
 
   {
     '616b2f/ak.nvim',
-    -- dir = "~/devel/ak.nvim",
-    -- dev = true
+    dir = "~/devel/ak.nvim",
+    dev = true
   },
 
   {
     '616b2f/bsp.nvim',
-    -- dir = "~/devel/bsp.nvim",
-    -- dev = true
-    ---@type bsp.BspSetupConfig
+    dir = "~/devel/bsp.nvim",
+    dev = true,
     opts = {
       log = {
         level = vim.log.levels.DEBUG
       },
       ui = {
-        enable = false
+        enable = true
+      },
+      on_start = {
+        test_case_discovery = false
       },
       plugins = {
         fidget = true
       }
     },
-    config = function(_, opts)
+    config = function (_, opts)
+      require('bsp').setup(opts)
       vim.api.nvim_create_autocmd("User",
       {
-        group = vim.api.nvim_create_augroup('UserBspConfig', {clear=true}),
-        -- group = 'bsp',
+        group = 'bsp',
         pattern = 'BspAttach',
         callback = function()
           vim.keymap.set('n', '<leader>bb', require('bsp').compile_build_target, { desc = 'my: compile build target with build server' })
@@ -492,8 +486,6 @@ require('lazy').setup({
           vim.keymap.set('n', '<leader>bc', require('bsp').cleancache_build_target, { desc = 'my: clean cache build target with build server' })
         end
       })
-
-      require("bsp").setup(opts)
     end
   },
 
@@ -510,6 +502,7 @@ require('lazy').setup({
 
 -- enable filetype.lua and disable filetype.vim
 vim.g.do_filetype_lua = 1
+
 
 vim.o.title = true
 vim.o.titlestring = "nvim: %t"
@@ -869,12 +862,12 @@ vim.keymap.set('n', '<space>F', function() require'hop'.hint_char1({ direction =
 -- require('telescope').load_extension 'fzf'
 
 -- telescope keybindins
-vim.keymap.set('n', '<leader>ec', function() require('telescope.builtin').find_files({cwd=vim.fn.stdpath('config')}) end)
 vim.keymap.set('n', '<leader>ff', function() require('telescope.builtin').find_files({hidden=true,no_ignore=false,no_ignore_parent=false}) end)
 vim.keymap.set('n', '<leader>fw', function() require('telescope.builtin').grep_string({search=vim.fn.expand('<cword>')}) end)
 vim.keymap.set('n', '<leader>fb', function() require('telescope.builtin').buffers({show_all_buffers=true}) end)
+vim.keymap.set('n', '<leader>ec', function() require('telescope.builtin').find_files({cwd=vim.fn.stdpath('config')}) end, {desc="my: find config files in nvim directory"})
 vim.keymap.set('n', '<leader>fh', require('telescope.builtin').help_tags)
-vim.keymap.set('n', '<leader>fgg', require('telescope.builtin').live_grep)
+vim.keymap.set('n', '<leader>fgg', require('ak').ui.code_search, {desc="my: custom code search with glob filter"})
 vim.keymap.set('n', '<leader>fgb', require('telescope.builtin').git_branches)
 vim.keymap.set('n', '<leader>fgc', require('telescope.builtin').git_commits)
 vim.keymap.set('n', '<leader>fi', require('telescope.builtin').lsp_implementations)
@@ -1036,7 +1029,5 @@ vim.api.nvim_create_autocmd('LspAttach', {
     end
   end,
 })
-
-vim.lsp.enable('roslyn-ls')
 
 -- vim: ts=2 sts=2 sw=2 et
