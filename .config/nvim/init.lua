@@ -2,14 +2,14 @@
 vim.loader.enable()
 
 -- Install LazyVim
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+local lazypath = vim.fn.stdpath('data') .. '/lazy/lazy.nvim'
 if not vim.uv.fs_stat(lazypath) then
   vim.fn.system({
-    "git",
-    "clone",
-    "--filter=blob:none",
-    "https://github.com/folke/lazy.nvim.git",
-    "--branch=stable", -- latest stable release
+    'git',
+    'clone',
+    '--filter=blob:none',
+    'https://github.com/folke/lazy.nvim.git',
+    '--branch=stable', -- latest stable release
     lazypath,
   })
 end
@@ -20,7 +20,7 @@ require('lazy').setup({
   { 'nvim-telescope/telescope.nvim', dependencies = { 'nvim-lua/plenary.nvim' } },
   { 'nvim-telescope/telescope-ui-select.nvim',
     config = function ()
-      require("telescope").load_extension("ui-select")
+      require('telescope').load_extension('ui-select')
     end
   },
 
@@ -31,7 +31,7 @@ require('lazy').setup({
   -- git plugin
   {
     'NeogitOrg/neogit',
-    branch = "master",
+    branch = 'master',
     dependencies = {
       'nvim-lua/plenary.nvim',
       'sindrets/diffview.nvim'
@@ -44,28 +44,28 @@ require('lazy').setup({
 
   -- nvim lsp support
   {
-    "williamboman/mason.nvim",
-    dir = "~/devel/mason.nvim",
+    'williamboman/mason.nvim',
+    dir = '~/devel/mason.nvim',
     dev = true,
     opts = {
       registries = {
-        -- "github:mason-org/mason-registry",
-        -- "github:616b2f/mason-registry",
-        "file:~/devel/mason-registry",
-        "github:616b2f/mason-registry-bsp"
+        -- 'github:mason-org/mason-registry',
+        -- 'github:616b2f/mason-registry',
+        'file:~/devel/mason-registry',
+        'github:616b2f/mason-registry-bsp'
       }
     }
   },
-  "williamboman/mason-lspconfig.nvim", -- for better integration with lspconfig
+  'williamboman/mason-lspconfig.nvim', -- for better integration with lspconfig
   {
-    "neovim/nvim-lspconfig", -- Collection of configurations for built-in LSP client
-    dir = "~/devel/nvim-lspconfig",
+    'neovim/nvim-lspconfig', -- Collection of configurations for built-in LSP client
+    dir = '~/devel/nvim-lspconfig',
     dev = true
   },
-  "WhoIsSethDaniel/mason-tool-installer.nvim", -- for easier installing tools
+  'WhoIsSethDaniel/mason-tool-installer.nvim', -- for easier installing tools
   {
     'j-hui/fidget.nvim',
-    branch = "main",
+    branch = 'main',
     opts = {
       notification = {
         override_vim_notify = true,
@@ -73,27 +73,27 @@ require('lazy').setup({
           stack_upwards = false
         },
         window = {
-          align = "top"
+          align = 'top'
         }
       },
     }
   },
 
   -- specific for csharp allows goto definition for decompiled binaries
-  "Hoffs/omnisharp-extended-lsp.nvim",
+  'Hoffs/omnisharp-extended-lsp.nvim',
 
-  "mfussenegger/nvim-jdtls", -- specific for java, add some special config
+  'mfussenegger/nvim-jdtls', -- specific for java, add some special config
 
   -- Additional lua configuration, makes nvim stuff amazing
   {
-    "folke/lazydev.nvim",
-    ft = "lua", -- only load on lua files
+    'folke/lazydev.nvim',
+    ft = 'lua', -- only load on lua files
     opts = {
       library = {
         'bsp.nvim',
         'neotest',
         -- Load luvit types when the `vim.uv` word is found
-        { path = "${3rd}/luv/library", words = { "vim%.uv" } },
+        { path = '${3rd}/luv/library', words = { 'vim%.uv' } },
       },
     },
   },
@@ -112,7 +112,7 @@ require('lazy').setup({
   {
     'saghen/blink.cmp',
     -- dev = true,
-    -- dir = "~/devel/blink.cmp/",
+    -- dir = '~/devel/blink.cmp/',
     lazy = false, -- lazy loading handled internally
     -- optional: provides snippets for the snippet source
     dependencies = 'rafamadriz/friendly-snippets',
@@ -176,7 +176,7 @@ require('lazy').setup({
     },
     -- allows extending the enabled_providers array elsewhere in your config
     -- without having to redefining it
-    opts_extend = { "sources.default" }
+    opts_extend = { 'sources.default' }
   },
 
   -- 'tjdevries/complextras.nvim',
@@ -196,7 +196,7 @@ require('lazy').setup({
 
   -- comment plugins
   -- {
-  --   'numtostr/comment.nvim', -- "gc" to comment visual regions/lines
+  --   'numtostr/comment.nvim', -- 'gc' to comment visual regions/lines
   --   opt = {}
   -- },
   --'tomtom/tcomment_vim',
@@ -222,31 +222,31 @@ require('lazy').setup({
   {
     'rcarriga/nvim-dap-ui',
     dependencies = {
-      "nvim-neotest/nvim-nio",
+      'nvim-neotest/nvim-nio',
     }
   },
 
 
   -- unit test plugins
   -- {
-  --   "nvim-neotest/neotest",
-  --   -- dir = "~/devel/neotest",
+  --   'nvim-neotest/neotest',
+  --   -- dir = '~/devel/neotest',
   --   -- dev = true,
   --   dependencies = {
-  --     "nvim-neotest/nvim-nio",
-  --     "nvim-lua/plenary.nvim",
-  --     "nvim-treesitter/nvim-treesitter",
-  --     "antoinemadec/FixCursorHold.nvim"
+  --     'nvim-neotest/nvim-nio',
+  --     'nvim-lua/plenary.nvim',
+  --     'nvim-treesitter/nvim-treesitter',
+  --     'antoinemadec/FixCursorHold.nvim'
   --   }
   -- },
   -- {
-  --   dir = "~/devel/neotest-bsp"
+  --   dir = '~/devel/neotest-bsp'
   -- },
   -- {
-  --   "Issafalcon/neotest-dotnet",
+  --   'Issafalcon/neotest-dotnet',
   --   dependencies = {
   --     {
-  --       "nvim-neotest/neotest",
+  --       'nvim-neotest/neotest',
   --     },
   --   }
   -- },
@@ -259,7 +259,7 @@ require('lazy').setup({
       's1n7ax/nvim-window-picker'
     },
     config = function()
-      require("nvim-tree").setup({
+      require('nvim-tree').setup({
         update_cwd = false,
         update_focused_file = {
           update_cwd = false
@@ -271,7 +271,7 @@ require('lazy').setup({
           open_file = {
               window_picker = {
                 enable = true,
-                picker = require("window-picker").pick_window,
+                picker = require('window-picker').pick_window,
             }
           }
         },
@@ -287,17 +287,17 @@ require('lazy').setup({
             },
             glyphs = { -- default shows no icon by default
               git = {
-                unstaged = "✗",
-                staged = "✚",
-                unmerged = "═",
-                renamed = "➜",
-                untracked = "★"
+                unstaged = '✗',
+                staged = '✚',
+                unmerged = '═',
+                renamed = '➜',
+                untracked = '★'
               },
               folder = {
-                default = "",
-                open = "",
-                empty = "",
-                empty_open = ""
+                default = '',
+                open = '',
+                empty = '',
+                empty_open = ''
               }
             }
           }
@@ -307,8 +307,8 @@ require('lazy').setup({
   },
 
   {
-    "s1n7ax/nvim-window-picker", -- for open_with_window_picker keymaps
-    version = "2.*",
+    's1n7ax/nvim-window-picker', -- for open_with_window_picker keymaps
+    version = '2.*',
     opt = {
       filter_rules = {
         include_current_win = false,
@@ -316,9 +316,9 @@ require('lazy').setup({
         -- filter using buffer options
         bo = {
           -- if the file type is one of following, the window will be ignored
-          filetype = { "neo-tree", "neo-tree-popup", "notify" },
+          filetype = { 'neo-tree', 'neo-tree-popup', 'notify' },
           -- if the buffer type is one of following, the window will be ignored
-          buftype = { "terminal", "quickfix" },
+          buftype = { 'terminal', 'quickfix' },
         },
       },
     }
@@ -326,25 +326,25 @@ require('lazy').setup({
 
   {
     '616b2f/neo-tree-tests',
-    dir = "~/devel/neo-tree-tests",
+    dir = '~/devel/neo-tree-tests',
     dev = true
   },
   {
-    "nvim-neo-tree/neo-tree.nvim",
-    branch = "v3.x",
+    'nvim-neo-tree/neo-tree.nvim',
+    branch = 'v3.x',
     dependencies = {
-      "nvim-lua/plenary.nvim",
-      "nvim-tree/nvim-web-devicons", -- not strictly required, but recommended
-      "MunifTanjim/nui.nvim",
-      "s1n7ax/nvim-window-picker",
-      "616b2f/neo-tree-tests"
+      'nvim-lua/plenary.nvim',
+      'nvim-tree/nvim-web-devicons', -- not strictly required, but recommended
+      'MunifTanjim/nui.nvim',
+      's1n7ax/nvim-window-picker',
+      '616b2f/neo-tree-tests'
     },
     opts = {
       sources = {
-          "filesystem",
-          "buffers",
-          "git_status",
-          "tests"
+          'filesystem',
+          'buffers',
+          'git_status',
+          'tests'
       },
       tests = {
           -- The config for your source goes here. This is the same as any other source, plus whatever
@@ -355,18 +355,18 @@ require('lazy').setup({
       }
     },
     config = function(_, opts)
-      require("neo-tree").setup(opts)
+      require('neo-tree').setup(opts)
     end
   },
   {
     'gnikdroy/projections.nvim',
-    branch = "pre_release",
+    branch = 'pre_release',
     config = function()
-      require("projections").setup({
+      require('projections').setup({
         workspaces = {                        -- Default workspaces to search for 
-          { "~/devel/ext", { ".git" } },      -- devel/ext is a workspace. patterns = { ".git" }
-          { "~/devel", { ".git" } },          -- devel is a workspace. patterns = { ".git" }
-          { "~/devel/projects", { ".git" } },      -- devel/projects is a workspace. patterns = { ".git" }
+          { '~/devel/ext', { '.git' } },      -- devel/ext is a workspace. patterns = { '.git' }
+          { '~/devel', { '.git' } },          -- devel is a workspace. patterns = { '.git' }
+          { '~/devel/projects', { '.git' } },      -- devel/projects is a workspace. patterns = { '.git' }
         },
         store_hooks = {
           pre = function()
@@ -374,11 +374,11 @@ require('lazy').setup({
             -- restoring the session with those tabs open results in an bad UX
 
             -- close nvim tree tab if open
-            local nvim_tree_present, nvim_tree_api = pcall(require, "nvim-tree.api")
+            local nvim_tree_present, nvim_tree_api = pcall(require, 'nvim-tree.api')
             if nvim_tree_present then nvim_tree_api.tree.close() end
 
             -- close neogit status tab if open
-            local neogit_present, neogit_api = pcall(require, "neogit")
+            local neogit_present, neogit_api = pcall(require, 'neogit')
             if neogit_present and neogit_api.status.status_buffer then
               neogit_api.status.close()
             end
@@ -388,8 +388,8 @@ require('lazy').setup({
 
       -- configure projection to also switch cwd in nvim-tree
       -- when project is switched
-      local switcher = require("projections.switcher")
-      local nvim_tree_present, api = pcall(require, "nvim-tree.api")
+      local switcher = require('projections.switcher')
+      local nvim_tree_present, api = pcall(require, 'nvim-tree.api')
       if nvim_tree_present then
         local original_switch_function = switcher.switch
         switcher.switch = function(spath)
@@ -400,7 +400,7 @@ require('lazy').setup({
             --- post hook that only runs if project switching was successful
             api.tree.change_root(spath)
 
-            local lualine_present, lualine_api = pcall(require, "lualine")
+            local lualine_present, lualine_api = pcall(require, 'lualine')
             if lualine_present then
               lualine_api.refresh()
             end
@@ -421,7 +421,7 @@ require('lazy').setup({
       require'hop'.setup()
     end
   },
-  -- "nvim-telescope/telescope-file-browser.nvim"
+  -- 'nvim-telescope/telescope-file-browser.nvim'
 
   -- terraform plugin
   'hashivim/vim-terraform',
@@ -430,7 +430,7 @@ require('lazy').setup({
   {
     'tversteeg/registers.nvim',
     config = function ()
-      require("registers").setup()
+      require('registers').setup()
     end,
   },
 
@@ -442,7 +442,7 @@ require('lazy').setup({
 
   {
     '616b2f/ak.nvim',
-    -- dir = "~/devel/ak.nvim",
+    -- dir = '~/devel/ak.nvim',
     -- dev = true
   },
 
@@ -498,13 +498,13 @@ require('lazy').setup({
 vim.g.do_filetype_lua = 1
 
 vim.o.title = true
-vim.o.titlestring = "nvim: %t"
+vim.o.titlestring = 'nvim: %t'
 
 -- dont fix end of line in files
 vim.o.fixendofline = false
 
 -- sync default registers with clipboard
-vim.o.clipboard="unnamedplus"
+vim.o.clipboard='unnamedplus'
 
 -- set default tab to spaces
 -- length of an actual \t character:
@@ -524,10 +524,10 @@ vim.o.scrolloff = 8
 -- if set, only insert spaces; otherwise insert \t and complete with spaces:
 vim.o.expandtab=true
 
-vim.opt.completeopt = { "menu", "menuone", "noselect", "popup" }
+vim.opt.completeopt = { 'menu', 'menuone', 'noselect', 'popup' }
 
 -- Don't show the dumb matching stuff.
-vim.opt.shortmess:append "c"
+vim.opt.shortmess:append 'c'
 
 -- show special characters like tabs and trailing spaces
 vim.opt.listchars = {
@@ -603,12 +603,12 @@ vim.o.updatetime = 250
 vim.wo.signcolumn = 'yes'
 
 -- show max width column, to gide you howlong the line should be
--- vim.o.colorcolumn = "80"
+-- vim.o.colorcolumn = '80'
 
 -- Set colorscheme
 vim.o.termguicolors = true
---require("nord").setup({
---  diff = { mode = "fg" }, -- enables/disables colorful backgrounds when used in diff mode. values : [bg|fg]
+--require('nord').setup({
+--  diff = { mode = 'fg' }, -- enables/disables colorful backgrounds when used in diff mode. values : [bg|fg]
 --})
 -- vim.cmd[[colorscheme nord]]
 -- set bg color of floating windows to a different color than normal background
@@ -648,11 +648,11 @@ local project_name_display = function ()
     end
 end
 
-vim.o.winbar="%f"
+vim.o.winbar='%f'
 require('lualine').setup {
   sections = {
     lualine_b = { project_name_display, 'branch', 'diff', 'diagnostics'},
-    lualine_x = { "overseer" },
+    lualine_x = { 'overseer' },
   },
   options = {
     icons_enabled = true,
@@ -696,24 +696,24 @@ require('telescope').setup {
       }
     },
     vimgrep_arguments = {
-      "rg",
-      "--color=never",
-      "--no-heading",
-      "--with-filename",
-      "--line-number",
-      "--column",
-      "--hidden",
-      "--smart-case"
+      'rg',
+      '--color=never',
+      '--no-heading',
+      '--with-filename',
+      '--line-number',
+      '--column',
+      '--hidden',
+      '--smart-case'
     },
     file_ignore_patterns = {
       -- ignore dotnet generated folders in the file search
-      "^bin/",
-      "^obj/",
-      "/bin/",
-      "/obj/",
+      '^bin/',
+      '^obj/',
+      '/bin/',
+      '/obj/',
       -- ignore .git folders (usefull when using hidden=true option)
-      "^.git/",
-      "/.git/",
+      '^.git/',
+      '/.git/',
     },
     mappings = {
       i = {
@@ -723,8 +723,8 @@ require('telescope').setup {
     },
   },
   extensions = {
-    ["ui-select"] = {
-      require("telescope.themes").get_dropdown {
+    ['ui-select'] = {
+      require('telescope.themes').get_dropdown {
       },
     }
   }
@@ -739,7 +739,7 @@ require('neogit').setup {
 }
 
 -- mason setup
-require("mason").setup()
+require('mason').setup()
 require('mason-tool-installer').setup {
 
   -- a list of all tools you want to ensure are installed upon
@@ -787,18 +787,18 @@ require('mason-tool-installer').setup {
   }
 }
 
--- require("neotest").setup({
+-- require('neotest').setup({
 --   log_level = vim.log.levels.DEBUG,
 --   adapters = {
---     require("neotest-dotnet")
+--     require('neotest-dotnet')
 --   },
 --   icons = {
---     running_animated = { "/", "|", "\\", "-", "/", "|", "\\", "-" },
---     passed = "✔",
---     running = "🗘",
---     failed = "✖",
---     skipped = "ﰸ",
---     unknown = "?",
+--     running_animated = { '/', '|', '\\', '-', '/', '|', '\\', '-' },
+--     passed = '✔',
+--     running = '🗘',
+--     failed = '✖',
+--     skipped = 'ﰸ',
+--     unknown = '?',
 --   }
 -- })
 
@@ -812,9 +812,9 @@ vim.api.nvim_exec2([[
 })
 
 -- custom config
-vim.lsp.set_log_level("debug")
+vim.lsp.set_log_level('debug')
 -- require('completion-config')
-vim.lsp.set_log_level("TRACE")
+vim.lsp.set_log_level('TRACE')
 require('lsp-config')
 require('dap-config')
 require('formatter-config')
@@ -833,24 +833,24 @@ require('mini.surround').setup({})
 -- command FormatJson %!jq .
 
 local ak = require('ak')
-vim.api.nvim_create_user_command('GenUuid', function() ak.ui.insert_text(ak.uuid.new()) end, {desc="my: generate a new UUID and paste it on your cursors position."})
-vim.api.nvim_create_user_command('EditConfig', "e ~/.config/nvim/init.lua", {desc="my: open init.lua file for editing "})
-vim.api.nvim_create_user_command('UrlEncode', ak.ui.url.encode, {desc="my: convert a JWT token into plain JSON representation", range=true})
-vim.api.nvim_create_user_command('Base64Encode', ak.ui.base64.encode, {desc="my: convert a JWT token into plain JSON representation", range=true})
-vim.api.nvim_create_user_command('Base64Decode', ak.ui.base64.decode, {desc="my: convert a JWT token into plain JSON representation", range=true})
-vim.api.nvim_create_user_command('Base64UrlEncode', ak.ui.base64url.encode, {desc="my: convert a JWT token into plain JSON representation", range=true})
-vim.api.nvim_create_user_command('Base64UrlDecode', ak.ui.base64url.decode, {desc="my: convert a JWT token into plain JSON representation", range=true})
-vim.api.nvim_create_user_command('JwtDecode', ak.ui.jwt.decode, {desc="my: convert a JWT token into plain JSON representation", range=true})
+vim.api.nvim_create_user_command('GenUuid', function() ak.ui.insert_text(ak.uuid.new()) end, {desc='my: generate a new UUID and paste it on your cursors position.'})
+vim.api.nvim_create_user_command('EditConfig', 'e ~/.config/nvim/init.lua', {desc='my: open init.lua file for editing '})
+vim.api.nvim_create_user_command('UrlEncode', ak.ui.url.encode, {desc='my: convert a JWT token into plain JSON representation', range=true})
+vim.api.nvim_create_user_command('Base64Encode', ak.ui.base64.encode, {desc='my: convert a JWT token into plain JSON representation', range=true})
+vim.api.nvim_create_user_command('Base64Decode', ak.ui.base64.decode, {desc='my: convert a JWT token into plain JSON representation', range=true})
+vim.api.nvim_create_user_command('Base64UrlEncode', ak.ui.base64url.encode, {desc='my: convert a JWT token into plain JSON representation', range=true})
+vim.api.nvim_create_user_command('Base64UrlDecode', ak.ui.base64url.decode, {desc='my: convert a JWT token into plain JSON representation', range=true})
+vim.api.nvim_create_user_command('JwtDecode', ak.ui.jwt.decode, {desc='my: convert a JWT token into plain JSON representation', range=true})
 
 -- setup extra surround mappings
 vim.keymap.set('x', 'S', function() require('mini.surround').add('visual') end, { noremap = true })
--- -- Make special mapping for "add surrounding for line"
+-- -- Make special mapping for 'add surrounding for line'
 -- vim.keymap.set('n', 'yss', 'ys_', { noremap = false })
 
 -- setup nvim-tree keybinding
-vim.keymap.set('n', '<leader>nr', require("nvim-tree.api").tree.reload, { desc="my: reload nvim-tree" })
-vim.keymap.set('n', '<leader>nn', require("nvim-tree.api").tree.toggle, { desc="my: toggle nvim-tree" })
-vim.keymap.set('n', '<leader>nf', function() require("nvim-tree.api").tree.open({find_file=true}) end, { desc="my: jump to current file in nvim-treee" })
+vim.keymap.set('n', '<leader>nr', require('nvim-tree.api').tree.reload, { desc='my: reload nvim-tree' })
+vim.keymap.set('n', '<leader>nn', require('nvim-tree.api').tree.toggle, { desc='my: toggle nvim-tree' })
+vim.keymap.set('n', '<leader>nf', function() require('nvim-tree.api').tree.open({find_file=true}) end, { desc='my: jump to current file in nvim-treee' })
 
 -- hop mappings
 vim.keymap.set('n', '<space>f', function() require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.AFTER_CURSOR, current_line_only = false }) end)
@@ -863,18 +863,18 @@ vim.keymap.set('n', '<space>F', function() require'hop'.hint_char1({ direction =
 vim.keymap.set('n', '<leader>ff', function() require('telescope.builtin').find_files({hidden=true,no_ignore=false,no_ignore_parent=false}) end)
 vim.keymap.set('n', '<leader>fw', function() require('telescope.builtin').grep_string({search=vim.fn.expand('<cword>')}) end)
 vim.keymap.set('n', '<leader>fb', function() require('telescope.builtin').buffers({show_all_buffers=true}) end)
-vim.keymap.set('n', '<leader>ec', function() require('telescope.builtin').find_files({cwd=vim.fn.stdpath('config')}) end, {desc="my: find config files in nvim directory"})
+vim.keymap.set('n', '<leader>ec', function() require('telescope.builtin').find_files({cwd=vim.fn.stdpath('config')}) end, {desc='my: find config files in nvim directory'})
 vim.keymap.set('n', '<leader>fh', require('telescope.builtin').help_tags)
-vim.keymap.set('n', '<leader>fgg', require('ak').ui.code_search, {desc="my: custom code search with glob filter"})
+vim.keymap.set('n', '<leader>fgg', require('ak').ui.code_search, {desc='my: custom code search with glob filter'})
 vim.keymap.set('n', '<leader>fgb', require('telescope.builtin').git_branches)
 vim.keymap.set('n', '<leader>fgc', require('telescope.builtin').git_commits)
 vim.keymap.set('n', '<leader>fi', require('telescope.builtin').lsp_implementations)
 vim.keymap.set('n', '<leader>fs', require('telescope.builtin').lsp_document_symbols)
-vim.keymap.set('n', '<leader>fk', require('telescope.builtin').keymaps,{desc="my: find keybindings"})
+vim.keymap.set('n', '<leader>fk', require('telescope.builtin').keymaps,{desc='my: find keybindings'})
 vim.keymap.set('n', '<leader>fm', function() require('telescope.builtin').lsp_document_symbols({symbols={'method','function'}}) end)
 vim.keymap.set('n', '<leader>fsw', require('telescope.builtin').lsp_workspace_symbols)
 vim.keymap.set('n', '<leader>fc', function() require('telescope.builtin').lsp_workspace_symbols({symbols='class'}) end)
-vim.keymap.set("n", "<leader>fp", function() vim.cmd("Telescope projections") end, {desc="my: find projects"})
+vim.keymap.set('n', '<leader>fp', function() vim.cmd('Telescope projections') end, {desc='my: find projects'})
 -- vim.keymap.set('n', '<leader>sf', function() require('telescope.builtin').find_files({previewer = false}) end)
 -- vim.keymap.set('n', '<leader>sb', require('telescope.builtin').current_buffer_fuzzy_find)
 -- vim.keymap.set('n', '<leader>sh', require('telescope.builtin').help_tags)
@@ -884,10 +884,10 @@ vim.keymap.set("n", "<leader>fp", function() vim.cmd("Telescope projections") en
 -- vim.keymap.set('n', '<leader>?', require('telescope.builtin').oldfiles)
 
 -- setup extra surround mappings
-vim.keymap.set('x', 'S', function() require('mini.surround').add('visual') end, { noremap=true, desc="my: add surround chars to current visual selection" })
+vim.keymap.set('x', 'S', function() require('mini.surround').add('visual') end, { noremap=true, desc='my: add surround chars to current visual selection' })
 
 -- disable some preset key mappings
-vim.keymap.set('n', 'Q', "<nop>")
+vim.keymap.set('n', 'Q', '<nop>')
 
 vim.keymap.set('n', '<space>/', function()
   -- You can pass additional configuration to telescope to change theme, layout, etc.
@@ -897,11 +897,11 @@ vim.keymap.set('n', '<space>/', function()
   })
 end, { desc = 'my: fuzzily search in current buffer' })
 
-vim.keymap.set('n', '<space>rw', ":s/\\<<C-r><C-w>\\>/<C-r><C-w>/g<Left><Left>", {desc="my: replace current word under cursor with substitute"})
+vim.keymap.set('n', '<space>rw', ':s/\\<<C-r><C-w>\\>/<C-r><C-w>/g<Left><Left>', {desc='my: replace current word under cursor with substitute'})
 -- hop mappings
 vim.keymap.set('n', '<space>f', function() require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.AFTER_CURSOR, current_line_only = false }) end)
 vim.keymap.set('n', '<space>F', function() require'hop'.hint_char1({ direction = require'hop.hint'.HintDirection.BEFORE_CURSOR, current_line_only = false }) end)
-vim.keymap.set('n', '<space>gb', ":b#<CR>",{desc="my: switch between two last active buffers"})
+vim.keymap.set('n', '<space>gb', ':b#<CR>',{desc='my: switch between two last active buffers'})
 
 vim.cmd [[
   " configure terminal
@@ -923,17 +923,17 @@ my.helper.find_root_dir = function(source, indicator_pattern)
   local matches = vim.fs.find(fn_match_file, {
     path = source,
     upward = true,
-    type = "directory"
+    type = 'directory'
   })
   if matches and #matches > 0 then
-    path = vim.fn.fnamemodify(matches[1], ":p:h:h")
+    path = vim.fn.fnamemodify(matches[1], ':p:h:h')
   end
 
   return path
 end
 -- Find git directory for current file
 my.helper.get_git_dir = function ()
-  return my.helper.find_root_dir(vim.fn.expand('%:p:h'), ".git")
+  return my.helper.find_root_dir(vim.fn.expand('%:p:h'), '.git')
 end
 
 -- -- Diagnostic keymaps
@@ -943,8 +943,8 @@ vim.keymap.set('n', ']d', function() vim.diagnostic.goto_next() end, { noremap =
 vim.keymap.set('n', '<leader>q', function() vim.diagnostic.setloclist() end, { noremap = true, silent = true })
 
 -- neogit keymaps
--- vim.keymap.set('n', '<leader>gg', function() require("neogit").open({kind="replace",cwd=my.helper.get_git_dir()}) end, { desc = "my: open neogit overview" })
-vim.keymap.set('n', '<leader>gg', function() require("neogit").open({cwd=my.helper.get_git_dir()}) end, { desc = "my: open neogit overview" })
+-- vim.keymap.set('n', '<leader>gg', function() require('neogit').open({kind='replace',cwd=my.helper.get_git_dir()}) end, { desc = 'my: open neogit overview' })
+vim.keymap.set('n', '<leader>gg', function() require('neogit').open({cwd=my.helper.get_git_dir()}) end, { desc = 'my: open neogit overview' })
 
 -- setup dap key bindings
 -- REPL (Read Evaluate Print Loop)
@@ -959,29 +959,29 @@ vim.keymap.set('n', '<leader>dsi', require('dap').step_into)
 vim.keymap.set('n', '<leader>dso', require('dap').step_out)
 vim.keymap.set('n', '<leader>do', require('dap').repl.open)
 vim.keymap.set('n', '<leader>drl', require('dap').run_last)
--- vim.keymap.set('n', '<leader>dtt', function() require('neotest').run.run({suite=true,strategy="dap"}) end, {desc="my: run test for the whole suite"})
--- vim.keymap.set('n', '<leader>dtf', function() require('neotest').run.run({vim.fn.expand('%'),suite=false,strategy='dap'}) end, {desc="my: run test for current file in debug mode"})
--- vim.keymap.set('n', '<leader>dtn', function() require('neotest').run.run({strategy='dap'}) end, {desc="my: run nearest test in debug mode"})
+-- vim.keymap.set('n', '<leader>dtt', function() require('neotest').run.run({suite=true,strategy='dap'}) end, {desc='my: run test for the whole suite'})
+-- vim.keymap.set('n', '<leader>dtf', function() require('neotest').run.run({vim.fn.expand('%'),suite=false,strategy='dap'}) end, {desc='my: run test for current file in debug mode'})
+-- vim.keymap.set('n', '<leader>dtn', function() require('neotest').run.run({strategy='dap'}) end, {desc='my: run nearest test in debug mode'})
 
 -- keybinding for neotest
--- vim.keymap.set('n', '<leader>tt', require("neotest").summary.toggle, { desc="my: toggle test summary window"})
-vim.keymap.set('n', '<leader>tt', function() require("neo-tree.command").execute({source="tests", toggle=true, position="right"}) end, { desc="my: toggle test tree"})
--- vim.keymap.set('n', '<leader>tn', require("neotest").run.run, { desc = "my: run nearest test"})
--- vim.keymap.set('n', '<leader>ts', require("neotest").run.stop)
--- vim.keymap.set('n', '<leader>ta', require("neotest").run.attach)
--- vim.keymap.set('n', '<leader>tf', function() require('neotest').run.run({vim.fn.expand('%')}) end, {desc="my: run test in current file"})
--- vim.keymap.set('n', '<leader>ts', function() require('neotest').run.run({suite=true}) end, {desc="my: run test for the whole suite"})
+-- vim.keymap.set('n', '<leader>tt', require('neotest').summary.toggle, { desc='my: toggle test summary window'})
+vim.keymap.set('n', '<leader>tt', function() require('neo-tree.command').execute({source='tests', toggle=true, position='right'}) end, { desc='my: toggle test tree'})
+-- vim.keymap.set('n', '<leader>tn', require('neotest').run.run, { desc = 'my: run nearest test'})
+-- vim.keymap.set('n', '<leader>ts', require('neotest').run.stop)
+-- vim.keymap.set('n', '<leader>ta', require('neotest').run.attach)
+-- vim.keymap.set('n', '<leader>tf', function() require('neotest').run.run({vim.fn.expand('%')}) end, {desc='my: run test in current file'})
+-- vim.keymap.set('n', '<leader>ts', function() require('neotest').run.run({suite=true}) end, {desc='my: run test for the whole suite'})
 
 -- diagnostic
 vim.keymap.set('n', '<leader>ee', vim.diagnostic.open_float)
 vim.keymap.set('n', '<leader>eq', vim.diagnostic.setqflist)
 vim.keymap.set('n', '<leader>er', function() vim.diagnostic.setqflist({severity=vim.diagnostic.severity.ERROR}) end)
 vim.keymap.set('n', '<leader>el', vim.diagnostic.setloclist)
-vim.keymap.set('n', ']d', function() vim.diagnostic.jump({count=1,float=true}) end, {desc="my: go to previous diagnostic"})
-vim.keymap.set('n', '[d', function() vim.diagnostic.jump({count=-1,float=true}) end, {desc="my: go to next diagnostic"})
-vim.keymap.set('n', '<leader>qq', vim.cmd.copen, {desc="my: open quickfix list"})
-vim.keymap.set('n', '[q', vim.cmd.cprevious, {desc="my: go to previous item in the quickfix list"})
-vim.keymap.set('n', ']q', vim.cmd.cnext, {desc="my: go to next item in the quickfix list"})
+vim.keymap.set('n', ']d', function() vim.diagnostic.jump({count=1,float=true}) end, {desc='my: go to previous diagnostic'})
+vim.keymap.set('n', '[d', function() vim.diagnostic.jump({count=-1,float=true}) end, {desc='my: go to next diagnostic'})
+vim.keymap.set('n', '<leader>qq', vim.cmd.copen, {desc='my: open quickfix list'})
+vim.keymap.set('n', '[q', vim.cmd.cprevious, {desc='my: go to previous item in the quickfix list'})
+vim.keymap.set('n', ']q', vim.cmd.cnext, {desc='my: go to next item in the quickfix list'})
 
 -- Use LspAttach autocommand to only map the following keys
 -- after the language server attaches to the current buffer
@@ -1009,7 +1009,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
 
     local client = vim.lsp.get_client_by_id(ev.data.client_id)
     -- setup compiler config for omnisharp
-    if client and client.name == "omnisharp" then
+    if client and client.name == 'omnisharp' then
 
       vim.keymap.set('n', 'gd', require('omnisharp_extended').lsp_definition, opts)
       vim.keymap.set('n', 'gi', require('omnisharp_extended').lsp_implementation, opts)
