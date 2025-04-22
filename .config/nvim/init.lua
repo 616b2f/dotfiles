@@ -813,13 +813,11 @@ vim.api.nvim_exec2([[
 
 -- custom config
 vim.lsp.set_log_level('debug')
--- require('completion-config')
 vim.lsp.set_log_level('TRACE')
 require('lsp-config')
 require('dap-config')
 require('formatter-config')
 require('treesitter-config')
--- require('luasnip-config')
 
 require('mini.surround').setup({})
 
@@ -834,7 +832,6 @@ require('mini.surround').setup({})
 
 local ak = require('ak')
 vim.api.nvim_create_user_command('GenUuid', function() ak.ui.insert_text(ak.uuid.new()) end, {desc='my: generate a new UUID and paste it on your cursors position.'})
-vim.api.nvim_create_user_command('EditConfig', 'e ~/.config/nvim/init.lua', {desc='my: open init.lua file for editing '})
 vim.api.nvim_create_user_command('UrlEncode', ak.ui.url.encode, {desc='my: convert a JWT token into plain JSON representation', range=true})
 vim.api.nvim_create_user_command('Base64Encode', ak.ui.base64.encode, {desc='my: convert a JWT token into plain JSON representation', range=true})
 vim.api.nvim_create_user_command('Base64Decode', ak.ui.base64.decode, {desc='my: convert a JWT token into plain JSON representation', range=true})
