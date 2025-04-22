@@ -16,11 +16,9 @@ vim.fn.sign_define('DapBreakpointRejected', {text='', texthl='', linehl='', n
 
 -- C#
 if (reg.is_installed('netcoredbg')) then
-    local netcoredbg = reg.get_package('netcoredbg')
-
     local adapter_config = {
         type = 'executable',
-        command = netcoredbg:get_install_path() .. '/netcoredbg',
+        command = 'netcoredbg',
         args = {'--interpreter=vscode'}
     }
     -- neotest-dotnet needs 'netcoredbg'
