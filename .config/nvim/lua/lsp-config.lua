@@ -219,17 +219,25 @@ end
 vim.lsp.config('*', {
   capabilities = {
     textDocument = {
-        diagnostic = {
-            dynamicRegistration = true,
-        },
+      diagnostic = {
+        dynamicRegistration = true,
+      },
+    },
+    -- enable file watch server side, can slow down the server
+    workspace = {
+      didChangeWatchedFiles = {
+        dynamicRegistration = true,
+        -- enable file watcher capabilities for lsp clients
+        relativePatternSupport = true,
+      },
     },
   }
 })
-vim.lsp.config('*',
-  {
-    capabilities = require('blink.cmp').get_lsp_capabilities(),
-    on_attach = on_attach
-  })
+
+vim.lsp.config('*', {
+  capabilities = require('blink.cmp').get_lsp_capabilities(),
+  on_attach = on_attach
+})
 
 vim.lsp.enable({
   'roslyn_ls',
