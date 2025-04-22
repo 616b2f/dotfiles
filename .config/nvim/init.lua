@@ -49,7 +49,8 @@ require('lazy').setup({
     dev = true,
     opts = {
       registries = {
-        "github:mason-org/mason-registry",
+        -- "github:mason-org/mason-registry",
+        -- "github:616b2f/mason-registry",
         "file:~/devel/mason-registry",
         "github:616b2f/mason-registry-bsp"
       }
@@ -58,8 +59,8 @@ require('lazy').setup({
   "williamboman/mason-lspconfig.nvim", -- for better integration with lspconfig
   {
     "neovim/nvim-lspconfig", -- Collection of configurations for built-in LSP client
-    dir = "~/devel/nvim-lspconfig/",
-    dev = true,
+    dir = "~/devel/nvim-lspconfig",
+    dev = true
   },
   "WhoIsSethDaniel/mason-tool-installer.nvim", -- for easier installing tools
   {
@@ -75,8 +76,8 @@ require('lazy').setup({
           align = "top"
         }
       },
-    } -- `opts = {}` is the same as calling `require('fidget').setup({})`
-  }, -- Useful status updates for LSP
+    }
+  },
 
   -- specific for csharp allows goto definition for decompiled binaries
   "Hoffs/omnisharp-extended-lsp.nvim",
@@ -116,7 +117,7 @@ require('lazy').setup({
     -- optional: provides snippets for the snippet source
     dependencies = 'rafamadriz/friendly-snippets',
     -- use a release tag to download pre-built binaries
-    version = '*',
+    version = 'v1.1.*',
     ---@module 'blink.cmp'
     ---@type blink.cmp.Config
     opts = {
@@ -433,14 +434,6 @@ require('lazy').setup({
     end,
   },
 
-  -- plugin to show function signatures in a better way
-  -- {
-  --   'ray-x/lsp_signature.nvim',
-  --   event = "VeryLazy",
-  --   opts = {},
-  --   config = function(_, opts) require'lsp_signature'.setup(opts) end
-  -- },
-
   -- vscode like task runner
   {
     'stevearc/overseer.nvim',
@@ -449,14 +442,15 @@ require('lazy').setup({
 
   {
     '616b2f/ak.nvim',
-    dir = "~/devel/ak.nvim",
-    dev = true
+    -- dir = "~/devel/ak.nvim",
+    -- dev = true
   },
 
   {
     '616b2f/bsp.nvim',
-    dir = "~/devel/bsp.nvim",
+    dir = '~/devel/bsp.nvim',
     dev = true,
+    ---@type bsp.BspSetupConfig
     opts = {
       log = {
         level = vim.log.levels.DEBUG
@@ -471,9 +465,9 @@ require('lazy').setup({
         fidget = true
       }
     },
-    config = function (_, opts)
+    config = function(_, opts)
       require('bsp').setup(opts)
-      vim.api.nvim_create_autocmd("User",
+      vim.api.nvim_create_autocmd('User',
       {
         group = 'bsp',
         pattern = 'BspAttach',
@@ -503,7 +497,6 @@ require('lazy').setup({
 -- enable filetype.lua and disable filetype.vim
 vim.g.do_filetype_lua = 1
 
-
 vim.o.title = true
 vim.o.titlestring = "nvim: %t"
 
@@ -530,6 +523,11 @@ vim.o.scrolloff = 8
 
 -- if set, only insert spaces; otherwise insert \t and complete with spaces:
 vim.o.expandtab=true
+
+vim.opt.completeopt = { "menu", "menuone", "noselect", "popup" }
+
+-- Don't show the dumb matching stuff.
+vim.opt.shortmess:append "c"
 
 -- show special characters like tabs and trailing spaces
 vim.opt.listchars = {
