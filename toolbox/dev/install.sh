@@ -188,6 +188,7 @@ fi
 # misc tooling
 ###
 sudo dnf install -y \
+    fish \
     fzf \
     gh \
     git \
