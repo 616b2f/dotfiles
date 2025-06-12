@@ -5,6 +5,7 @@ folders=".config/sway
 .config/waybar
 .config/alacritty
 .config/nvim
+.config/luakit
 .config/dive
 .config/omnisharp
 .config/xdg-desktop-portal-wlr
