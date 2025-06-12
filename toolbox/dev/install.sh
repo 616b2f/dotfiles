@@ -26,6 +26,9 @@ sudo dnf install -y wl-clipboard
 # and stuff needed for nvim lua plugin development
 sudo dnf install -y luarocks compat-lua compat-lua-devel gcc-c++
 
+# needed to debug nvim
+sudo dnf install -y gdb gdb-gdbserver
+
 # install vusted (for unitests of nvim lua plugins)
 # luarocks --lua-version=5.1 install vusted
 luarocks --lua-version=5.1 --local install busted
@@ -41,6 +44,11 @@ sudo dnf install -y gettext-devel
 
 # install neovim nightly
 sudo dnf copr enable -y agriffis/neovim-nightly
+
+###
+# fedora packaging
+###
+sudo dnf install -y fedora-packager
 
 # telescope prerequisites
 sudo dnf install -y ripgrep jq fd-find
@@ -93,7 +101,7 @@ dotnet tool update -g dotnet-reportgenerator-globaltool
 ###
 # java
 ###
-sudo dnf install -y java-17-openjdk-devel
+# sudo dnf install -y java-21-openjdk-devel
 # install spring boot cli
 #./../../install-scripts/springboot.sh
 # ./../../install-scripts/gradle.sh

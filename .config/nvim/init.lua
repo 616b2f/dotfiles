@@ -44,23 +44,22 @@ require('lazy').setup({
 
   -- nvim lsp support
   {
-    'williamboman/mason.nvim',
+    'mason-org/mason.nvim',
     dir = '~/devel/mason.nvim',
     dev = true,
     opts = {
       registries = {
-        -- 'github:mason-org/mason-registry',
-        -- 'github:616b2f/mason-registry',
-        'file:~/devel/mason-registry',
+        'github:mason-org/mason-registry',
+        -- 'file:~/devel/mason-registry',
         'github:616b2f/mason-registry-bsp'
       }
     }
   },
-  'williamboman/mason-lspconfig.nvim', -- for better integration with lspconfig
+  'mason-org/mason-lspconfig.nvim', -- for better integration with lspconfig
   {
     'neovim/nvim-lspconfig', -- Collection of configurations for built-in LSP client
     dir = '~/devel/nvim-lspconfig',
-    dev = true
+    dev = true,
   },
   'WhoIsSethDaniel/mason-tool-installer.nvim', -- for easier installing tools
   {
@@ -117,7 +116,7 @@ require('lazy').setup({
     -- optional: provides snippets for the snippet source
     dependencies = 'rafamadriz/friendly-snippets',
     -- use a release tag to download pre-built binaries
-    version = 'v1.1.*',
+    version = 'v1.2.*',
     ---@module 'blink.cmp'
     ---@type blink.cmp.Config
     opts = {
@@ -442,8 +441,6 @@ require('lazy').setup({
 
   {
     '616b2f/ak.nvim',
-    -- dir = '~/devel/ak.nvim',
-    -- dev = true
   },
 
   {

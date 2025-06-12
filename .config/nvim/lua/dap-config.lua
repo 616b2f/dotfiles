@@ -73,7 +73,7 @@ if (reg.is_installed('netcoredbg')) then
             env = {
               ASPNETCORE_ENVIRONMENT = function()
                   return "Development"
-              end
+              end,
             },
         },
         {
@@ -86,11 +86,10 @@ if (reg.is_installed('netcoredbg')) then
         {
             name = "attach - netcoredbg",
             type = "coreclr",
-            -- mode = "local",
-            -- cwd = "${workspaceFolder}",
+            request = "attach",
             processId  = require('dap.utils').pick_process,
-            args = {}
-            -- justMyCode = true, -- set to `true` in debug configuration and `false` in release configuration
+            args = {},
+            justMyCode = true, -- set to `true` in debug configuration and `false` in release configuration
         },
         {
             name = "Skaffold Debug",
