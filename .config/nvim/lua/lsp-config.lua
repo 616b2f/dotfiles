@@ -54,11 +54,11 @@ vim.lsp.config('*', {
 })
 
 vim.lsp.enable({
-  'roslyn_ls',
+  -- 'roslyn_ls',
   'clangd',
   'lua_ls',
   'yamlls',
--- 'omnisharp',
+  'omnisharp',
 -- 'pylsp',
 -- 'jdtls',
 -- 'gdscript',

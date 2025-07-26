@@ -49,8 +49,8 @@ require('lazy').setup({
     dev = true,
     opts = {
       registries = {
+        'file:~/devel/mason-registry',
         'github:mason-org/mason-registry',
-        -- 'file:~/devel/mason-registry',
         'github:616b2f/mason-registry-bsp'
       }
     }
@@ -116,7 +116,7 @@ require('lazy').setup({
     -- optional: provides snippets for the snippet source
     dependencies = 'rafamadriz/friendly-snippets',
     -- use a release tag to download pre-built binaries
-    version = 'v1.2.*',
+    version = 'v1.6.*',
     ---@module 'blink.cmp'
     ---@type blink.cmp.Config
     opts = {
@@ -869,6 +869,7 @@ vim.keymap.set('n', '<leader>fm', function() require('telescope.builtin').lsp_do
 vim.keymap.set('n', '<leader>fsw', require('telescope.builtin').lsp_workspace_symbols)
 vim.keymap.set('n', '<leader>fc', function() require('telescope.builtin').lsp_workspace_symbols({symbols='class'}) end)
 vim.keymap.set('n', '<leader>fp', function() vim.cmd('Telescope projections') end, {desc='my: find projects'})
+vim.keymap.set('n', '<leader>f\'', require('telescope.builtin').marks, {desc="my: find marks"})
 -- vim.keymap.set('n', '<leader>sf', function() require('telescope.builtin').find_files({previewer = false}) end)
 -- vim.keymap.set('n', '<leader>sb', require('telescope.builtin').current_buffer_fuzzy_find)
 -- vim.keymap.set('n', '<leader>sh', require('telescope.builtin').help_tags)

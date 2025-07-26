@@ -24,6 +24,11 @@ if (reg.is_installed('netcoredbg')) then
     -- neotest-dotnet needs 'netcoredbg'
     dap.adapters.netcoredbg = adapter_config
     dap.adapters.coreclr = adapter_config
+    dap.adapters.gdb = {
+      type = "executable",
+      command = "gdb",
+      args = { "--interpreter=dap", "--eval-command", "set print pretty on" }
+    }
 
     dap.adapters.skaffold = function(cb, config)
       if config.request == 'attach' then
@@ -146,6 +151,48 @@ if (reg.is_installed('cpptools')) then
         },
     }
 end
+
+-- C
+dap.configurations.c = {
+  {
+    name = "Launch",
+    type = "gdb",
+    request = "launch",
+    program = function()
+      return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+    end,
+    cwd = "${workspaceFolder}",
+    stopAtBeginningOfMainSubprogram = false,
+  },
+  {
+    name = "Select and attach to process",
+    type = "gdb",
+    request = "attach",
+    program = function()
+      return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+    end,
+    pid = function()
+      local name = vim.fn.input('Executable name (filter): ')
+      return require("dap.utils").pick_process({ filter = name })
+    end,
+    cwd = '${workspaceFolder}'
+  },
+  {
+    -- using gdbserver :7777
+    name = 'Attach to NVIM',
+    type = 'gdb',
+    request = 'attach',
+    target = 'localhost:7777',
+    program = function()
+      -- $ GDB=1 TEST_FILE=test/functional/api/vim_spec.lua TEST_FILTER='works with charwise range$' make functionaltest
+      -- return "/var/home/ak/devel/neovim/build/bin/nvim"
+      return "build/bin/nvim"
+      -- return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+    end,
+    cwd = '${workspaceFolder}'
+  },
+}
+
 
 require("dapui").setup()
 
