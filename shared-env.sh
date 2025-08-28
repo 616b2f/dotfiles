@@ -32,6 +32,7 @@ swaylock \
 bemenu \
 j4-dmenu-desktop \
 xdg-desktop-portal-wlr \
+mate-polkit \
 waybar \
 wl-clipboard \
 brightnessctl \
