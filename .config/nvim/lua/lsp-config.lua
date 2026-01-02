@@ -48,9 +48,22 @@ vim.lsp.config('*', {
 
     -- enable semantic tokens highligting hints
     if client:supports_method("textDocument/semanticTokens") then
-      client.server_capabilities.semanticTokensProvider = true
+      vim.lsp.semantic_tokens.enable(true, {client_id=client.id})
     end
   end
+})
+
+vim.lsp.config("omnisharp", {
+ cmd = {
+    "/var/home/ak/devel/omnisharp-roslyn/bin/Release/OmniSharp.Stdio.Driver/net8.0/OmniSharp",
+    '-z', -- https://github.com/OmniSharp/omnisharp-vscode/pull/4300
+    '--hostPID',
+    tostring(vim.fn.getpid()),
+    'DotNet:enablePackageRestore=false',
+    '--encoding',
+    'utf-8',
+    '--languageserver',
+  },
 })
 
 vim.lsp.enable({
@@ -59,6 +72,7 @@ vim.lsp.enable({
   'lua_ls',
   'yamlls',
   'omnisharp',
+  'gh_actions_ls',
 -- 'pylsp',
 -- 'jdtls',
 -- 'gdscript',

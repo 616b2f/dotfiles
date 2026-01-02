@@ -1,6 +1,17 @@
 -- enable experimental loader
 vim.loader.enable()
 
+-- enable experimental messages ui
+require('vim._extui').enable({
+  enable = true, -- Whether to enable or disable the UI.
+  msg = { -- Options related to the message module.
+    ---@type 'cmd'|'msg' Where to place regular messages, either in the
+    ---cmdline or in a separate ephemeral message window.
+    target = 'cmd',
+    timeout = 1000, -- Time a message is visible in the message window.
+  },
+})
+
 -- Install LazyVim
 local lazypath = vim.fn.stdpath('data') .. '/lazy/lazy.nvim'
 if not vim.uv.fs_stat(lazypath) then
@@ -17,7 +28,12 @@ vim.opt.rtp:prepend(lazypath)
 
 require('lazy').setup({
   -- UI to select things (files, grep results, open buffers...)
-  { 'nvim-telescope/telescope.nvim', dependencies = { 'nvim-lua/plenary.nvim' } },
+  {
+    'nvim-telescope/telescope.nvim',
+    dependencies = {
+      'nvim-lua/plenary.nvim'
+    }
+  },
   { 'nvim-telescope/telescope-ui-select.nvim',
     config = function ()
       require('telescope').load_extension('ui-select')
@@ -39,8 +55,110 @@ require('lazy').setup({
   },
 
   -- Highlight, edit, and navigate code using a fast incremental parsing library
-  'nvim-treesitter/nvim-treesitter',
-  'nvim-treesitter/nvim-treesitter-textobjects', -- Additional textobjects for treesitter
+  {
+    'nvim-treesitter/nvim-treesitter',
+    lazy = false,
+    branch = 'main',
+    build = ':TSUpdate',
+    config = function()
+      require'nvim-treesitter'.install {
+        'query',
+        'c_sharp',
+        'lua',
+        'go',
+        'java',
+        'python',
+        'vimdoc',
+        'terraform',
+        'markdown',
+        'hurl',
+        'json',
+        'xml',
+        'yaml',
+        'gdscript',
+        'godot_resource',
+        'gdshader'
+      }
+      vim.api.nvim_create_autocmd('FileType', {
+        pattern = {
+          'cs',
+          'lua',
+          'json',
+          'yaml',
+          'xml',
+          'tf',
+          'hurl',
+          'vimdoc'
+        },
+        callback = function() vim.treesitter.start() end,
+      })
+    end
+  },
+  {
+    'nvim-treesitter/nvim-treesitter-textobjects',
+    branch = 'main',
+    config = function()
+      require("nvim-treesitter-textobjects").setup {
+        move = {
+          -- whether to set jumps in the jumplist
+          set_jumps = true,
+        },
+      }
+      -- selects
+      vim.keymap.set({ "x", "o" }, "am", function()
+        require "nvim-treesitter-textobjects.select".select_textobject("@function.outer", "textobjects")
+      end)
+      vim.keymap.set({ "x", "o" }, "im", function()
+        require "nvim-treesitter-textobjects.select".select_textobject("@function.inner", "textobjects")
+      end)
+      vim.keymap.set({ "x", "o" }, "ac", function()
+        require "nvim-treesitter-textobjects.select".select_textobject("@class.outer", "textobjects")
+      end)
+      vim.keymap.set({ "x", "o" }, "ic", function()
+        require "nvim-treesitter-textobjects.select".select_textobject("@class.inner", "textobjects")
+      end)
+
+      -- moves
+      -- You can also pass a list to group multiple queries.
+      vim.keymap.set({ "n", "x", "o" }, "]o", function()
+        move.goto_next_start({"@loop.inner", "@loop.outer"}, "textobjects")
+      end)
+
+      -- You can also use captures from other query groups like `locals.scm` or `folds.scm`
+      vim.keymap.set({ "n", "x", "o" }, "]s", function()
+        require("nvim-treesitter-textobjects.move").goto_next_start("@local.scope", "locals")
+      end)
+      vim.keymap.set({ "n", "x", "o" }, "]z", function()
+        require("nvim-treesitter-textobjects.move").goto_next_start("@fold", "folds")
+      end)
+
+      vim.keymap.set({ "n", "x", "o" }, "][", function()
+        require("nvim-treesitter-textobjects.move").goto_next_end("@class.outer", "textobjects")
+      end)
+      vim.keymap.set({ "n", "x", "o" }, "]]", function()
+        require("nvim-treesitter-textobjects.move").goto_next_start("@class.outer", "textobjects")
+      end)
+      vim.keymap.set({ "n", "x", "o" }, "[]", function()
+        require("nvim-treesitter-textobjects.move").goto_previous_end("@class.outer", "textobjects")
+      end)
+      vim.keymap.set({ "n", "x", "o" }, "[[", function()
+        require("nvim-treesitter-textobjects.move").goto_previous_start("@class.outer", "textobjects")
+      end)
+
+      vim.keymap.set({ "n", "x", "o" }, "]m", function()
+        require("nvim-treesitter-textobjects.move").goto_next_start("@function.outer", "textobjects")
+      end)
+      vim.keymap.set({ "n", "x", "o" }, "[m", function()
+        require("nvim-treesitter-textobjects.move").goto_previous_start("@function.outer", "textobjects")
+      end)
+      vim.keymap.set({ "n", "x", "o" }, "]M", function()
+        require("nvim-treesitter-textobjects.move").goto_next_end("@function.outer", "textobjects")
+      end)
+      vim.keymap.set({ "n", "x", "o" }, "[M", function()
+        require("nvim-treesitter-textobjects.move").goto_previous_end("@function.outer", "textobjects")
+      end)
+    end
+  },
 
   -- nvim lsp support
   {
@@ -79,7 +197,11 @@ require('lazy').setup({
   },
 
   -- specific for csharp allows goto definition for decompiled binaries
-  'Hoffs/omnisharp-extended-lsp.nvim',
+  {
+    'Hoffs/omnisharp-extended-lsp.nvim',
+    -- dev = true,
+    -- dir = '~/devel/omnisharp-extended-lsp.nvim/'
+  },
 
   'mfussenegger/nvim-jdtls', -- specific for java, add some special config
 
@@ -116,7 +238,7 @@ require('lazy').setup({
     -- optional: provides snippets for the snippet source
     dependencies = 'rafamadriz/friendly-snippets',
     -- use a release tag to download pre-built binaries
-    version = 'v1.6.*',
+    version = 'v1.8.*',
     ---@module 'blink.cmp'
     ---@type blink.cmp.Config
     opts = {
@@ -264,7 +386,7 @@ require('lazy').setup({
           update_cwd = false
         },
         view = {
-          width = 70
+          width = 35
         },
         actions = {
           open_file = {
@@ -494,6 +616,8 @@ require('lazy').setup({
 -- enable filetype.lua and disable filetype.vim
 vim.g.do_filetype_lua = 1
 
+vim.o.virtualedit = 'onemore'
+
 vim.o.title = true
 vim.o.titlestring = 'nvim: %t'
 
@@ -571,8 +695,8 @@ vim.cmd [[
 
     " set intendation for *.csproj files
     autocmd FileType cs setlocal commentstring=//\ %s
-    autocmd BufNewFile,BufRead *.csproj setlocal ts=2 sts=2 sw=2 expandtab
-    autocmd BufNewFile,BufRead *.props set syntax=xml ft=xml
+    autocmd BufNewFile,BufRead *.csproj,nuget.config setlocal ts=2 sts=2 sw=2 expandtab
+    autocmd BufNewFile,BufRead *.props,nuget.config set syntax=xml ft=xml
 ]]
 
 -- Set highlight on search
@@ -618,7 +742,7 @@ vim.o.backup=false
 vim.o.writebackup=false
 
 -- Give more space for displaying messages.
-vim.o.cmdheight=2
+vim.o.cmdheight=0
 
 -- Having longer updatetime (default is 4000 ms = 4 s) leads to noticeable
 -- delays and poor user experience.
@@ -687,6 +811,15 @@ require('diffview').setup({
 -- Telescope
 require('telescope').setup {
   defaults = {
+    layout_strategy = "vertical",
+    layout_config = {
+      vertical = {
+        width = 0.9,
+        height = 0.9,
+        preview_height = 20,
+      },
+    },
+    wrap_results = true,
     path_display = {
       filename_first = {
         reverse_directories = true
@@ -745,7 +878,12 @@ require('mason-tool-installer').setup {
 
     -- you can turn off/on auto_update per tool
     { 'bash-language-server', auto_update = true },
+
     'lua-language-server',
+    'stylua',
+
+    'gh-actions-language-server',
+
     'yaml-language-server',
     'vim-language-server',
     'gopls',
@@ -809,12 +947,11 @@ vim.api.nvim_exec2([[
 })
 
 -- custom config
-vim.lsp.set_log_level('debug')
-vim.lsp.set_log_level('TRACE')
+vim.lsp.log.set_level('debug')
+vim.lsp.log.set_level('TRACE')
 require('lsp-config')
 require('dap-config')
 require('formatter-config')
-require('treesitter-config')
 
 require('mini.surround').setup({})
 
@@ -840,6 +977,8 @@ vim.api.nvim_create_user_command('JwtDecode', ak.ui.jwt.decode, {desc='my: conve
 vim.keymap.set('x', 'S', function() require('mini.surround').add('visual') end, { noremap = true })
 -- -- Make special mapping for 'add surrounding for line'
 -- vim.keymap.set('n', 'yss', 'ys_', { noremap = false })
+-- TODO: consider to enable this (thanks ImVossie)
+-- vim.keymap.set('n', '<leader>wr', ':set wrap!<CR>', { noremap = true, silent = true })
 
 -- setup nvim-tree keybinding
 vim.keymap.set('n', '<leader>nr', require('nvim-tree.api').tree.reload, { desc='my: reload nvim-tree' })
@@ -1022,5 +1161,14 @@ vim.api.nvim_create_autocmd('LspAttach', {
     end
   end,
 })
+
+-- vim.env.NO_COLOR=1
+-- vim.env.__SuppressAnsiEscapeSequences=1
+--
+-- vim.cmd[[
+-- let &shell = 'pwsh'
+-- let &shellcmdflag = "-NoLogo -NoProfile -NonInteractive -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;$PSDefaultParameterValues['Out-File:Encoding']='utf8';$PSStyle.OutputRendering='PlainText'"
+-- set shellquote= shellxquote=
+-- ]]
 
 -- vim: ts=2 sts=2 sw=2 et
