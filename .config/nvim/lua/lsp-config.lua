@@ -53,26 +53,12 @@ vim.lsp.config('*', {
   end
 })
 
-vim.lsp.config("omnisharp", {
- cmd = {
-    "/var/home/ak/devel/omnisharp-roslyn/bin/Release/OmniSharp.Stdio.Driver/net8.0/OmniSharp",
-    '-z', -- https://github.com/OmniSharp/omnisharp-vscode/pull/4300
-    '--hostPID',
-    tostring(vim.fn.getpid()),
-    'DotNet:enablePackageRestore=false',
-    '--encoding',
-    'utf-8',
-    '--languageserver',
-  },
-})
-
 vim.lsp.enable({
   -- 'roslyn_ls',
   'clangd',
   'lua_ls',
   'yamlls',
   'omnisharp',
-  'gh_actions_ls',
 -- 'pylsp',
 -- 'jdtls',
 -- 'gdscript',

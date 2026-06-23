@@ -2,11 +2,6 @@
 set -e -o pipefail
 
 ###
-# enable podman socket inside toolbox
-###
-systemctl --user --now enable podman.socket
-
-###
 # setup additional repos
 ###
 sudo cp ./yum.repos.d/* /etc/yum.repos.d/
@@ -15,6 +10,11 @@ sudo cp ./yum.repos.d/* /etc/yum.repos.d/
 # update all installed packages to latest version
 ###
 sudo dnf update -y --best --allowerasing
+
+###
+# enable podman socket inside toolbox
+###
+systemctl --user --now enable podman.socket
 
 ###
 # install neovim
@@ -40,7 +40,9 @@ sudo dnf install -y gcc libstdc++-static
 sudo dnf install -y inotify-tools
 
 # deps for build neovim from source
-sudo dnf install -y gettext-devel
+sudo dnf install -y \
+    gettext-devel \
+    clang
 
 # install neovim nightly
 sudo dnf copr enable -y agriffis/neovim-nightly
@@ -60,6 +62,33 @@ sudo dnf install -y neovim python3-neovim
 
 # update plugins
 nvim --headless "+Lazy! restore" +qa
+
+
+###
+# luakit development
+###
+sudo dnf install -y \
+    gcc \
+    clang \
+    clang-tools-extra \
+    gstreamer1-devel \
+    gtk4-devel \
+    make \
+    sqlite3 \
+    webkitgtk6.0-devel \
+    glibc-common \
+    luajit-devel \
+    lua5.1-socket \
+    lua5.1-filesystem \
+    javascriptcoregtk6.0-devel \
+    glib2-devel \
+    xorg-x11-server-Xvfb \
+    bear
+
+# 
+luarocks --lua-version=5.1 --local install luassert
+luarocks --lua-version=5.1 --local install luacheck
+
 
 ###
 # install wally-cli (for Moonlander firmware update)
@@ -83,8 +112,7 @@ cs install bloop --only-prebuilt=true
 ###
 # install dotnet sdk
 sudo dnf install -y \
-    dotnet-sdk-8.0 \
-    dotnet-sdk-9.0
+    dotnet-sdk-10.0
 # Create Dotnet Developer Certificate
 dotnet dev-certs https
 
@@ -117,6 +145,9 @@ if ! [ -x "$(command -v rustup)" ]; then
     # install rust
     echo "Install rustup"
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+
+    # needed for neovim
+    cargo install stylua --features luajit
 fi
 
 ###

@@ -1,622 +1,1022 @@
 -- enable experimental loader
 vim.loader.enable()
 
--- enable experimental messages ui
-require('vim._extui').enable({
-  enable = true, -- Whether to enable or disable the UI.
-  msg = { -- Options related to the message module.
-    ---@type 'cmd'|'msg' Where to place regular messages, either in the
-    ---cmdline or in a separate ephemeral message window.
-    target = 'cmd',
-    timeout = 1000, -- Time a message is visible in the message window.
-  },
-})
+local plugins = {
+    { 'https://github.com/nvim-lua/plenary.nvim' },
+    { 'https://github.com/nvim-treesitter/nvim-treesitter' },
+    { 'https://github.com/nvim-tree/nvim-web-devicons' },
+    { 'https://github.com/MunifTanjim/nui.nvim' },
+    { 'https://github.com/616b2f/neo-tree-tests' },
+    { 'https://github.com/nvim-neotest/nvim-nio' },
+    { 'https://github.com/sindrets/diffview.nvim' },
+    { 'https://github.com/rafamadriz/friendly-snippets' },
+
+    -- UI to select things (files, grep results, open buffers...)
+    { 'https://github.com/nvim-telescope/telescope.nvim' },
+    { 'https://github.com/nvim-telescope/telescope-ui-select.nvim',
+        config = function ()
+            require('telescope').load_extension('ui-select')
+        end
+    },
+
+    -- Add indentation guides even on blank lines
+    { 'https://github.com/lukas-reineke/indent-blankline.nvim' },
+    -- Add git related info in the signs columns and popups
+    { 'https://github.com/lewis6991/gitsigns.nvim' },
+
+    -- git plugin
+    {
+        'https://github.com/NeogitOrg/neogit',
+        version = 'master',
+    },
+
+    -- Highlight, edit, and navigate code using a fast incremental parsing library
+    {
+        'https://github.com/nvim-treesitter/nvim-treesitter',
+        version = "main",
+        build = ':TSUpdate'
+    },
+
+    {
+        'https://github.com/nvim-treesitter/nvim-treesitter-textobjects', -- Additional textobjects for treesitter
+        version = "main",
+    },
+
+    {
+      'https://github.com/olimorris/codecompanion.nvim',
+      version = vim.version.range("v19.13.*"),
+      config = function()
+        require("codecompanion").setup({
+          adapters = {
+            acp = {
+              gemini_cli = function()
+                return require("codecompanion.adapters").extend("gemini_cli", {
+                  schema = {
+                    model = {
+                      default = "gemini-2.5-flash",
+                    },
+                  },
+                  defaults = {
+                    auth_method = "gemini-api-key",       -- "oauth-personal"|"gemini-api-key"|"vertex-ai"
+                  },
+                  -- env = {
+                  --   GEMINI_API_KEY = "cmd:op read op://personal/Gemini_API/credential --no-newline",
+                  -- },
+                })
+              end,
+            },
+          },
+          -- Set Gemini ACP as your default chat interface
+          interactions = {
+            chat = {
+              adapter = "gemini_cli",
+            },
+          },
+          display = {
+            chat = {
+              window = {
+                layout = "vertical",       -- Split vertically
+                position = "right",        -- Place it on the right side
+                width = 0.35,              -- Occupy 35% of the editor width
+              },
+            },
+          },
+        })
+        vim.keymap.set({ "n", "v" }, "<leader>cc", "<cmd>CodeCompanionChat Toggle<cr>",
+          { desc = "my: Toggle Gemini ACP Agent" })
+        vim.keymap.set({ "n", "v" }, "<leader>ca", "<cmd>CodeCompanionActions<cr>", { desc = "my: CodeCompanion Actions" })
+      end
+    },
+
+    -- nvim lsp support
+    {
+        'https://github.com/mason-org/mason.nvim',
+        -- dir = '~/devel/mason.nvim',
+        -- dev = true,
+        config = function()
+            require('mason').setup({
+                registries = {
+                    -- 'file:~/devel/mason-registry',
+                    'github:mason-org/mason-registry',
+                    -- 'github:616b2f/mason-registry-lsp',
+                    'github:616b2f/mason-registry-bsp'
+                }
+            })
+        end
+    },
+    'https://github.com/mason-org/mason-lspconfig.nvim', -- for better integration with lspconfig
+    {
+        'https://github.com/neovim/nvim-lspconfig', -- Collection of configurations for built-in LSP client
+        -- dir = '~/devel/nvim-lspconfig',
+        -- dev = true,
+    },
+    'https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim', -- for easier installing tools
+    {
+        'https://github.com/j-hui/fidget.nvim',
+        version = 'main',
+        config = function()
+          require('fidget').setup({
+            notification = {
+                override_vim_notify = false,
+                view = {
+                  stack_upwards = false
+                },
+                window = {
+                  align = 'top'
+                }
+              },
+          })
+        end
+    },
+
+    -- specific for csharp allows goto definition for decompiled binaries
+    'https://github.com/Hoffs/omnisharp-extended-lsp.nvim',
+
+    'https://github.com/mfussenegger/nvim-jdtls', -- specific for java, add some special config
+
+    -- Additional lua configuration, makes nvim stuff amazing
+    {
+        'https://github.com/folke/lazydev.nvim',
+        config = function()
+          require("lazydev").setup({
+            library = {
+                'bsp.nvim',
+                'neotest',
+                -- Load luvit types when the `vim.uv` word is found
+                { path = '${3rd}/luv/library', words = { 'vim%.uv' } },
+            },
+          })
+        end
+    },
+
+    -- complete support
+    {
+        'https://github.com/saghen/blink.cmp',
+        -- dev = true,
+        -- dir = '~/devel/blink.cmp/',
+        -- use a release tag to download pre-built binaries
+        version = vim.version.range('v1.10.*'),
+        config = function()
+          require('blink.cmp').setup({
+            keymap = {
+                preset = 'default',
+                ['<c-k>'] = { 'snippet_forward', 'fallback' },
+                ['<c-j>'] = { 'snippet_backward', 'fallback' },
+            },
+
+            signature = {
+                enabled = true,
+            },
+
+            completion = {
+                -- experimental auto-brackets support
+                accept = { auto_brackets = { enabled = true } },
+                documentation = { auto_show = true }
+            },
+
+            appearance = {
+                use_nvim_cmp_as_default = true,
+                nerd_font_variant = 'mono',
+                kind_icons = {
+                Text = '',
+                Method = '',
+                Function = '',
+                Constructor = '',
+
+                Field = '',
+                Variable = '',
+                Property = '',
+
+                Class = '',
+                Interface = '',
+                Struct = '',
+                Module = '󰅩',
+
+                Unit = '',
+                Value = '',
+                Enum = '',
+                EnumMember = '',
+
+                Keyword = '',
+                Constant = '',
+
+                Snippet = '',
+                Color = '',
+                File = '',
+                Reference = '',
+                Folder = '',
+                Event = '',
+                Operator = '',
+                TypeParameter = '',
+                }
+            }
+          })
+        end
+    },
+
+    -- custom formatters
+    'https://github.com/mhartington/formatter.nvim',
+
+    -- color schemes
+    -- 'gbprod/nord.nvim',
+
+    -- colorscheme helper
+    'https://github.com/tjdevries/colorbuddy.nvim',
+
+    -- colorizer (show colors for RGB and there like)
+    'https://github.com/norcalli/nvim-colorizer.lua',
+
+    -- lightline plugin for pretty statusline
+    {
+        'https://github.com/nvim-lualine/lualine.nvim', -- Fancier statusline
+    },
+
+    -- essential plugins,
+    { 'https://github.com/echasnovski/mini.nvim', version = 'stable' },
+
+    -- debugger adapter protocoll support
+    'https://github.com/mfussenegger/nvim-dap',
+    {
+        'https://github.com/rcarriga/nvim-dap-ui',
+    },
+
+
+    -- unit test plugins
+    -- {
+    --   'https://github.com/nvim-neotest/neotest',
+    --   -- dir = '~/devel/neotest',
+    --   -- dev = true,
+    --   dependencies = {
+    --     'nvim-neotest/nvim-nio',
+    --     'nvim-lua/plenary.nvim',
+    --     'nvim-treesitter/nvim-treesitter',
+    --     'antoinemadec/FixCursorHold.nvim'
+    --   }
+    -- },
+    -- {
+    --   dir = '~/devel/neotest-bsp'
+    -- },
+    -- {
+    --   'https://github.com/Issafalcon/neotest-dotnet',
+    --   dependencies = {
+    --     {
+    --       'nvim-neotest/neotest',
+    --     },
+    --   }
+    -- },
+
+    -- file explorer like NERDtree
+    {
+        'https://github.com/nvim-tree/nvim-tree.lua',
+        config = function()
+          require('nvim-tree').setup({
+              update_cwd = false,
+              update_focused_file = {
+              update_cwd = false
+              },
+              view = {
+              width = 70
+              },
+              actions = {
+              open_file = {
+                  window_picker = {
+                      enable = true,
+                      picker = require('window-picker').pick_window,
+                  }
+              }
+              },
+              renderer = {
+              highlight_git = true, -- 0 by default, will enable file highlight for git attributes (can be used without the icons).
+              add_trailing = true,
+              icons = {
+                  show = {
+                  git = false,
+                  folder = true,
+                  file = true,
+                  folder_arrow = true,
+                  },
+                  glyphs = { -- default shows no icon by default
+                  git = {
+                      unstaged = '✗',
+                      staged = '✚',
+                      unmerged = '═',
+                      renamed = '➜',
+                      untracked = '★'
+                  },
+                  folder = {
+                      default = '',
+                      open = '',
+                      empty = '',
+                      empty_open = ''
+                  }
+                  }
+              }
+              }
+          })
+        end
+    },
+
+    {
+        'https://github.com/s1n7ax/nvim-window-picker', -- for open_with_window_picker keymaps
+        version = vim.version.range('2.*'),
+        config = function()
+          require('window-picker').setup({
+            filter_rules = {
+                include_current_win = false,
+                autoselect_one = true,
+                -- filter using buffer options
+                bo = {
+                -- if the file type is one of following, the window will be ignored
+                filetype = { 'neo-tree', 'neo-tree-popup', 'notify' },
+                -- if the buffer type is one of following, the window will be ignored
+                buftype = { 'terminal', 'quickfix' },
+                },
+            },
+          })
+        end
+    },
+
+    {
+        'https://github.com/616b2f/neo-tree-tests',
+        -- dir = '~/devel/neo-tree-tests',
+        -- dev = true
+    },
+    {
+        'https://github.com/nvim-neo-tree/neo-tree.nvim',
+        version = vim.version.range('v3.x'),
+        config = function()
+          require('neo-tree').setup({
+              sources = {
+                  'filesystem',
+                  'buffers',
+                  'git_status',
+                  'tests'
+              },
+              tests = {
+                  -- The config for your source goes here. This is the same as any other source, plus whatever
+                  -- special config options you add.
+                  --window = {...}
+                  --renderers = { ..}
+                  --etc
+              }
+          })
+        end
+    },
+    {
+        'https://github.com/gnikdroy/projections.nvim',
+        version = 'pre_release',
+        config = function()
+          require('projections').setup({
+              workspaces = {                        -- Default workspaces to search for 
+              { '~/devel/ext', { '.git' } },      -- devel/ext is a workspace. patterns = { '.git' }
+              { '~/devel', { '.git' } },          -- devel is a workspace. patterns = { '.git' }
+              { '~/devel/projects', { '.git' } },      -- devel/projects is a workspace. patterns = { '.git' }
+              },
+              store_hooks = {
+              pre = function()
+                  -- some workaround to not save tab state of some plugins,
+                  -- restoring the session with those tabs open results in an bad UX
+
+                  -- close nvim tree tab if open
+                  local nvim_tree_present, nvim_tree_api = pcall(require, 'nvim-tree.api')
+                  if nvim_tree_present then nvim_tree_api.tree.close() end
+
+                  -- close neogit status tab if open
+                  local neogit_present, neogit_api = pcall(require, 'neogit')
+                  if neogit_present and neogit_api.status.status_buffer then
+                  neogit_api.status.close()
+                  end
+              end
+              }
+          })
+
+          -- configure projection to also switch cwd in nvim-tree
+          -- when project is switched
+          local switcher = require('projections.switcher')
+          local nvim_tree_present, api = pcall(require, 'nvim-tree.api')
+          if nvim_tree_present then
+              local original_switch_function = switcher.switch
+              switcher.switch = function(spath)
+              -- pre hooks here
+              local result = original_switch_function(spath)
+              -- unconditional post hooks here
+              if result then
+                  --- post hook that only runs if project switching was successful
+                  api.tree.change_root(spath)
+
+                  local lualine_present, lualine_api = pcall(require, 'lualine')
+                  if lualine_present then
+                  lualine_api.refresh()
+                  end
+              end
+              return result
+              end
+          end
+
+          require('telescope').load_extension('projections')
+        end
+    },
+
+    {
+        'https://github.com/smoka7/hop.nvim',
+        version = vim.version.range('*'),
+        config = function()
+        -- you can configure Hop the way you like here; see :h hop-config
+          require'hop'.setup()
+        end
+    },
+
+    -- terraform plugin
+    { 'https://github.com/hashivim/vim-terraform' },
+
+    -- nice helper for registers
+    {
+        'https://codeberg.org/616b2f/registers.nvim',
+        config = function ()
+            require('registers').setup()
+        end,
+    },
+
+    -- vscode like task runner
+    {
+        'https://github.com/stevearc/overseer.nvim',
+        config = function()
+          require('overseer').setup()
+        end
+    },
+
+    {
+        'https://github.com/616b2f/ak.nvim',
+    },
+
+    {
+        'https://github.com/616b2f/bsp.nvim',
+        -- dir = '~/devel/bsp.nvim',
+        -- dev = true,
+        config = function()
+          require('bsp').setup({
+            log = {
+                level = vim.log.levels.DEBUG
+            },
+            ui = {
+                enable = true
+            },
+            on_start = {
+                test_case_discovery = false
+            },
+            plugins = {
+                fidget = true
+            }
+          })
+          vim.api.nvim_create_autocmd('User',
+          {
+              group = 'bsp',
+              pattern = 'BspAttach',
+              callback = function()
+              vim.keymap.set('n', '<leader>bb', require('bsp').compile_build_target, { desc = 'my: compile build target with build server' })
+              vim.keymap.set('n', '<leader>br', require('bsp').run_build_target, { desc = 'my: run build target with build server' })
+              vim.keymap.set('n', '<leader>btt', require('bsp').test_build_target, { desc = 'my: test build target with build server' })
+              vim.keymap.set('n', '<leader>btc', require('bsp').test_case_target, { desc = 'my: select specific test case to run with build server' })
+              vim.keymap.set('n', '<leader>btf', require('bsp').test_file_target, { desc = 'my: select specific file to run with build server' })
+              vim.keymap.set('n', '<leader>bc', require('bsp').cleancache_build_target, { desc = 'my: clean cache build target with build server' })
+              end
+          })
+        end
+    },
+
+    -- show markdown in a nicer way
+    {
+        'https://github.com/MeanderingProgrammer/render-markdown.nvim',
+        config = function ()
+            require('render-markdown').setup()
+        end
+    }
+}
+
+local packages = {}
+for _, v in pairs(plugins) do
+    if type(v) == "string" then
+        table.insert(packages, { src = v})
+    elseif type(v) == "table" then
+        local obj = { src = v[1] }
+        if v.version then
+            obj.version = v.version
+        end
+        table.insert(packages, obj)
+    end
+end
+
+vim.pack.add(packages);
+
+for _, v in pairs(plugins) do
+    if type(v) == "table" then
+        if v.config then
+          v.config()
+        end
+    end
+end
 
 -- Install LazyVim
-local lazypath = vim.fn.stdpath('data') .. '/lazy/lazy.nvim'
-if not vim.uv.fs_stat(lazypath) then
-  vim.fn.system({
-    'git',
-    'clone',
-    '--filter=blob:none',
-    'https://github.com/folke/lazy.nvim.git',
-    '--branch=stable', -- latest stable release
-    lazypath,
-  })
-end
-vim.opt.rtp:prepend(lazypath)
+-- local lazypath = vim.fn.stdpath('data') .. '/lazy/lazy.nvim'
+-- if not vim.uv.fs_stat(lazypath) then
+--   vim.fn.system({
+--     'git',
+--     'clone',
+--     '--filter=blob:none',
+--     'https://github.com/folke/lazy.nvim.git',
+--     '--branch=stable', -- latest stable release
+--     lazypath,
+--   })
+-- end
+-- vim.opt.rtp:prepend(lazypath)
 
-require('lazy').setup({
-  -- UI to select things (files, grep results, open buffers...)
-  {
-    'nvim-telescope/telescope.nvim',
-    dependencies = {
-      'nvim-lua/plenary.nvim'
-    }
-  },
-  { 'nvim-telescope/telescope-ui-select.nvim',
-    config = function ()
-      require('telescope').load_extension('ui-select')
-    end
-  },
-
-  -- Add indentation guides even on blank lines
-  'lukas-reineke/indent-blankline.nvim',
-  -- Add git related info in the signs columns and popups
-  { 'lewis6991/gitsigns.nvim', dependencies = { 'nvim-lua/plenary.nvim' } },
-  -- git plugin
-  {
-    'NeogitOrg/neogit',
-    branch = 'master',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      'sindrets/diffview.nvim'
-    }
-  },
-
-  -- Highlight, edit, and navigate code using a fast incremental parsing library
-  {
-    'nvim-treesitter/nvim-treesitter',
-    lazy = false,
-    branch = 'main',
-    build = ':TSUpdate',
-    config = function()
-      require'nvim-treesitter'.install {
-        'query',
-        'c_sharp',
-        'lua',
-        'go',
-        'java',
-        'python',
-        'vimdoc',
-        'terraform',
-        'markdown',
-        'hurl',
-        'json',
-        'xml',
-        'yaml',
-        'gdscript',
-        'godot_resource',
-        'gdshader'
-      }
-      vim.api.nvim_create_autocmd('FileType', {
-        pattern = {
-          'cs',
-          'lua',
-          'json',
-          'yaml',
-          'xml',
-          'tf',
-          'hurl',
-          'vimdoc'
-        },
-        callback = function() vim.treesitter.start() end,
-      })
-    end
-  },
-  {
-    'nvim-treesitter/nvim-treesitter-textobjects',
-    branch = 'main',
-    config = function()
-      require("nvim-treesitter-textobjects").setup {
-        move = {
-          -- whether to set jumps in the jumplist
-          set_jumps = true,
-        },
-      }
-      -- selects
-      vim.keymap.set({ "x", "o" }, "am", function()
-        require "nvim-treesitter-textobjects.select".select_textobject("@function.outer", "textobjects")
-      end)
-      vim.keymap.set({ "x", "o" }, "im", function()
-        require "nvim-treesitter-textobjects.select".select_textobject("@function.inner", "textobjects")
-      end)
-      vim.keymap.set({ "x", "o" }, "ac", function()
-        require "nvim-treesitter-textobjects.select".select_textobject("@class.outer", "textobjects")
-      end)
-      vim.keymap.set({ "x", "o" }, "ic", function()
-        require "nvim-treesitter-textobjects.select".select_textobject("@class.inner", "textobjects")
-      end)
-
-      -- moves
-      -- You can also pass a list to group multiple queries.
-      vim.keymap.set({ "n", "x", "o" }, "]o", function()
-        move.goto_next_start({"@loop.inner", "@loop.outer"}, "textobjects")
-      end)
-
-      -- You can also use captures from other query groups like `locals.scm` or `folds.scm`
-      vim.keymap.set({ "n", "x", "o" }, "]s", function()
-        require("nvim-treesitter-textobjects.move").goto_next_start("@local.scope", "locals")
-      end)
-      vim.keymap.set({ "n", "x", "o" }, "]z", function()
-        require("nvim-treesitter-textobjects.move").goto_next_start("@fold", "folds")
-      end)
-
-      vim.keymap.set({ "n", "x", "o" }, "][", function()
-        require("nvim-treesitter-textobjects.move").goto_next_end("@class.outer", "textobjects")
-      end)
-      vim.keymap.set({ "n", "x", "o" }, "]]", function()
-        require("nvim-treesitter-textobjects.move").goto_next_start("@class.outer", "textobjects")
-      end)
-      vim.keymap.set({ "n", "x", "o" }, "[]", function()
-        require("nvim-treesitter-textobjects.move").goto_previous_end("@class.outer", "textobjects")
-      end)
-      vim.keymap.set({ "n", "x", "o" }, "[[", function()
-        require("nvim-treesitter-textobjects.move").goto_previous_start("@class.outer", "textobjects")
-      end)
-
-      vim.keymap.set({ "n", "x", "o" }, "]m", function()
-        require("nvim-treesitter-textobjects.move").goto_next_start("@function.outer", "textobjects")
-      end)
-      vim.keymap.set({ "n", "x", "o" }, "[m", function()
-        require("nvim-treesitter-textobjects.move").goto_previous_start("@function.outer", "textobjects")
-      end)
-      vim.keymap.set({ "n", "x", "o" }, "]M", function()
-        require("nvim-treesitter-textobjects.move").goto_next_end("@function.outer", "textobjects")
-      end)
-      vim.keymap.set({ "n", "x", "o" }, "[M", function()
-        require("nvim-treesitter-textobjects.move").goto_previous_end("@function.outer", "textobjects")
-      end)
-    end
-  },
-
-  -- nvim lsp support
-  {
-    'mason-org/mason.nvim',
-    dir = '~/devel/mason.nvim',
-    dev = true,
-    opts = {
-      registries = {
-        'file:~/devel/mason-registry',
-        'github:mason-org/mason-registry',
-        'github:616b2f/mason-registry-bsp'
-      }
-    }
-  },
-  'mason-org/mason-lspconfig.nvim', -- for better integration with lspconfig
-  {
-    'neovim/nvim-lspconfig', -- Collection of configurations for built-in LSP client
-    dir = '~/devel/nvim-lspconfig',
-    dev = true,
-  },
-  'WhoIsSethDaniel/mason-tool-installer.nvim', -- for easier installing tools
-  {
-    'j-hui/fidget.nvim',
-    branch = 'main',
-    opts = {
-      notification = {
-        override_vim_notify = true,
-        view = {
-          stack_upwards = false
-        },
-        window = {
-          align = 'top'
-        }
-      },
-    }
-  },
-
-  -- specific for csharp allows goto definition for decompiled binaries
-  {
-    'Hoffs/omnisharp-extended-lsp.nvim',
-    -- dev = true,
-    -- dir = '~/devel/omnisharp-extended-lsp.nvim/'
-  },
-
-  'mfussenegger/nvim-jdtls', -- specific for java, add some special config
-
-  -- Additional lua configuration, makes nvim stuff amazing
-  {
-    'folke/lazydev.nvim',
-    ft = 'lua', -- only load on lua files
-    opts = {
-      library = {
-        'bsp.nvim',
-        'neotest',
-        -- Load luvit types when the `vim.uv` word is found
-        { path = '${3rd}/luv/library', words = { 'vim%.uv' } },
-      },
-    },
-  },
-
-  -- 'L3MON4D3/LuaSnip', -- Snippets plugin
-  -- {
-  --   'hrsh7th/nvim-cmp',
-  --   dependencies = {
-  --     'hrsh7th/cmp-nvim-lsp',
-  --     'saadparwaiz1/cmp_luasnip',
-  --     'onsails/lspkind-nvim',
-  --   }
-  -- },
-
-  -- complete support
-  {
-    'saghen/blink.cmp',
-    -- dev = true,
-    -- dir = '~/devel/blink.cmp/',
-    lazy = false, -- lazy loading handled internally
-    -- optional: provides snippets for the snippet source
-    dependencies = 'rafamadriz/friendly-snippets',
-    -- use a release tag to download pre-built binaries
-    version = 'v1.8.*',
-    ---@module 'blink.cmp'
-    ---@type blink.cmp.Config
-    opts = {
-      keymap = {
-        preset = 'default',
-        ['<c-k>'] = { 'snippet_forward', 'fallback' },
-        ['<c-j>'] = { 'snippet_backward', 'fallback' },
-      },
-
-      signature = {
-        enabled = true,
-      },
-
-      completion = {
-        -- experimental auto-brackets support
-        accept = { auto_brackets = { enabled = true } },
-        documentation = { auto_show = true }
-      },
-
-      appearance = {
-        use_nvim_cmp_as_default = true,
-        nerd_font_variant = 'mono',
-        kind_icons = {
-          Text = '',
-          Method = '',
-          Function = '',
-          Constructor = '',
-
-          Field = '',
-          Variable = '',
-          Property = '',
-
-          Class = '',
-          Interface = '',
-          Struct = '',
-          Module = '󰅩',
-
-          Unit = '',
-          Value = '',
-          Enum = '',
-          EnumMember = '',
-
-          Keyword = '',
-          Constant = '',
-
-          Snippet = '',
-          Color = '',
-          File = '',
-          Reference = '',
-          Folder = '',
-          Event = '',
-          Operator = '',
-          TypeParameter = '',
-        }
-      }
-    },
-    -- allows extending the enabled_providers array elsewhere in your config
-    -- without having to redefining it
-    opts_extend = { 'sources.default' }
-  },
-
-  -- 'tjdevries/complextras.nvim',
-  -- 'rafamadriz/friendly-snippets', -- basic snippets
-
-  -- custom formatters
-  'mhartington/formatter.nvim',
-
-  -- color schemes
-  -- 'gbprod/nord.nvim',
-
-  -- colorscheme helper
-  'tjdevries/colorbuddy.nvim',
-
-  -- colorizer (show colors for RGB and there like)
-  'norcalli/nvim-colorizer.lua',
-
-  -- comment plugins
-  -- {
-  --   'numtostr/comment.nvim', -- 'gc' to comment visual regions/lines
-  --   opt = {}
-  -- },
-  --'tomtom/tcomment_vim',
-  --'preservim/nerdcommenter',
-
-  -- Plugin outside ~/.vim/plugged with post-update hook
-  --'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' },
-  --'junegunn/fzf.vim',
-
-  -- lightline plugin for pretty statusline
-  {
-    'nvim-lualine/lualine.nvim', -- Fancier statusline
-    dependencies = { 'nvim-tree/nvim-web-devicons', lazy = true } -- for file icons
-  },
-  -- 'itchyny/lightline.vim',
-
-  -- essential plugins,
-  -- 'tpope/vim-surround',
-  { 'echasnovski/mini.nvim', branch = 'stable' },
-
-  -- debugger adapter protocoll support
-  'mfussenegger/nvim-dap',
-  {
-    'rcarriga/nvim-dap-ui',
-    dependencies = {
-      'nvim-neotest/nvim-nio',
-    }
-  },
-
-
-  -- unit test plugins
-  -- {
-  --   'nvim-neotest/neotest',
-  --   -- dir = '~/devel/neotest',
-  --   -- dev = true,
-  --   dependencies = {
-  --     'nvim-neotest/nvim-nio',
-  --     'nvim-lua/plenary.nvim',
-  --     'nvim-treesitter/nvim-treesitter',
-  --     'antoinemadec/FixCursorHold.nvim'
-  --   }
-  -- },
-  -- {
-  --   dir = '~/devel/neotest-bsp'
-  -- },
-  -- {
-  --   'Issafalcon/neotest-dotnet',
-  --   dependencies = {
-  --     {
-  --       'nvim-neotest/neotest',
-  --     },
-  --   }
-  -- },
-
-  -- file explorer like NERDtree
-  {
-    'nvim-tree/nvim-tree.lua',
-    dependencies = {
-      'nvim-tree/nvim-web-devicons', -- optional, for file icon
-      's1n7ax/nvim-window-picker'
-    },
-    config = function()
-      require('nvim-tree').setup({
-        update_cwd = false,
-        update_focused_file = {
-          update_cwd = false
-        },
-        view = {
-          width = 35
-        },
-        actions = {
-          open_file = {
-              window_picker = {
-                enable = true,
-                picker = require('window-picker').pick_window,
-            }
-          }
-        },
-        renderer = {
-          highlight_git = true, -- 0 by default, will enable file highlight for git attributes (can be used without the icons).
-          add_trailing = true,
-          icons = {
-            show = {
-              git = false,
-              folder = true,
-              file = true,
-              folder_arrow = true,
-            },
-            glyphs = { -- default shows no icon by default
-              git = {
-                unstaged = '✗',
-                staged = '✚',
-                unmerged = '═',
-                renamed = '➜',
-                untracked = '★'
-              },
-              folder = {
-                default = '',
-                open = '',
-                empty = '',
-                empty_open = ''
-              }
-            }
-          }
-        }
-      })
-    end
-  },
-
-  {
-    's1n7ax/nvim-window-picker', -- for open_with_window_picker keymaps
-    version = '2.*',
-    opt = {
-      filter_rules = {
-        include_current_win = false,
-        autoselect_one = true,
-        -- filter using buffer options
-        bo = {
-          -- if the file type is one of following, the window will be ignored
-          filetype = { 'neo-tree', 'neo-tree-popup', 'notify' },
-          -- if the buffer type is one of following, the window will be ignored
-          buftype = { 'terminal', 'quickfix' },
-        },
-      },
-    }
-  },
-
-  {
-    '616b2f/neo-tree-tests',
-    dir = '~/devel/neo-tree-tests',
-    dev = true
-  },
-  {
-    'nvim-neo-tree/neo-tree.nvim',
-    branch = 'v3.x',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      'nvim-tree/nvim-web-devicons', -- not strictly required, but recommended
-      'MunifTanjim/nui.nvim',
-      's1n7ax/nvim-window-picker',
-      '616b2f/neo-tree-tests'
-    },
-    opts = {
-      sources = {
-          'filesystem',
-          'buffers',
-          'git_status',
-          'tests'
-      },
-      tests = {
-          -- The config for your source goes here. This is the same as any other source, plus whatever
-          -- special config options you add.
-          --window = {...}
-          --renderers = { ..}
-          --etc
-      }
-    },
-    config = function(_, opts)
-      require('neo-tree').setup(opts)
-    end
-  },
-  {
-    'gnikdroy/projections.nvim',
-    branch = 'pre_release',
-    config = function()
-      require('projections').setup({
-        workspaces = {                        -- Default workspaces to search for 
-          { '~/devel/ext', { '.git' } },      -- devel/ext is a workspace. patterns = { '.git' }
-          { '~/devel', { '.git' } },          -- devel is a workspace. patterns = { '.git' }
-          { '~/devel/projects', { '.git' } },      -- devel/projects is a workspace. patterns = { '.git' }
-        },
-        store_hooks = {
-          pre = function()
-            -- some workaround to not save tab state of some plugins,
-            -- restoring the session with those tabs open results in an bad UX
-
-            -- close nvim tree tab if open
-            local nvim_tree_present, nvim_tree_api = pcall(require, 'nvim-tree.api')
-            if nvim_tree_present then nvim_tree_api.tree.close() end
-
-            -- close neogit status tab if open
-            local neogit_present, neogit_api = pcall(require, 'neogit')
-            if neogit_present and neogit_api.status.status_buffer then
-              neogit_api.status.close()
-            end
-          end
-        }
-      })
-
-      -- configure projection to also switch cwd in nvim-tree
-      -- when project is switched
-      local switcher = require('projections.switcher')
-      local nvim_tree_present, api = pcall(require, 'nvim-tree.api')
-      if nvim_tree_present then
-        local original_switch_function = switcher.switch
-        switcher.switch = function(spath)
-          -- pre hooks here
-          local result = original_switch_function(spath)
-          -- unconditional post hooks here
-          if result then
-            --- post hook that only runs if project switching was successful
-            api.tree.change_root(spath)
-
-            local lualine_present, lualine_api = pcall(require, 'lualine')
-            if lualine_present then
-              lualine_api.refresh()
-            end
-          end
-          return result
-        end
-      end
-
-      require('telescope').load_extension('projections')
-    end
-  },
-
-  {
-    'smoka7/hop.nvim',
-    version = '*',
-    config = function()
-      -- you can configure Hop the way you like here; see :h hop-config
-      require'hop'.setup()
-    end
-  },
-  -- 'nvim-telescope/telescope-file-browser.nvim'
-
-  -- terraform plugin
-  'hashivim/vim-terraform',
-
-  -- nice helper for registers
-  {
-    'tversteeg/registers.nvim',
-    config = function ()
-      require('registers').setup()
-    end,
-  },
-
-  -- vscode like task runner
-  {
-    'stevearc/overseer.nvim',
-    opts = {},
-  },
-
-  {
-    '616b2f/ak.nvim',
-  },
-
-  {
-    '616b2f/bsp.nvim',
-    dir = '~/devel/bsp.nvim',
-    dev = true,
-    ---@type bsp.BspSetupConfig
-    opts = {
-      log = {
-        level = vim.log.levels.DEBUG
-      },
-      ui = {
-        enable = true
-      },
-      on_start = {
-        test_case_discovery = false
-      },
-      plugins = {
-        fidget = true
-      }
-    },
-    config = function(_, opts)
-      require('bsp').setup(opts)
-      vim.api.nvim_create_autocmd('User',
-      {
-        group = 'bsp',
-        pattern = 'BspAttach',
-        callback = function()
-          vim.keymap.set('n', '<leader>bb', require('bsp').compile_build_target, { desc = 'my: compile build target with build server' })
-          vim.keymap.set('n', '<leader>br', require('bsp').run_build_target, { desc = 'my: run build target with build server' })
-          vim.keymap.set('n', '<leader>btt', require('bsp').test_build_target, { desc = 'my: test build target with build server' })
-          vim.keymap.set('n', '<leader>btc', require('bsp').test_case_target, { desc = 'my: select specific test case to run with build server' })
-          vim.keymap.set('n', '<leader>btf', require('bsp').test_file_target, { desc = 'my: select specific file to run with build server' })
-          vim.keymap.set('n', '<leader>bc', require('bsp').cleancache_build_target, { desc = 'my: clean cache build target with build server' })
-        end
-      })
-    end
-  },
-
-  -- show markdown in a nicer way
-  {
-      'MeanderingProgrammer/render-markdown.nvim',
-      opts = {},
-      dependencies = {
-        'nvim-treesitter/nvim-treesitter',
-        'nvim-tree/nvim-web-devicons'
-      },
-  }
-})
+-- require('lazy').setup({
+--   -- UI to select things (files, grep results, open buffers...)
+--   { 'https://github.com/nvim-telescope/telescope.nvim', dependencies = { 'https://github.com/nvim-lua/plenary.nvim' } },
+--   { 'https://github.com/nvim-telescope/telescope-ui-select.nvim',
+--     config = function ()
+--       require('telescope').load_extension('ui-select')
+--     end
+--   },
+--
+--   -- Add indentation guides even on blank lines
+--   'lukas-reineke/indent-blankline.nvim',
+--   -- Add git related info in the signs columns and popups
+--   { 'https://github.com/lewis6991/gitsigns.nvim', dependencies = { 'https://github.com/nvim-lua/plenary.nvim' } },
+--   -- git plugin
+--   {
+--     'NeogitOrg/neogit',
+--     branch = 'master',
+--     dependencies = {
+--       'nvim-lua/plenary.nvim',
+--       'sindrets/diffview.nvim'
+--     }
+--   },
+--
+--   -- Highlight, edit, and navigate code using a fast incremental parsing library
+--   {
+--     'nvim-treesitter/nvim-treesitter',
+--     branch = "main",
+--     lazy = false,
+--     build = ':TSUpdate'
+--   },
+--
+--   {
+--     'nvim-treesitter/nvim-treesitter-textobjects', -- Additional textobjects for treesitter
+--     branch = "main",
+--   },
+--
+--   -- nvim lsp support
+--   {
+--     'mason-org/mason.nvim',
+--     -- dir = '~/devel/mason.nvim',
+--     -- dev = true,
+--     opts = {
+--       registries = {
+--         -- 'file:~/devel/mason-registry',
+--         'github:mason-org/mason-registry',
+--         -- 'github:616b2f/mason-registry-lsp',
+--         'github:616b2f/mason-registry-bsp'
+--       }
+--     }
+--   },
+--   'mason-org/mason-lspconfig.nvim', -- for better integration with lspconfig
+--   {
+--     'neovim/nvim-lspconfig', -- Collection of configurations for built-in LSP client
+--     -- dir = '~/devel/nvim-lspconfig',
+--     -- dev = true,
+--   },
+--   'WhoIsSethDaniel/mason-tool-installer.nvim', -- for easier installing tools
+--   {
+--     'j-hui/fidget.nvim',
+--     branch = 'main',
+--     opts = {
+--       notification = {
+--         override_vim_notify = true,
+--         view = {
+--           stack_upwards = false
+--         },
+--         window = {
+--           align = 'top'
+--         }
+--       },
+--     }
+--   },
+--
+--   -- specific for csharp allows goto definition for decompiled binaries
+--   'Hoffs/omnisharp-extended-lsp.nvim',
+--
+--   'mfussenegger/nvim-jdtls', -- specific for java, add some special config
+--
+--   -- Additional lua configuration, makes nvim stuff amazing
+--   {
+--     'folke/lazydev.nvim',
+--     ft = 'lua', -- only load on lua files
+--     opts = {
+--       library = {
+--         'bsp.nvim',
+--         'neotest',
+--         -- Load luvit types when the `vim.uv` word is found
+--         { path = '${3rd}/luv/library', words = { 'https://github.com/vim%.uv' } },
+--       },
+--     },
+--   },
+--
+--   -- 'L3MON4D3/LuaSnip', -- Snippets plugin
+--   -- {
+--   --   'hrsh7th/nvim-cmp',
+--   --   dependencies = {
+--   --     'hrsh7th/cmp-nvim-lsp',
+--   --     'saadparwaiz1/cmp_luasnip',
+--   --     'onsails/lspkind-nvim',
+--   --   }
+--   -- },
+--
+--   -- complete support
+--   {
+--     'saghen/blink.cmp',
+--     -- dev = true,
+--     -- dir = '~/devel/blink.cmp/',
+--     lazy = false, -- lazy loading handled internally
+--     -- optional: provides snippets for the snippet source
+--     dependencies = 'rafamadriz/friendly-snippets',
+--     -- use a release tag to download pre-built binaries
+--     version = 'v1.9.*',
+--     ---@module 'blink.cmp'
+--     ---@type blink.cmp.Config
+--     opts = {
+--       keymap = {
+--         preset = 'default',
+--         ['<c-k>'] = { 'https://github.com/snippet_forward', 'fallback' },
+--         ['<c-j>'] = { 'https://github.com/snippet_backward', 'fallback' },
+--       },
+--
+--       signature = {
+--         enabled = true,
+--       },
+--
+--       completion = {
+--         -- experimental auto-brackets support
+--         accept = { auto_brackets = { enabled = true } },
+--         documentation = { auto_show = true }
+--       },
+--
+--       appearance = {
+--         use_nvim_cmp_as_default = true,
+--         nerd_font_variant = 'mono',
+--         kind_icons = {
+--           Text = '',
+--           Method = '',
+--           Function = '',
+--           Constructor = '',
+--
+--           Field = '',
+--           Variable = '',
+--           Property = '',
+--
+--           Class = '',
+--           Interface = '',
+--           Struct = '',
+--           Module = '󰅩',
+--
+--           Unit = '',
+--           Value = '',
+--           Enum = '',
+--           EnumMember = '',
+--
+--           Keyword = '',
+--           Constant = '',
+--
+--           Snippet = '',
+--           Color = '',
+--           File = '',
+--           Reference = '',
+--           Folder = '',
+--           Event = '',
+--           Operator = '',
+--           TypeParameter = '',
+--         }
+--       }
+--     },
+--     -- allows extending the enabled_providers array elsewhere in your config
+--     -- without having to redefining it
+--     opts_extend = { 'https://github.com/sources.default' }
+--   },
+--
+--   -- 'tjdevries/complextras.nvim',
+--   -- 'rafamadriz/friendly-snippets', -- basic snippets
+--
+--   -- custom formatters
+--   'mhartington/formatter.nvim',
+--
+--   -- color schemes
+--   -- 'gbprod/nord.nvim',
+--
+--   -- colorscheme helper
+--   'tjdevries/colorbuddy.nvim',
+--
+--   -- colorizer (show colors for RGB and there like)
+--   'norcalli/nvim-colorizer.lua',
+--
+--   -- comment plugins
+--   -- {
+--   --   'numtostr/comment.nvim', -- 'gc' to comment visual regions/lines
+--   --   opt = {}
+--   -- },
+--   --'tomtom/tcomment_vim',
+--   --'preservim/nerdcommenter',
+--
+--   -- Plugin outside ~/.vim/plugged with post-update hook
+--   --'junegunn/fzf', { 'https://github.com/dir': '~/.fzf', 'do': './install --all' },
+--   --'junegunn/fzf.vim',
+--
+--   -- lightline plugin for pretty statusline
+--   {
+--     'nvim-lualine/lualine.nvim', -- Fancier statusline
+--     dependencies = { 'https://github.com/nvim-tree/nvim-web-devicons', lazy = true } -- for file icons
+--   },
+--   -- 'itchyny/lightline.vim',
+--
+--   -- essential plugins,
+--   -- 'tpope/vim-surround',
+--   { 'https://github.com/echasnovski/mini.nvim', branch = 'stable' },
+--
+--   -- debugger adapter protocoll support
+--   'mfussenegger/nvim-dap',
+--   {
+--     'rcarriga/nvim-dap-ui',
+--     dependencies = {
+--       'nvim-neotest/nvim-nio',
+--     }
+--   },
+--
+--
+--   -- unit test plugins
+--   -- {
+--   --   'nvim-neotest/neotest',
+--   --   -- dir = '~/devel/neotest',
+--   --   -- dev = true,
+--   --   dependencies = {
+--   --     'nvim-neotest/nvim-nio',
+--   --     'nvim-lua/plenary.nvim',
+--   --     'nvim-treesitter/nvim-treesitter',
+--   --     'antoinemadec/FixCursorHold.nvim'
+--   --   }
+--   -- },
+--   -- {
+--   --   dir = '~/devel/neotest-bsp'
+--   -- },
+--   -- {
+--   --   'Issafalcon/neotest-dotnet',
+--   --   dependencies = {
+--   --     {
+--   --       'nvim-neotest/neotest',
+--   --     },
+--   --   }
+--   -- },
+--
+--   -- file explorer like NERDtree
+--   {
+--     'nvim-tree/nvim-tree.lua',
+--     dependencies = {
+--       'nvim-tree/nvim-web-devicons', -- optional, for file icon
+--       's1n7ax/nvim-window-picker'
+--     },
+--     config = function()
+--       require('nvim-tree').setup({
+--         update_cwd = false,
+--         update_focused_file = {
+--           update_cwd = false
+--         },
+--         view = {
+--           width = 70
+--         },
+--         actions = {
+--           open_file = {
+--               window_picker = {
+--                 enable = true,
+--                 picker = require('window-picker').pick_window,
+--             }
+--           }
+--         },
+--         renderer = {
+--           highlight_git = true, -- 0 by default, will enable file highlight for git attributes (can be used without the icons).
+--           add_trailing = true,
+--           icons = {
+--             show = {
+--               git = false,
+--               folder = true,
+--               file = true,
+--               folder_arrow = true,
+--             },
+--             glyphs = { -- default shows no icon by default
+--               git = {
+--                 unstaged = '✗',
+--                 staged = '✚',
+--                 unmerged = '═',
+--                 renamed = '➜',
+--                 untracked = '★'
+--               },
+--               folder = {
+--                 default = '',
+--                 open = '',
+--                 empty = '',
+--                 empty_open = ''
+--               }
+--             }
+--           }
+--         }
+--       })
+--     end
+--   },
+--
+--   {
+--     's1n7ax/nvim-window-picker', -- for open_with_window_picker keymaps
+--     version = '2.*',
+--     opt = {
+--       filter_rules = {
+--         include_current_win = false,
+--         autoselect_one = true,
+--         -- filter using buffer options
+--         bo = {
+--           -- if the file type is one of following, the window will be ignored
+--           filetype = { 'https://github.com/neo-tree', 'neo-tree-popup', 'notify' },
+--           -- if the buffer type is one of following, the window will be ignored
+--           buftype = { 'https://github.com/terminal', 'quickfix' },
+--         },
+--       },
+--     }
+--   },
+--
+--   {
+--     '616b2f/neo-tree-tests',
+--     -- dir = '~/devel/neo-tree-tests',
+--     -- dev = true
+--   },
+--   {
+--     'nvim-neo-tree/neo-tree.nvim',
+--     branch = 'v3.x',
+--     dependencies = {
+--       'nvim-lua/plenary.nvim',
+--       'nvim-tree/nvim-web-devicons', -- not strictly required, but recommended
+--       'MunifTanjim/nui.nvim',
+--       's1n7ax/nvim-window-picker',
+--       '616b2f/neo-tree-tests'
+--     },
+--     opts = {
+--       sources = {
+--           'filesystem',
+--           'buffers',
+--           'git_status',
+--           'tests'
+--       },
+--       tests = {
+--           -- The config for your source goes here. This is the same as any other source, plus whatever
+--           -- special config options you add.
+--           --window = {...}
+--           --renderers = { ..}
+--           --etc
+--       }
+--     },
+--     config = function(_, opts)
+--       require('neo-tree').setup(opts)
+--     end
+--   },
+--   {
+--     'gnikdroy/projections.nvim',
+--     branch = 'pre_release',
+--     config = function()
+--       require('projections').setup({
+--         workspaces = {                        -- Default workspaces to search for 
+--           { 'https://github.com/~/devel/ext', { 'https://github.com/.git' } },      -- devel/ext is a workspace. patterns = { 'https://github.com/.git' }
+--           { 'https://github.com/~/devel', { 'https://github.com/.git' } },          -- devel is a workspace. patterns = { 'https://github.com/.git' }
+--           { 'https://github.com/~/devel/projects', { 'https://github.com/.git' } },      -- devel/projects is a workspace. patterns = { 'https://github.com/.git' }
+--         },
+--         store_hooks = {
+--           pre = function()
+--             -- some workaround to not save tab state of some plugins,
+--             -- restoring the session with those tabs open results in an bad UX
+--
+--             -- close nvim tree tab if open
+--             local nvim_tree_present, nvim_tree_api = pcall(require, 'nvim-tree.api')
+--             if nvim_tree_present then nvim_tree_api.tree.close() end
+--
+--             -- close neogit status tab if open
+--             local neogit_present, neogit_api = pcall(require, 'neogit')
+--             if neogit_present and neogit_api.status.status_buffer then
+--               neogit_api.status.close()
+--             end
+--           end
+--         }
+--       })
+--
+--       -- configure projection to also switch cwd in nvim-tree
+--       -- when project is switched
+--       local switcher = require('projections.switcher')
+--       local nvim_tree_present, api = pcall(require, 'nvim-tree.api')
+--       if nvim_tree_present then
+--         local original_switch_function = switcher.switch
+--         switcher.switch = function(spath)
+--           -- pre hooks here
+--           local result = original_switch_function(spath)
+--           -- unconditional post hooks here
+--           if result then
+--             --- post hook that only runs if project switching was successful
+--             api.tree.change_root(spath)
+--
+--             local lualine_present, lualine_api = pcall(require, 'lualine')
+--             if lualine_present then
+--               lualine_api.refresh()
+--             end
+--           end
+--           return result
+--         end
+--       end
+--
+--       require('telescope').load_extension('projections')
+--     end
+--   },
+--
+--   {
+--     'smoka7/hop.nvim',
+--     version = '*',
+--     config = function()
+--       -- you can configure Hop the way you like here; see :h hop-config
+--       require'hop'.setup()
+--     end
+--   },
+--
+--   -- terraform plugin
+--   'hashivim/vim-terraform',
+--
+--   -- nice helper for registers
+--   {
+--     'tversteeg/registers.nvim',
+--     config = function ()
+--       require('registers').setup()
+--     end,
+--   },
+--
+--   -- vscode like task runner
+--   {
+--     'stevearc/overseer.nvim',
+--     opts = {},
+--   },
+--
+--   {
+--     '616b2f/ak.nvim',
+--   },
+--
+--   {
+--     '616b2f/bsp.nvim',
+--     -- dir = '~/devel/bsp.nvim',
+--     -- dev = true,
+--     ---@type bsp.BspSetupConfig
+--     opts = {
+--       log = {
+--         level = vim.log.levels.DEBUG
+--       },
+--       ui = {
+--         enable = true
+--       },
+--       on_start = {
+--         test_case_discovery = false
+--       },
+--       plugins = {
+--         fidget = true
+--       }
+--     },
+--     config = function(_, opts)
+--       require('bsp').setup(opts)
+--       vim.api.nvim_create_autocmd('User',
+--       {
+--         group = 'bsp',
+--         pattern = 'BspAttach',
+--         callback = function()
+--           vim.keymap.set('n', '<leader>bb', require('bsp').compile_build_target, { desc = 'my: compile build target with build server' })
+--           vim.keymap.set('n', '<leader>br', require('bsp').run_build_target, { desc = 'my: run build target with build server' })
+--           vim.keymap.set('n', '<leader>btt', require('bsp').test_build_target, { desc = 'my: test build target with build server' })
+--           vim.keymap.set('n', '<leader>btc', require('bsp').test_case_target, { desc = 'my: select specific test case to run with build server' })
+--           vim.keymap.set('n', '<leader>btf', require('bsp').test_file_target, { desc = 'my: select specific file to run with build server' })
+--           vim.keymap.set('n', '<leader>bc', require('bsp').cleancache_build_target, { desc = 'my: clean cache build target with build server' })
+--         end
+--       })
+--     end
+--   },
+--
+--   -- show markdown in a nicer way
+--   {
+--       'MeanderingProgrammer/render-markdown.nvim',
+--       opts = {},
+--       dependencies = {
+--         'nvim-treesitter/nvim-treesitter',
+--         'nvim-tree/nvim-web-devicons'
+--       },
+--   }
+-- })
 
 -- enable filetype.lua and disable filetype.vim
 vim.g.do_filetype_lua = 1
-
-vim.o.virtualedit = 'onemore'
 
 vim.o.title = true
 vim.o.titlestring = 'nvim: %t'
@@ -695,8 +1095,8 @@ vim.cmd [[
 
     " set intendation for *.csproj files
     autocmd FileType cs setlocal commentstring=//\ %s
-    autocmd BufNewFile,BufRead *.csproj,nuget.config setlocal ts=2 sts=2 sw=2 expandtab
-    autocmd BufNewFile,BufRead *.props,nuget.config set syntax=xml ft=xml
+    autocmd BufNewFile,BufRead *.csproj setlocal ts=2 sts=2 sw=2 expandtab
+    autocmd BufNewFile,BufRead *.props set syntax=xml ft=xml
 ]]
 
 -- Set highlight on search
@@ -742,7 +1142,7 @@ vim.o.backup=false
 vim.o.writebackup=false
 
 -- Give more space for displaying messages.
-vim.o.cmdheight=0
+vim.o.cmdheight=2
 
 -- Having longer updatetime (default is 4000 ms = 4 s) leads to noticeable
 -- delays and poor user experience.
@@ -789,8 +1189,8 @@ require('lualine').setup {
 
 -- Map blankline
 vim.g.indent_blankline_char = '┊'
-vim.g.indent_blankline_filetype_exclude = { 'help', 'packer' }
-vim.g.indent_blankline_buftype_exclude = { 'terminal', 'nofile' }
+vim.g.indent_blankline_filetype_exclude = { 'https://github.com/help', 'packer' }
+vim.g.indent_blankline_buftype_exclude = { 'https://github.com/terminal', 'nofile' }
 vim.g.indent_blankline_show_trailing_blankline_indent = false
 
 -- Gitsigns
@@ -811,15 +1211,6 @@ require('diffview').setup({
 -- Telescope
 require('telescope').setup {
   defaults = {
-    layout_strategy = "vertical",
-    layout_config = {
-      vertical = {
-        width = 0.9,
-        height = 0.9,
-        preview_height = 20,
-      },
-    },
-    wrap_results = true,
     path_display = {
       filename_first = {
         reverse_directories = true
@@ -878,12 +1269,7 @@ require('mason-tool-installer').setup {
 
     -- you can turn off/on auto_update per tool
     { 'bash-language-server', auto_update = true },
-
     'lua-language-server',
-    'stylua',
-
-    'gh-actions-language-server',
-
     'yaml-language-server',
     'vim-language-server',
     'gopls',
@@ -912,13 +1298,16 @@ require('mason-tool-installer').setup {
     'jdtls',
     'java-debug-adapter',
     'java-test',
-    'gradle-bsp', -- BSP
+    -- 'gradle-bsp', -- BSP
 
     -- json
     'json-lsp',
 
     -- python
     'python-lsp-server',
+
+    -- c
+    'clangd',
   }
 }
 
@@ -952,6 +1341,7 @@ vim.lsp.log.set_level('TRACE')
 require('lsp-config')
 require('dap-config')
 require('formatter-config')
+-- require('treesitter-config')
 
 require('mini.surround').setup({})
 
@@ -977,8 +1367,6 @@ vim.api.nvim_create_user_command('JwtDecode', ak.ui.jwt.decode, {desc='my: conve
 vim.keymap.set('x', 'S', function() require('mini.surround').add('visual') end, { noremap = true })
 -- -- Make special mapping for 'add surrounding for line'
 -- vim.keymap.set('n', 'yss', 'ys_', { noremap = false })
--- TODO: consider to enable this (thanks ImVossie)
--- vim.keymap.set('n', '<leader>wr', ':set wrap!<CR>', { noremap = true, silent = true })
 
 -- setup nvim-tree keybinding
 vim.keymap.set('n', '<leader>nr', require('nvim-tree.api').tree.reload, { desc='my: reload nvim-tree' })
@@ -1161,14 +1549,4 @@ vim.api.nvim_create_autocmd('LspAttach', {
     end
   end,
 })
-
--- vim.env.NO_COLOR=1
--- vim.env.__SuppressAnsiEscapeSequences=1
---
--- vim.cmd[[
--- let &shell = 'pwsh'
--- let &shellcmdflag = "-NoLogo -NoProfile -NonInteractive -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;$PSDefaultParameterValues['Out-File:Encoding']='utf8';$PSStyle.OutputRendering='PlainText'"
--- set shellquote= shellxquote=
--- ]]
-
 -- vim: ts=2 sts=2 sw=2 et

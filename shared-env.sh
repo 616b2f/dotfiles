@@ -7,6 +7,8 @@ folders=".config/sway
 .config/nvim
 .config/luakit
 .config/dive
+.config/git
+.config/luakit
 .config/omnisharp
 .config/xdg-desktop-portal-wlr
 .bashrc.d
@@ -27,6 +29,7 @@ fish \
 fzf \
 grim \
 slurp \
+luakit \
 mako \
 swaylock \
 bemenu \
