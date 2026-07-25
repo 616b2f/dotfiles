@@ -51,7 +51,7 @@ set $menu_desktop $bemenu_vars j4-dmenu-desktop --term="$term -e" --dmenu="bemen
 #
 # Default wallpaper (more resolutions are available in /usr/share/backgrounds/sway/)
 # output * bg /usr/share/backgrounds/fedora-workstation/aurora-over-iceland.png fill
-output * bg /usr/share/backgrounds/gnome/adwaita-d.jxl fill
+output * bg /usr/share/backgrounds/f44/default/f44-01-night.jxl fill
 
 # set fractional scaling
 output eDP-1 scale 1.5
@@ -343,4 +343,5 @@ bar {
 
 include /etc/sway/config.d/*
 
-exec /usr/libexec/polkit-gnome-authentication-agent-1
+exec /usr/bin/cosmic-osd
+# exec /usr/libexec/polkit-gnome-authentication-agent-1

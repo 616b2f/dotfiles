@@ -25,9 +25,6 @@ end)
 
 require "unique_instance"
 
--- Set the number of web processes to use. A value of 0 means 'no limit'. This
--- has no effect since WebKit 2.26
-luakit.process_limit = 4
 -- Set the cookie storage location
 soup.cookies_storage = luakit.data_dir .. "/cookies.db"
 
@@ -68,9 +65,18 @@ end)
 
 -- Load luakit binds and modes
 local modes = require "modes"
-local binds = require "binds"
+
+-- modes.add_binds("command",
+-- {
+--     { ":q[uit]", "Close current tab.", function (w) w:close_tab() end },
+--     { ":qa", "Close all tabs and close window.", function (w, o) w:close_win(o.bang) end },
+-- })
 
 local settings = require "settings"
+
+---- needed sometimes when run inside toolbox
+-- settings.webview.hardware_acceleration_policy = "never"
+
 local engines = {}
 --     g = "https://google.com?q=%s",
 --     gh = "https://github.com/search?q=%s&type=repositories"
@@ -87,6 +93,19 @@ require "settings_chrome"
 -- Optional user script loading --
 ----------------------------------
 require("plugins")
+
+modes.add_binds("normal", {
+    { "o", "Open one or more URLs (floating search).", function (w) require("plugins.search_bar").show(w) end },
+    { "t", "Open one or more URLs in a new tab (floating search).",
+        function (w) require("search_bar").show(w, { new_tab = true }) end },
+    { "w", "Open one or more URLs in a new window.", function (w) w:enter_cmd(":winopen ") end },
+    { "O", "Open one or more URLs based on current location (floating search).",
+        function (w) require("search_bar").show(w, { text = w.view.uri or "" }) end },
+    { "T", "Open one or more URLs based on current location in a new tab (floating search).",
+        function (w) require("search_bar").show(w, { new_tab = true, text = w.view.uri or "" }) end },
+    { "W", "Open one or more URLs based on current location in a new window.",
+        function (w) w:enter_cmd(":winopen " .. (w.view.uri or "")) end },
+})
 
 -- Add adblock
 local adblock = require "adblock"
@@ -111,19 +130,17 @@ local session = require "session"
 
 -- Restore last saved session
 local w = session and session.restore()
-if w then
-    print("w is set")
-    for i, uri in ipairs(uris) do
-        w:new_tab(uri, { switch = i == 1 })
-    end
-else
-    print("w is NOT set")
-    for i, uri in ipairs(uris) do
-        print(uri)
-    end
-    -- Or open new window
-    window.new(uris)
-end
+-- if w then
+--     for i, uri in ipairs(uris) do
+--         w:new_tab(uri, { switch = i == 1 })
+--     end
+-- else
+--     for i, uri in ipairs(uris) do
+--         print(uri)
+--     end
+--     -- Or open new window
+--     window.new(uris)
+-- end
 
 -- Add command to list closed tabs & bind to open closed tabs
 local undoclose = require "undoclose"

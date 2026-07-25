@@ -14,7 +14,7 @@ sudo dnf update -y --best --allowerasing
 ###
 # enable podman socket inside toolbox
 ###
-systemctl --user --now enable podman.socket
+#systemctl --user --now enable podman.socket
 
 ###
 # install neovim
@@ -24,14 +24,17 @@ sudo dnf install -y wl-clipboard
 
 # install luarocks (package manager for lua)
 # and stuff needed for nvim lua plugin development
-sudo dnf install -y luarocks compat-lua compat-lua-devel gcc-c++
+sudo dnf install -y \
+    luarocks \
+    compat-lua \
+    compat-lua-devel \
 
 # needed to debug nvim
 sudo dnf install -y gdb gdb-gdbserver
 
 # install vusted (for unitests of nvim lua plugins)
 # luarocks --lua-version=5.1 install vusted
-luarocks --lua-version=5.1 --local install busted
+# luarocks --lua-version=5.1 --local install busted
 
 # treesitter prerequisites
 sudo dnf install -y gcc libstdc++-static
@@ -42,10 +45,16 @@ sudo dnf install -y inotify-tools
 # deps for build neovim from source
 sudo dnf install -y \
     gettext-devel \
-    clang
+    clang \
+    clang-tools-extra
 
 # install neovim nightly
 sudo dnf copr enable -y agriffis/neovim-nightly
+
+###
+# install luakit
+###
+sudo dnf copr enable -y 616b2f/luakit
 
 ###
 # fedora packaging
@@ -61,8 +70,7 @@ sudo dnf install -y nodejs
 sudo dnf install -y neovim python3-neovim
 
 # update plugins
-nvim --headless "+Lazy! restore" +qa
-
+nvim --headless "+lua vim.pack.update(nil, { target = 'lockfile' })" +qa
 
 ###
 # luakit development
