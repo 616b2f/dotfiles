@@ -1,6 +1,9 @@
 -- enable experimental loader
 vim.loader.enable()
 
+-- Remap ':' in Visual mode to clear '<,'> and insert `<,`>
+vim.keymap.set('x', ':', ':<C-u>`<,`>')
+
 local plugins = {
     { 'https://github.com/nvim-lua/plenary.nvim' },
     { 'https://github.com/nvim-treesitter/nvim-treesitter' },

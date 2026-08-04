@@ -1,9 +1,8 @@
---- Floating search bar widget for Luakit.
+--- Zen Browser-styled floating search bar widget for Luakit.
 --
--- Presents a centered spotlight-style overlay for URL/search input with
--- live history and bookmark completions. Implemented as a proper Luakit
--- mode so the window's existing focus and key-routing infrastructure
--- handles everything correctly -- no timers or manual focus juggling.
+-- Presents a sleek, centered 70%-width floating omnibox overlay for URL/search
+-- input with live history and bookmark completions. Styled with a clean Zen-like
+-- aesthetic and native Luakit theme integration.
 --
 -- ## Usage
 --
@@ -13,12 +12,12 @@
 -- search_bar.show(w, { text = w.view.uri })    -- prefill current URI
 --
 -- @module search_bar
--- luacheck: globals widget timer
+-- luacheck: globals widget
 
-local lousy    = require("lousy")
-local modes    = require("modes")
-local settings = require("settings")
-local history  = require("history")
+local lousy     = require("lousy")
+local modes     = require("modes")
+local settings  = require("settings")
+local history   = require("history")
 local bookmarks = require("bookmarks")
 
 local _M = {}
@@ -39,44 +38,64 @@ local function escape(s)
 end
 
 local function make_row(col1, col2, extra)
-    local r = { col1, col2,
-        bg          = "#1e1e2e",
-        fg          = "#cdd6f4",
-        selected_bg = "#313244",
-        selected_fg = "#f5c2e7",
-    }
+    local r = { col1, col2 }
     if extra then for k, v in pairs(extra) do r[k] = v end end
     return r
 end
 
 local function make_title(label)
-    return { label, "", title = true, bg = "#1e1e2e", fg = "#89b4fa" }
+    return { label, "", title = true }
+end
+
+local function update_width(w)
+    local d = data[w]
+    if not d or not d.container then return end
+
+    local win_width = 1000
+    if w.win and w.win.allocation and w.win.allocation.width and w.win.allocation.width > 0 then
+        win_width = w.win.allocation.width
+    end
+
+    local target_width = math.floor(win_width * 0.7)
+    d.container.width_request = target_width
+
+    d.container.css = string.format([[
+        background-color: %s;
+        color: %s;
+        border: 1px solid %s;
+        border-radius: 6px;
+        padding: 6px 10px;
+        margin-top: 40px;
+        min-width: %dpx;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    ]], d.bg, d.fg, d.border_color, target_width)
 end
 
 local function update_completions(w, text)
     local d = data[w]
     if not d then return end
 
-    if text == "" then
+    if text == "" or not text then
+        d.lock = true
         d.menu:build({})
         d.menu:hide()
+        d.lock = false
         return
     end
 
-    local rows          = {}
+    local rows           = {}
     local default_engine = settings.get_setting("window.default_search_engine") or "google"
-    local engine, query = parse_engine(text)
-    local engine_name   = engine or default_engine
+    local engine, query  = parse_engine(text)
+    local engine_name    = engine or default_engine
 
-    -- Row 1: "Search with <engine>"
+    -- Row 1: Search engine action
     table.insert(rows, make_row(
         "Search with <b>" .. escape(engine_name) .. "</b>",
         escape(query),
-        { text = text }
+        { text = text, is_search = true }
     ))
 
     -- History matches
-    local history_rows = {}
     if history.db then
         local sql = [[
             SELECT uri, title, lower(uri||ifnull(title,'')) AS search_text
@@ -86,10 +105,11 @@ local function update_completions(w, text)
         local term = "%" .. query:gsub("%%", "\\%"):gsub("_", "\\_") .. "%"
         local rows_db = history.db:exec(sql, { term })
         if rows_db and rows_db[1] then
-            table.insert(history_rows, make_title("History"))
+            table.insert(rows, make_title("History"))
             for _, r in ipairs(rows_db) do
-                table.insert(history_rows, make_row(
-                    escape(r.title ~= "" and r.title or r.uri),
+                local title = (r.title and r.title ~= "") and r.title or r.uri
+                table.insert(rows, make_row(
+                    escape(title),
                     escape(r.uri),
                     { text = r.uri }
                 ))
@@ -98,7 +118,6 @@ local function update_completions(w, text)
     end
 
     -- Bookmark matches
-    local bookmark_rows = {}
     if bookmarks.db then
         local sql = [[
             SELECT uri, title, lower(uri||ifnull(title,'')||ifnull(tags,'')) AS search_text
@@ -108,10 +127,11 @@ local function update_completions(w, text)
         local term = "%" .. query:gsub("%%", "\\%"):gsub("_", "\\_") .. "%"
         local rows_db = bookmarks.db:exec(sql, { term })
         if rows_db and rows_db[1] then
-            table.insert(bookmark_rows, make_title("Bookmarks"))
+            table.insert(rows, make_title("Bookmarks"))
             for _, r in ipairs(rows_db) do
-                table.insert(bookmark_rows, make_row(
-                    escape(r.title ~= "" and r.title or r.uri),
+                local title = (r.title and r.title ~= "") and r.title or r.uri
+                table.insert(rows, make_row(
+                    escape(title),
                     escape(r.uri),
                     { text = r.uri }
                 ))
@@ -119,15 +139,24 @@ local function update_completions(w, text)
         end
     end
 
-    for _, r in ipairs(history_rows)  do table.insert(rows, r) end
-    for _, r in ipairs(bookmark_rows) do table.insert(rows, r) end
-
-    -- Prevent the "changed" signal from triggering a recursive update
+    -- Rebuild completion menu
     d.lock = true
     d.menu:build(rows)
     if #rows > 1 then
         d.menu:show()
-        d.menu:move_down()   -- pre-select first non-title row
+        d.menu:move_down() -- Select first non-title item (Row 1)
+
+        -- Enforce text ellipsizing so long items never stretch the box
+        local menu_data = data[d.menu]
+        if menu_data and menu_data.table then
+            for _, rw in ipairs(menu_data.table) do
+                if rw.cols then
+                    for _, cell in ipairs(rw.cols) do
+                        if cell then cell.ellipsize = "end" end
+                    end
+                end
+            end
+        end
     else
         d.menu:hide()
     end
@@ -136,109 +165,145 @@ end
 
 -- Widget construction (done once per window, lazily)
 local function build_widgets(w)
-    -- Floating container
+    local theme = lousy.theme.get() or {}
+    local bg = theme.menu_bg or theme.bg or "#1e1e2e"
+    local fg = theme.menu_fg or theme.fg or "#cdd6f4"
+    local font = theme.font or "12px monospace"
+    local border_color = theme.menu_selected_bg or theme.sbar_fg or "#444444"
+    local prompt_fg = theme.menu_secondary_title_fg or theme.tab_fg or "#888888"
+
+    -- Centered floating container
     local container = widget{ type = "vbox" }
-    container.css = [[
-        background-color: #1e1e2e;
-        border: 1px solid #313244;
-        border-radius: 12px;
-        padding: 12px;
-        margin-top: 100px;
-        width: 600px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-    ]]
 
-    -- Search entry
+    -- Header row (prompt label + search entry)
+    local header = widget{ type = "hbox" }
+    header.homogeneous = false
+
+    local prompt = widget{ type = "label" }
+    prompt.font = font
+    prompt.text = " Search: "
+    prompt.fg   = prompt_fg
+    prompt.bg   = bg
+
     local input = widget{ type = "entry" }
-    input.css = [[
-        background-color: #313244;
-        color: #cdd6f4;
+    input.font = font
+    input.css  = string.format([[
+        background-color: %s;
+        color: %s;
         border: none;
-        border-radius: 8px;
-        padding: 12px;
-        font-size: 16px;
-        caret-color: #f5c2e7;
-    ]]
+        border-radius: 0px;
+        padding: 2px 6px;
+        margin: 0px;
+        outline: none;
+        caret-color: %s;
+    ]], bg, fg, fg)
 
-    -- Completion menu
-    local menu = lousy.widget.menu{ max_rows = 11 }
-    menu.widget.css = [[
+    header:pack(prompt, { expand = false, fill = false })
+    header:pack(input, { expand = true, fill = true })
+
+    -- Completion menu widget using Luakit's built-in lousy.widget.menu
+    local menu = lousy.widget.menu{ max_rows = 10 }
+    menu.widget.css = string.format([[
         background-color: transparent;
         border: none;
-        margin-top: 8px;
-    ]]
+        border-top: 1px solid %s;
+        margin-top: 6px;
+        padding-top: 4px;
+    ]], border_color)
 
-    container:pack(input)
-    container:pack(menu.widget)
+    container:pack(header, { expand = false, fill = true })
+    container:pack(menu.widget, { expand = true, fill = true })
 
-    -- Attach to the window overlay; hidden by default
+    -- Attach to window overlay container (centered horizontally near top)
     w.menu_tabs:pack(container, { halign = "center", valign = "start" })
     container:hide()
 
     local d = {
-        container = container,
-        input     = input,
-        menu      = menu,
-        lock      = false,
-        orig_text = "",
-        opts      = {},
+        container    = container,
+        prompt       = prompt,
+        input        = input,
+        menu         = menu,
+        bg           = bg,
+        fg           = fg,
+        border_color = border_color,
+        lock         = false,
+        orig_text    = "",
+        opts         = {},
     }
     data[w] = d
 
-    -- Text change → rebuild completions
+    -- Update container width dynamically when window is resized
+    if w.win then
+        w.win:add_signal("size-allocate", function ()
+            update_width(w)
+        end)
+    end
+    update_width(w)
+
+    -- Text change in input entry -> rebuild completions
     input:add_signal("changed", function ()
         if d.lock then return end
         d.orig_text = input.text
         update_completions(w, input.text)
     end)
 
-    -- Menu row selection → update entry text
+    -- Menu row selection -> update entry text
     menu:add_signal("changed", function (_, row)
         if d.lock then return end
         d.lock = true
         if row and not row.title then
-            input.text = row.text or row[1]
-            input.position = #input.text
+            local text = row.text or row.uri or row[1]
+            input.text = text
+            input.position = #text
         else
             input.text = d.orig_text
-            input.position = #input.text
+            input.position = #d.orig_text
         end
         d.lock = false
     end)
 
     -- Key handling inside the entry widget
-    input:add_signal("key-press", function (_, _mods, key)
-        if key == "Escape" then
-            w:set_mode()         -- triggers mode leave → hide + restore focus
-            return true
-        elseif key == "Return" then
-            local row  = d.menu:get()
-            local text = (row and not row.title) and row.text or input.text
+    input:add_signal("key-press", function (_, mods, key)
+        local has_ctrl = lousy.util.table.hasitem(mods, "Control")
+            or lousy.util.table.hasitem(mods, "Control_L")
+            or lousy.util.table.hasitem(mods, "Control_R")
+        local has_shift = lousy.util.table.hasitem(mods, "Shift")
+            or lousy.util.table.hasitem(mods, "Shift_L")
+            or lousy.util.table.hasitem(mods, "Shift_R")
+
+        if key == "Escape" or (has_ctrl and (key == "c" or key == "g" or key == "bracketleft")) then
             w:set_mode()
-            if d.opts.new_tab then
-                w:new_tab(text)
-            else
-                w:search_open_navigate(w.view, text)
+            return true
+        elseif key == "Return" or key == "KP_Enter" then
+            local row  = d.menu:get()
+            local text = (row and not row.title) and (row.text or row.uri or row[1]) or input.text
+            local open_in_new_tab = d.opts.new_tab or has_shift or has_ctrl
+            w:set_mode()
+            if text and text ~= "" then
+                if open_in_new_tab then
+                    w:new_tab(text)
+                else
+                    w:search_open_navigate(w.view, text)
+                end
             end
             return true
-        elseif key == "Tab" or key == "Down" then
+        elseif key == "Tab" or key == "Down" or key == "KP_Down" or (has_ctrl and (key == "j" or key == "n")) then
             d.menu:move_down()
             return true
-        elseif key == "ISO_Left_Tab" or key == "Up" then
+        elseif key == "ISO_Left_Tab" or key == "Up" or key == "KP_Up" or (has_ctrl and (key == "k" or key == "p")) then
             d.menu:move_up()
+            return true
+        elseif has_ctrl and key == "t" then
+            d.opts.new_tab = not d.opts.new_tab
+            d.prompt.text = d.opts.new_tab and " Search (tab): " or " Search: "
             return true
         end
     end)
 end
 
 -- Mode definition
--- "reset_on_focus = false" is the key property: it prevents webview.lua's
--- "root-active" signal handler from calling w:set_mode() (resetting to
--- normal) when the user clicks on web content while the bar is open.
--- "can_focus = false" on the view prevents WebKit from grabbing keyboard
--- focus via a click before that signal even fires.
 modes.new_mode("search_bar", {
-    reset_on_focus     = false,
+    reset_on_focus      = false,
     reset_on_navigation = false,
 
     enter = function (w)
@@ -246,9 +311,11 @@ modes.new_mode("search_bar", {
         if not d then build_widgets(w) end
         d = data[w]
 
-        -- Prevent the webview from stealing keyboard focus on click
+        -- Prevent webview from stealing keyboard focus on click
         if w.view then w.view.can_focus = false end
 
+        update_width(w)
+        d.prompt.text = d.opts.new_tab and " Search (tab): " or " Search: "
         d.container:show()
         d.input:focus()
     end,
@@ -276,29 +343,30 @@ modes.new_mode("search_bar", {
 function _M.show(w, opts)
     opts = opts or {}
 
-    -- Build widgets on first use
     if not data[w] then build_widgets(w) end
     local d = data[w]
 
-    -- Reset state for this invocation
     d.opts = opts
     d.lock = true
     d.input.text = opts.text or ""
     d.orig_text  = opts.text or ""
     d.lock = false
 
+    update_width(w)
+
     if opts.text and opts.text ~= "" then
         update_completions(w, opts.text)
-        d.input:select_region(0)
+        d.input:select_region(0, -1)
     else
         d.menu:build({})
         d.menu:hide()
     end
 
-    -- Entering the mode calls mode.enter which shows the container and
-    -- focuses the entry
     w:set_mode("search_bar")
 end
+
+package.loaded["search_bar"] = _M
+package.loaded["plugins.search_bar"] = _M
 
 return _M
 

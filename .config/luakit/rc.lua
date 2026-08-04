@@ -87,6 +87,9 @@ engines.gh = "https://github.com/search?q=%s&type=repositories"
 settings.window.search_engines = engines
 settings.window.default_search_engine = "g"
 
+settings.window.new_window_size = "maximized"
+-- settings.set_setting("window.new_window_size", "maximized")
+
 require "settings_chrome"
 
 ----------------------------------
@@ -95,14 +98,14 @@ require "settings_chrome"
 require("plugins")
 
 modes.add_binds("normal", {
-    { "o", "Open one or more URLs (floating search).", function (w) require("plugins.search_bar").show(w) end },
-    { "t", "Open one or more URLs in a new tab (floating search).",
-        function (w) require("search_bar").show(w, { new_tab = true }) end },
+    { "o", "Open one or more URLs (search bar).", function (w) require("plugins.search_bar").show(w) end },
+    { "t", "Open one or more URLs in a new tab (search bar).",
+        function (w) require("plugins.search_bar").show(w, { new_tab = true }) end },
     { "w", "Open one or more URLs in a new window.", function (w) w:enter_cmd(":winopen ") end },
-    { "O", "Open one or more URLs based on current location (floating search).",
-        function (w) require("search_bar").show(w, { text = w.view.uri or "" }) end },
-    { "T", "Open one or more URLs based on current location in a new tab (floating search).",
-        function (w) require("search_bar").show(w, { new_tab = true, text = w.view.uri or "" }) end },
+    { "O", "Open one or more URLs based on current location (search bar).",
+        function (w) require("plugins.search_bar").show(w, { text = w.view.uri or "" }) end },
+    { "T", "Open one or more URLs based on current location in a new tab (search bar).",
+        function (w) require("plugins.search_bar").show(w, { new_tab = true, text = w.view.uri or "" }) end },
     { "W", "Open one or more URLs based on current location in a new window.",
         function (w) w:enter_cmd(":winopen " .. (w.view.uri or "")) end },
 })
