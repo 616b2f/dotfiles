@@ -10,6 +10,7 @@ folders=".config/sway
 .config/git
 .config/luakit
 .config/omnisharp
+.config/xdg-desktop-portal
 .config/xdg-desktop-portal-wlr
 .bashrc.d
 "
