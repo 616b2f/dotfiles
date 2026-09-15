@@ -1,0 +1,675 @@
+#!/usr/bin/env luajit
+-- vim: set filetype=lua :
+
+-- Global state indicators to avoid thrashing window resize IPC on every keystroke
+local CURRENT_WIDTH  = 750
+local CURRENT_HEIGHT = 450
+local DEBOUNCE_DELAY = 0.25 -- Delay in seconds before triggering search reload on typing
+local DEFAULT_MODE   = "app"  -- Default mode fallback if no mode prefix is given
+local DELIMITER      = "\x1f" -- Configurable field separator (default: ASCII 0x1F Unit Separator)
+
+-- Helper function to resize this active window wrapper across Wayland/X11 compositors
+local function resize_launcher(width, height)
+    if width == CURRENT_WIDTH and height == CURRENT_HEIGHT then
+        return
+    end
+    CURRENT_WIDTH  = width
+    CURRENT_HEIGHT = height
+
+    -- 1. Sway / i3 IPC resize
+    if os.getenv("SWAYSOCK") or os.getenv("I3SOCK") or (os.getenv("XDG_CURRENT_DESKTOP") and os.getenv("XDG_CURRENT_DESKTOP"):lower():find("sway")) then
+        local cmd = string.format("swaymsg '[app_id=\"fzf-launcher\"]' resize set %d %d, move position center > /dev/null 2>&1", width, height)
+        if os.execute(cmd) then return end
+    end
+
+    -- 2. Generic wlrctl (wlroots compositors supporting foreign-toplevel management)
+    local wlr_cmd = string.format("wlrctl window resize %d %d fzf-launcher > /dev/null 2>&1", width, height)
+    if os.execute(wlr_cmd) then return end
+
+    -- 3. X11 / Xwayland fallback (xdotool)
+    if os.getenv("DISPLAY") then
+        local xdotool_cmd = string.format("xdotool search --onlyvisible --class fzf-launcher windowsize %d %d > /dev/null 2>&1", width, height)
+        if os.execute(xdotool_cmd) then return end
+    end
+end
+
+--------------------------------------------------------------------------------
+-- Generalized Modes Table
+-- Key = Mode Name, Value = Mode Implementation & Configuration
+--------------------------------------------------------------------------------
+local function get_app_paths()
+    local paths = {}
+    local seen = {}
+
+    local function add_path(p)
+        if p and p ~= "" and not seen[p] then
+            seen[p] = true
+            table.insert(paths, p)
+        end
+    end
+
+    local home = os.getenv("HOME") or ""
+    if home ~= "" then
+        add_path(home .. "/.local/share/applications")
+        add_path(home .. "/.local/share/flatpak/exports/share/applications")
+    end
+
+    local xdg_dirs = os.getenv("XDG_DATA_DIRS")
+    if xdg_dirs then
+        for dir in xdg_dirs:gmatch("[^:]+") do
+            if dir:match("applications/?$") then
+                add_path(dir)
+            else
+                add_path(dir:gsub("/+$", "") .. "/applications")
+            end
+        end
+    end
+
+    add_path("/var/lib/flatpak/exports/share/applications")
+    add_path("/usr/local/share/applications")
+    add_path("/usr/share/applications")
+
+    return paths
+end
+
+local function parse_desktop_files(search_query)
+    local app_paths = get_app_paths()
+    local matches = {}
+    local seen_files = {}
+    local query_lower = (search_query or ""):lower()
+
+    for _, path in ipairs(app_paths) do
+        local ls_handle = io.popen(string.format("ls '%s' 2>/dev/null", path))
+        if ls_handle then
+            for filename in ls_handle:lines() do
+                if filename:match("%.desktop$") and not seen_files[filename] then
+                    seen_files[filename] = true
+                    local filepath = path .. "/" .. filename
+                    local f = io.open(filepath, "r")
+                    if f then
+                        local name, exec, no_display = nil, nil, false
+                        local in_main_section = false
+                        for line in f:lines() do
+                            local group = line:match("^%s*%[([^%]]+)%]")
+                            if group then
+                                in_main_section = (group == "Desktop Entry")
+                            end
+
+                            if in_main_section then
+                                if not name and line:match("^Name=") then
+                                    name = line:gsub("^Name=", "")
+                                elseif not exec and line:match("^Exec=") then
+                                    exec = line:gsub("^Exec=", "")
+                                elseif line:match("^NoDisplay=true") then
+                                    no_display = true
+                                end
+                            end
+                        end
+                        f:close()
+
+                        if exec then
+                            exec = exec:gsub("@@%w*%s*%%[fFuUkKiIcCdD]%s*@@", "")
+                            exec = exec:gsub("@@[^@]*@@", "")
+                            exec = exec:gsub("%%[fFuUkKiIcCdD]", "")
+                            exec = exec:gsub("%s+$", "")
+                        end
+
+                        if name and exec and not no_display then
+                            if search_query == "" or name:lower():find(query_lower, 1, true) or filename:lower():find(query_lower, 1, true) then
+                                table.insert(matches, { name = name, exec = exec })
+                            end
+                        end
+                    end
+                end
+            end
+            ls_handle:close()
+        end
+    end
+    return matches
+end
+
+local function parse_json(str)
+    local pos = 1
+    local len = #str
+
+    local function skip_whitespace()
+        while pos <= len do
+            local b = str:byte(pos)
+            if b == 32 or b == 9 or b == 10 or b == 13 then
+                pos = pos + 1
+            else
+                break
+            end
+        end
+    end
+
+    local parse_value
+
+    local function parse_string()
+        pos = pos + 1
+        local start = pos
+        local chunks = nil
+        while pos <= len do
+            local b = str:byte(pos)
+            if b == 34 then
+                local s = str:sub(start, pos - 1)
+                pos = pos + 1
+                if chunks then
+                    table.insert(chunks, s)
+                    return table.concat(chunks)
+                end
+                return s
+            elseif b == 92 then
+                chunks = chunks or {}
+                table.insert(chunks, str:sub(start, pos - 1))
+                pos = pos + 1
+                local esc = str:sub(pos, pos)
+                if esc == "\"" or esc == "\\" or esc == "/" then
+                    table.insert(chunks, esc)
+                    pos = pos + 1
+                elseif esc == "b" then table.insert(chunks, "\b"); pos = pos + 1
+                elseif esc == "f" then table.insert(chunks, "\f"); pos = pos + 1
+                elseif esc == "n" then table.insert(chunks, "\n"); pos = pos + 1
+                elseif esc == "r" then table.insert(chunks, "\r"); pos = pos + 1
+                elseif esc == "t" then table.insert(chunks, "\t"); pos = pos + 1
+                elseif esc == "u" then
+                    local hex = str:sub(pos + 1, pos + 4)
+                    local cp = tonumber(hex, 16)
+                    pos = pos + 5
+                    if cp then
+                        if cp >= 0xD800 and cp <= 0xDBFF and str:sub(pos, pos + 1) == "\\u" then
+                            local hex2 = str:sub(pos + 2, pos + 5)
+                            local cp2 = tonumber(hex2, 16)
+                            if cp2 and cp2 >= 0xDC00 and cp2 <= 0xDFFF then
+                                pos = pos + 6
+                                cp = 0x10000 + (cp - 0xD800) * 0x400 + (cp2 - 0xDC00)
+                            end
+                        end
+                        if cp < 0x80 then
+                            table.insert(chunks, string.char(cp))
+                        elseif cp < 0x800 then
+                            table.insert(chunks, string.char(0xC0 + math.floor(cp / 64), 0x80 + (cp % 64)))
+                        elseif cp < 0x10000 then
+                            table.insert(chunks, string.char(0xE0 + math.floor(cp / 4096), 0x80 + (math.floor(cp / 64) % 64), 0x80 + (cp % 64)))
+                        else
+                            table.insert(chunks, string.char(
+                                0xF0 + math.floor(cp / 262144),
+                                0x80 + (math.floor(cp / 4096) % 64),
+                                0x80 + (math.floor(cp / 64) % 64),
+                                0x80 + (cp % 64)
+                            ))
+                        end
+                    end
+                else
+                    table.insert(chunks, esc)
+                    pos = pos + 1
+                end
+                start = pos
+            else
+                pos = pos + 1
+            end
+        end
+        return chunks and table.concat(chunks) or str:sub(start, len)
+    end
+
+    local function parse_number()
+        local num_str = str:match("^-?%d+%.?%d*[eE][+-]?%d+", pos)
+            or str:match("^-?%d+%.%d+", pos)
+            or str:match("^-?%d+", pos)
+        if num_str then
+            pos = pos + #num_str
+            return tonumber(num_str)
+        end
+        pos = pos + 1
+        return nil
+    end
+
+    local function parse_object()
+        pos = pos + 1
+        local obj = {}
+        skip_whitespace()
+        if pos <= len and str:byte(pos) == 125 then
+            pos = pos + 1
+            return obj
+        end
+        while pos <= len do
+            skip_whitespace()
+            if str:byte(pos) ~= 34 then break end
+            local key = parse_string()
+            skip_whitespace()
+            if pos <= len and str:byte(pos) == 58 then
+                pos = pos + 1
+            end
+            local val = parse_value()
+            obj[key] = val
+            skip_whitespace()
+            if pos <= len then
+                local b = str:byte(pos)
+                if b == 44 then
+                    pos = pos + 1
+                elseif b == 125 then
+                    pos = pos + 1
+                    break
+                else
+                    break
+                end
+            end
+        end
+        return obj
+    end
+
+    local function parse_array()
+        pos = pos + 1
+        local arr = {}
+        skip_whitespace()
+        if pos <= len and str:byte(pos) == 93 then
+            pos = pos + 1
+            return arr
+        end
+        while pos <= len do
+            local val = parse_value()
+            table.insert(arr, val)
+            skip_whitespace()
+            if pos <= len then
+                local b = str:byte(pos)
+                if b == 44 then
+                    pos = pos + 1
+                elseif b == 93 then
+                    pos = pos + 1
+                    break
+                else
+                    break
+                end
+            end
+        end
+        return arr
+    end
+
+    parse_value = function()
+        skip_whitespace()
+        if pos > len then return nil end
+        local b = str:byte(pos)
+        if b == 34 then
+            return parse_string()
+        elseif b == 123 then
+            return parse_object()
+        elseif b == 91 then
+            return parse_array()
+        elseif b == 116 and str:sub(pos, pos + 3) == "true" then
+            pos = pos + 4
+            return true
+        elseif b == 102 and str:sub(pos, pos + 4) == "false" then
+            pos = pos + 5
+            return false
+        elseif b == 110 and str:sub(pos, pos + 3) == "null" then
+            pos = pos + 4
+            return nil
+        else
+            return parse_number()
+        end
+    end
+
+    return parse_value()
+end
+
+local function decode_json(str)
+    local has_cjson, cjson = pcall(require, "cjson")
+    if has_cjson then
+        local ok, data = pcall(cjson.decode, str)
+        if ok and data ~= nil then return data end
+    end
+    local has_dkjson, dkjson = pcall(require, "dkjson")
+    if has_dkjson then
+        local ok, data = pcall(dkjson.decode, str)
+        if ok and data ~= nil then return data end
+    end
+    local ok, data = pcall(parse_json, str)
+    if ok and data ~= nil then return data end
+    return nil
+end
+
+local function get_bookmark_paths()
+    local patterns = {
+        "~/.config/google-chrome/*/Bookmarks",
+        "~/.config/google-chrome-beta/*/Bookmarks",
+        "~/.config/google-chrome-unstable/*/Bookmarks",
+        "~/.config/chromium/*/Bookmarks",
+        "~/.local/share/luakit/Bookmarks",
+        "~/.config/BraveSoftware/Brave-Browser/*/Bookmarks",
+        "~/.config/microsoft-edge*/*/Bookmarks",
+        "~/.config/vivaldi/*/Bookmarks",
+        "~/.config/opera/Bookmarks",
+        "~/.var/app/*/config/*/Default/Bookmarks",
+        "~/.var/app/*/config/*/*/Bookmarks",
+    }
+    local paths = {}
+    local seen = {}
+    local home = os.getenv("HOME") or ""
+
+    local has_ffi, ffi = pcall(require, "ffi")
+    if has_ffi then
+        pcall(ffi.cdef, [[
+            typedef struct {
+                size_t gl_pathc;
+                char **gl_pathv;
+                size_t gl_offs;
+            } glob_t;
+            int glob(const char *pattern, int flags, int (*errfunc)(const char *epath, int eerrno), glob_t *pglob);
+            void globfree(glob_t *pglob);
+        ]])
+    end
+
+    for _, pat in ipairs(patterns) do
+        local expanded = pat:gsub("^~", home)
+        if has_ffi and ffi.C and ffi.C.glob then
+            local pglob = ffi.new("glob_t")
+            if ffi.C.glob(expanded, 0, nil, pglob) == 0 then
+                for i = 0, tonumber(pglob.gl_pathc) - 1 do
+                    local p = ffi.string(pglob.gl_pathv[i])
+                    if not seen[p] then
+                        seen[p] = true
+                        table.insert(paths, p)
+                    end
+                end
+                ffi.C.globfree(pglob)
+            end
+        else
+            local handle = io.popen(string.format("ls -d %s 2>/dev/null", expanded))
+            if handle then
+                for p in handle:lines() do
+                    if not seen[p] then
+                        seen[p] = true
+                        table.insert(paths, p)
+                    end
+                end
+                handle:close()
+            end
+        end
+    end
+
+    return paths
+end
+
+local function parse_chrome_bookmarks(search_query)
+    local query_lower = (search_query or ""):lower()
+    local bookmark_paths = get_bookmark_paths()
+    local matches = {}
+    local seen_urls = {}
+
+    local function parse_node(node)
+        if type(node) ~= "table" then return end
+
+        if node.type == "url" and node.url then
+            local name = (node.name or ""):gsub("[\r\n]+", " "):gsub("^%s+", ""):gsub("%s+$", "")
+            local url = tostring(node.url):gsub("^%s+", ""):gsub("%s+$", "")
+
+            if name ~= "" and url ~= "" and not seen_urls[url] then
+                if query_lower == "" or name:lower():find(query_lower, 1, true) or url:lower():find(query_lower, 1, true) then
+                    seen_urls[url] = true
+                    table.insert(matches, { name = name, url = url })
+                end
+            end
+        end
+
+        for _, v in pairs(node) do
+            if type(v) == "table" then
+                parse_node(v)
+            end
+        end
+    end
+
+    for _, path in ipairs(bookmark_paths) do
+        local f = io.open(path, "r")
+        if f then
+            local content = f:read("*a")
+            f:close()
+            if content and #content > 0 then
+                local data = decode_json(content)
+                if type(data) == "table" and type(data.roots) == "table" then
+                    parse_node(data.roots)
+                end
+            end
+        end
+    end
+
+    return matches
+end
+
+local modes = {
+    bk = {
+        name = "bk",
+        label = "Browser Bookmarks",
+        width = 1100,
+        height = 550,
+        search = function(query)
+            local clean_query = query:gsub("^bk%s*", "")
+            local items = parse_chrome_bookmarks(clean_query)
+            for _, item in ipairs(items) do
+                local safe_url = item.url:gsub("'", "'\\''")
+                local action_payload = string.format("xdg-open '%s'", safe_url)
+                print(string.format("%-40s" .. DELIMITER .. "mode: bk" .. DELIMITER .. "cmd: %s", item.name, action_payload))
+            end
+        end,
+        preview = function(line_str)
+            local cmd = line_str and (line_str:match(DELIMITER .. "cmd:%s*xdg%-open%s+'?(.-)'?%s*$") or line_str:match(DELIMITER .. "cmd:%s*(.*)$"))
+            if cmd and #cmd > 0 then
+                print("📌 Chrome Bookmark")
+                print(string.rep("─", 40))
+                print("URL: " .. cmd)
+            else
+                print("📌 Chrome Bookmark Search")
+            end
+        end
+    },
+    app = {
+        name = "app",
+        label = "Desktop Applications",
+        width = 750,
+        height = 450,
+        search = function(query)
+            local clean_query = query:gsub("^app%s*", "")
+            local items = parse_desktop_files(clean_query)
+            for _, item in ipairs(items) do
+                print(string.format("%-30s" .. DELIMITER .. "mode: app" .. DELIMITER .. "cmd: %s", item.name, item.exec))
+            end
+        end,
+        preview = function(line_str)
+            local cmd = line_str and line_str:match(DELIMITER .. "cmd:%s*(.*)$")
+            if cmd and #cmd > 0 then
+                print(cmd)
+            else
+                print("📦 System Application Launcher Entry")
+            end
+        end
+    },
+    sys = {
+        name = "sys",
+        label = "System Power & Lock",
+        width = 500,
+        height = 250,
+        search = function(query)
+            print("Lock Screen     " .. DELIMITER .. "mode: sys" .. DELIMITER .. "cmd: swaylock")
+            print("Suspend System  " .. DELIMITER .. "mode: sys" .. DELIMITER .. "cmd: systemctl suspend")
+            print("Reboot Machine  " .. DELIMITER .. "mode: sys" .. DELIMITER .. "cmd: systemctl reboot")
+        end,
+        preview = function(line_str)
+            local cmd = line_str and line_str:match(DELIMITER .. "cmd:%s*(.*)$")
+            if cmd and #cmd > 0 then
+                print(cmd)
+            else
+                print("⚙️ System Control Action")
+            end
+        end
+    }
+}
+
+--------------------------------------------------------------------------------
+-- Mode Detection & Dispatcher
+--------------------------------------------------------------------------------
+local function list_mode_entries()
+    resize_launcher(750, 450)
+    for mode_key, mode in pairs(modes) do
+        print(string.format("%-30s" .. DELIMITER .. "Mode: %-25s" .. DELIMITER .. "mode: mode_select" .. DELIMITER .. "cmd: %s", mode.name, mode.label, mode.name))
+    end
+end
+
+local function parse_mode_and_query(input_str)
+    input_str = input_str or ""
+    local trimmed = input_str:gsub("^%s+", ""):gsub("%s+$", "")
+
+    if trimmed == "" then
+        return nil, ""
+    end
+
+    local first_word, rest = trimmed:match("^(%S+)%s*(.*)$")
+    if first_word and modes[first_word] then
+        return modes[first_word], rest
+    end
+
+    return modes[DEFAULT_MODE], trimmed
+end
+
+local function detect_mode(query)
+    local mode, _ = parse_mode_and_query(query)
+    return mode
+end
+
+local function dispatch_search(current_mode, query)
+    query = query or ""
+    local active_mode = parse_mode_and_query(query) or current_mode or modes[DEFAULT_MODE]
+
+    if active_mode then
+        resize_launcher(active_mode.width, active_mode.height)
+        active_mode.search(query)
+    end
+end
+
+local function dispatch_preview(current_mode, line_str)
+    line_str = line_str or ""
+    local explicit_mode = line_str:match(DELIMITER .. "mode:%s*([%w_]+)%s*" .. DELIMITER)
+    if explicit_mode == "mode_select" then
+        local target_mode_key = line_str:match(DELIMITER .. "cmd:%s*(%w+)%s*$")
+        local target_mode = modes[target_mode_key]
+        if target_mode then
+            print("⚙️ Mode Selector: " .. target_mode.name)
+            print(string.rep("─", 40))
+            print("Name:        " .. target_mode.name)
+            print("Description: " .. target_mode.label)
+            print("Window Size: " .. target_mode.width .. "x" .. target_mode.height)
+            print("\nPress [Enter] to launch " .. target_mode.name .. " mode.")
+        end
+    elseif explicit_mode and modes[explicit_mode] then
+        modes[explicit_mode].preview(line_str)
+    elseif current_mode then
+        current_mode.preview(line_str)
+    else
+        print("📦 Mode Launcher Entry")
+    end
+end
+
+--------------------------------------------------------------------------------
+-- Main Entry Point
+--------------------------------------------------------------------------------
+local script_path = debug.getinfo(1).source:match("@(.*)$") or arg[0] or "fzf-launcher"
+local real_p = io.popen(string.format("realpath '%s' 2>/dev/null", script_path))
+if real_p then
+    local resolved = real_p:read("*l")
+    real_p:close()
+    if resolved and #resolved > 0 then
+        script_path = resolved
+    end
+end
+
+-- Helper function to launch application commands detached from terminal process group
+local function launch_app_command(command)
+    os.execute(string.format("setsid -f bash -c %q >/dev/null 2>&1", command))
+end
+
+local function launch_fzf(mode_key, initial_query, path)
+    initial_query = initial_query or ""
+    local mode = modes[mode_key]
+    local prompt_str = "🚀 > "
+
+    local search_bind = mode and string.format("%s search", mode.name) or "search"
+    local preview_bind = mode and string.format("%s preview", mode.name) or "preview"
+
+    local fzf_cmd = string.format([[fzf \
+        --listen \
+        --disabled \
+        --prompt="%s" \
+        --query="%s" \
+        --layout="reverse" \
+        --border="none" \
+        --margin="1" \
+        --delimiter="%s" \
+        --with-nth=1 \
+        --bind "start:reload(\"%s\" %s)" \
+        --bind "change:execute-silent(pidfile=/tmp/fzf_launcher_debounce.pid; [ -f \$pidfile ] && kill \$(cat \$pidfile) 2>/dev/null; (sleep %g && curl -s -XPOST 127.0.0.1:\$FZF_PORT -d \"reload('%s' %s {q})\") & echo \$! > \$pidfile)" \
+        --preview-window="right:55%%:wrap" \
+        --preview "\"%s\" %s {}"]],
+        prompt_str, initial_query,
+        DELIMITER,
+        path, search_bind,
+        DEBOUNCE_DELAY, path, search_bind,
+        path, preview_bind)
+
+    local handle = io.popen(fzf_cmd)
+    local selection = handle:read("*a")
+    handle:close()
+
+    local cmd_prefix = DELIMITER .. "cmd: "
+    if selection and selection:find(cmd_prefix, 1, true) then
+        local command = selection:match(DELIMITER .. "cmd:%s*(.*)$")
+        if command then
+            command = command:gsub("%s+$", "")
+            if modes[command] then
+                launch_fzf(command, "", path)
+            else
+                launch_app_command(command)
+            end
+        end
+    end
+end
+
+local arg1 = arg[1]
+local arg2 = arg[2]
+
+if modes[arg1] then
+    -- Always follows: fzf-launcher <mode> <command> [additional_args...]
+    local mode = modes[arg1]
+    local extra_arg = table.concat(arg, " ", 3)
+
+    if arg2 == "search" then
+        dispatch_search(mode, extra_arg)
+    elseif arg2 == "preview" then
+        dispatch_preview(mode, extra_arg)
+    elseif arg2 == nil then
+        launch_fzf(arg1, "", script_path)
+    else
+        io.stderr:write(string.format("Unknown command '%s' for mode '%s'\n", tostring(arg2), tostring(arg1)))
+        os.exit(1)
+    end
+elseif arg1 == "search" then
+    local query = table.concat(arg, " ", 2)
+    if query == "" then
+        list_mode_entries()
+    else
+        dispatch_search(nil, query)
+    end
+elseif arg1 == "preview" then
+    local line_str = table.concat(arg, " ", 2)
+    dispatch_preview(nil, line_str)
+elseif arg1 == "modes" then
+    list_mode_entries()
+elseif os.getenv("FZF_QUERY") then
+    local fzf_q = os.getenv("FZF_QUERY") or ""
+    if fzf_q == "" then
+        list_mode_entries()
+    else
+        dispatch_search(nil, fzf_q)
+    end
+else
+    -- Standard interactive launch with mode selection
+    launch_fzf(nil, "", script_path)
+end
+
