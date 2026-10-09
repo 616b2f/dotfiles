@@ -45,7 +45,10 @@ set $bemenu_vars \
         --hf $color_fg_normal --hb $color_fg_primary"
 
 set $menu $bemenu_vars bemenu-run
-set $menu_desktop $bemenu_vars j4-dmenu-desktop --term="$term -e" --dmenu="bemenu"
+# set $menu_desktop $bemenu_vars j4-dmenu-desktop --term="$term -e" --dmenu="bemenu"
+set $menu_desktop $term --class fzf-launcher -e /bin/bash -l -c fzf-launcher
+# Define the floating container properties for your custom launcher
+for_window [app_id="fzf-launcher"] floating enable, border pixel 3, resize set 750 450, move position center
 
 ### Output configuration
 #
