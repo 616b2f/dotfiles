@@ -14,6 +14,7 @@ export HISTFILESIZE=20000
 
 # don't send telementry data for dotnet tools
 export DOTNET_CLI_TELEMETRY_OPTOUT=1
+export PATH=$PATH:/usr/share/dotnet:/usr/lib64/dotnet:~/.dotnet
 export PATH=$PATH:~/.dotnet/tools
 
 # use go bin folder
